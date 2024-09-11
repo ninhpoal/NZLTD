@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Nhập Thông Tin Kế Hoạch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-8xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Form Nhập Thông Tin Kế Hoạch</h1>
+        <input type="file" id="excelFile" accept=".xlsx, .xls" />
+        <button onclick="docFileExcel()" type="button"
+            class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">Đọc
+            file Excel</button>
+        <button type="button"
+            class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            Đẩy dữ liệu lên appsheet
+        </button>
+        <div id="keHoachForm" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="ngayNhan" class="block text-sm font-medium text-gray-700">Ngày nhận *</label>
+                    <input type="date" id="ngayNhan" name="ngayNhan" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="maKeHoach" class="block text-sm font-medium text-gray-700">Mã kế hoạch *</label>
+                    <input type="text" id="maKeHoach" name="maKeHoach" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="pop" class="block text-sm font-medium text-gray-700">POP *</label>
+                    <input type="text" id="pop" name="pop" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </div>
+                <div>
+                    <label for="tenCongTrinh" class="block text-sm font-medium text-gray-700">Tên công trình *</label>
+                    <input type="text" id="tenCongTrinh" name="tenCongTrinh" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                </div>
+            </div>
+            <div>
+                <label for="diaChiThiCong" class="block text-sm font-medium text-gray-700">Địa chỉ thi công</label>
+                <input type="text" id="diaChiThiCong" name="diaChiThiCong"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="khuVuc" class="block text-sm font-medium text-gray-700">Khu vực *</label>
+                    <select id="khuVuc" name="khuVuc" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="">Chọn khu vực</option>
+                    </select>
+                    <button type="button" onclick="themMoi('khuVuc')"
+                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
+                </div>
+                <div>
+                    <label for="keHoach" class="block text-sm font-medium text-gray-700">Kế hoạch *</label>
+                    <select id="keHoach" name="keHoach" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="">Chọn kế hoạch</option>
+                    </select>
+                    <button type="button" onclick="themMoi('keHoach')"
+                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
+                </div>
+                <div>
+                    <label for="nguoiGiaoViec" class="block text-sm font-medium text-gray-700">Người giao việc</label>
+                    <select id="nguoiGiaoViec" name="nguoiGiaoViec"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="">Chọn người giao việc</option>
+                    </select>
+                    <button type="button" onclick="themMoi('nguoiGiaoViec')"
+                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
+                </div>
+                <div>
+                    <label for="giamSat" class="block text-sm font-medium text-gray-700">Giám sát</label>
+                    <select id="giamSat" name="giamSat"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                        <option value="">Chọn giám sát</option>
+                    </select>
+                    <button type="button" onclick="themMoi('giamSat')"
+                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="tongBoChua" class="block text-sm font-medium text-gray-700">Tổng bộ chia</label>
+                        <input type="number" id="tongBoChua" name="tongBoChua"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    </div>
+                    <div>
+                        <label for="tongTuODFTapDiem" class="block text-sm font-medium text-gray-700">Tổng số Tủ/ODF/tập
+                            điểm</label>
+                        <input type="number" id="tongTuODFTapDiem" name="tongTuODFTapDiem"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    </div>
+                    <div>
+                        <label for="duToanCore" class="block text-sm font-medium text-gray-700">Dự toán Core</label>
+                        <input type="number" id="duToanCore" name="duToanCore"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="text-xl font-semibold mt-8 mb-4">Thông tin BCSG</h2>
+            <div class="overflow-x-auto">
+                <table id="bcsgTable" class="min-w-full bg-white">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">Tuyến cáp</th>
+                            <th class="py-3 px-6 text-left">Điểm đầu</th>
+                            <th class="py-3 px-6 text-left">Điểm cuối</th>
+                            <th class="py-3 px-6 text-left">Loại cáp</th>
+                            <th class="py-3 px-6 text-left">Dự toán</th>
+                            <th class="py-3 px-6 text-left">Đội kéo</th>
+                            <th class="py-3 px-6 text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bcsgTableBody">
+                        <!-- Các hàng BCSG sẽ được thêm vào đây -->
+                    </tbody>
+                </table>
+            </div>
+            <button type="button" onclick="themHangBCSG()"
+                class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                Thêm BCSG
+            </button>
+
+
+        </div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        // Constants for AppSheet API
+        const appId = '0ffda765-62b7-4260-b7ed-5bcbb530b113';
+        const accessKey = 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF';
+        const region = 'www';
+
+        // Khởi tạo dữ liệu mới
+        const duLieu = {
+            khuVuc: ['FPT-HCM', 'FPT-BDG', 'FPT-VTU', 'FPT-TNH', 'FPT-BPC', 'FPT-BTN', 'FPT-LAN', 'NZ-HCM', 'Intecom', 'FPT-DNI', 'Nhật Minh', 'PA VietNam', 'BPC'],
+            keHoach: ['SGxBuiding', 'Di dời', 'Ngầm hóa', 'FTI', 'AON', 'Nâng Cấp', 'XLSC', 'Cắt chuyển', 'Metro', 'Hot', 'Thu hồi', 'Intecom', 'Bảo trì', 'Ring'],
+            nguoiGiaoViec: ['Giáp VV', 'Cường TV', 'Sơn VT', 'Nghi NV', 'Thạo NT', 'Cường TQ', 'Kiệt NH', 'QLVH1 (Khiêm ND)', 'QLVH2 (Quý NT)', 'QLVH2 (Thế Anh)', 'QLVH3 (Thiện LTQ)', 'QLVH3 (Nguyên DT)', 'QLVH3 (Quang P)', 'QLVH3 (Khoa NA)', 'Cường LĐ', 'Sơn ĐT', 'Vương NN', 'Nhật NH', 'Hùng NQ DNI', 'Intecom', 'Nhật Minh', 'PhatMA', 'PA VietNam', 'ThanhTNM', 'Nam NQ', 'ThanhNT DNI'],
+            giamSat: ['Giám sát A', 'Giám sát B', 'Giám sát C']
+        };
+
+        function formatDate(dateString) {
+            const [day, month, year] = dateString.split('/');
+            return `${day}/${month}/${year}`;
+        }
+        // API and Data Management
+        function apiRequest(tableName, action, data) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            return $.ajax({
+                url: apiUrl,
+                method: 'POST',
+                headers: {
+                    'ApplicationAccessKey': accessKey,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    Action: action,
+                    Properties: {
+                        Locale: 'vi-VN',
+                        Timezone: 'Asia/Ho_Chi_Minh'
+                    },
+                    ...data
+                })
+            });
+        }
+
+        // New function to validate data
+        function validateData(data) {
+            const requiredFields = ['Mã kế hoạch', 'POP', 'Khu vực'];
+            for (let field of requiredFields) {
+                if (!data[field]) {
+                    throw new Error(`Trường ${field} là bắt buộc`);
+                }
+            }
+        }
+
+        async function sendDataToAppSheet(duAnData, bcgsData) {
+            try {
+                // Prepare DUAN data
+                const duAnRow = {
+                    'Ngày nhận': formatDate(duAnData['Ngày nhận']),
+                    'Mã kế hoạch': duAnData['Mã kế hoạch'],
+                    'POP': duAnData['POP'],
+                    'Tên công trình': duAnData['Tên công trình'],
+                    'Địa chỉ thi công': duAnData['Địa chỉ thi công'],
+                    'Khu vực': duAnData['Khu vực'],
+                    'Kế hoạch': duAnData['Kế hoạch'],
+                    'Người giao việc': duAnData['Người giao việc'],
+                    'Giám sát': duAnData['Giám sát'],
+                    'Tổng bộ chia': duAnData['Tổng bộ chia'],
+                    'Tổng số Tủ/ODF/tập điểm': duAnData['Tổng số Tủ/ODF/tập điểm'],
+                    'Dự toán Core': duAnData['Dự toán Core']
+                };
+
+                console.log('Sending DUAN data:', JSON.stringify([duAnRow], null, 2));
+                const duanResponse = await apiRequest('DUAN', 'Add', { Rows: duAnRow });
+                console.log('DUAN response:', JSON.stringify(duanResponse, null, 2));
+
+
+
+
+                alert('Dữ liệu đã được gửi thành công!');
+            } catch (error) {
+                console.error('Lỗi khi gửi dữ liệu:', error);
+                if (error.responseJSON) {
+                    console.error('API error details:', JSON.stringify(error.responseJSON, null, 2));
+                }
+                alert(`Có lỗi xảy ra khi gửi dữ liệu: ${error.message}`);
+            }
+        }
+
+        // Function to collect form data
+        function collectFormData() {
+            return {
+                'Ngày nhận':document.getElementById('maKeHoach').value, 
+                'Mã kế hoạch': document.getElementById('maKeHoach').value,
+                'POP': document.getElementById('pop').value,
+                'Tên công trình': document.getElementById('tenCongTrinh').value,
+                'Địa chỉ thi công': document.getElementById('diaChiThiCong').value,
+                'Khu vực': document.getElementById('khuVuc').value,
+                'Kế hoạch': document.getElementById('keHoach').value,
+                'Người giao việc': document.getElementById('nguoiGiaoViec').value,
+                'Giám sát': document.getElementById('giamSat').value,
+                'Tổng bộ chia': document.getElementById('tongBoChua').value,
+                'Tổng số Tủ/ODF/tập điểm': document.getElementById('tongTuODFTapDiem').value,
+                'Dự toán Core': document.getElementById('duToanCore').value
+            };
+        }
+        // Update the "Đẩy dữ liệu lên appsheet" button click handler
+        document.querySelector('button.bg-blue-600').onclick = async function () {
+            const duAnData = collectFormData();
+
+            // Collect data from BCSG table
+            const bcgsData = [];
+            document.querySelectorAll('#bcsgTableBody tr').forEach(row => {
+                const rowData = {
+
+                    'Mã kế hoạch': duAnData['Mã kế hoạch'],
+                    'Tuyến cáp': row.querySelector('[data-field="tuyenCap"]').value,
+                    'Điểm đầu': row.querySelector('[data-field="diemDau"]').value,
+                    'Điểm cuối': row.querySelector('[data-field="diemCuoi"]').value,
+                    'Loại cáp': row.querySelector('[data-field="loaiCap"]').value,
+                    'Dự toán': row.querySelector('[data-field="duToan"]').value,
+                    'Đội kéo': row.querySelector('[data-field="doiKeo"]').value
+                };
+                bcgsData.push(rowData);
+            });
+
+            // Send data to AppSheet
+            await sendDataToAppSheet(duAnData, bcgsData);
+        };
+        // Hàm điền dữ liệu vào select
+        function dienDuLieu(id) {
+            const select = document.getElementById(id);
+            select.innerHTML = '<option value="">Chọn ' + id + '</option>';
+            duLieu[id].forEach(item => {
+                const option = document.createElement('option');
+                option.value = item;
+                option.textContent = item;
+                select.appendChild(option);
+            });
+        }
+
+        function themHangBCSG() {
+            const tableBody = document.getElementById('bcsgTableBody');
+            const newRow = tableBody.insertRow();
+            newRow.innerHTML = `
+        <td><input type="text" class="border p-1 w-full" data-field="tuyenCap" required></td>
+        <td><input type="text" class="border p-1 w-full" data-field="diemDau" required></td>
+        <td><input type="text" class="border p-1 w-full" data-field="diemCuoi" required></td>
+        <td><input type="text" class="border p-1 w-full" data-field="loaiCap" required></td>
+        <td><input type="number" class="border p-1 w-full" data-field="duToan" required></td>
+        <td><input type="text" class="border p-1 w-full" data-field="doiKeo"></td>
+        <td class="text-center">
+            <button onclick="xoaHangBCSG(this)" class="text-red-500 hover:text-red-700">Xóa</button>
+        </td>
+    `;
+            return newRow;
+        }
+
+        function docFileExcel() {
+            const file = document.getElementById('excelFile').files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // Đọc sheet NV-DTVT
+                const sheetDTVT = workbook.Sheets['NV-DTVT'];
+                const sheetTT = workbook.Sheets['TT'];
+                document.getElementById('maKeHoach').value = sheetDTVT['C8']?.v || '';
+                document.getElementById('tenCongTrinh').value = sheetDTVT['A7']?.v || '';
+                document.getElementById('pop').value = sheetTT['E12']?.v || '';
+                document.getElementById('diaChiThiCong').value = sheetTT['E22']?.v || '';
+
+                // Đọc sheet NV-TM
+                const sheetTM = workbook.Sheets['NV-TM'];
+                const range = XLSX.utils.decode_range(sheetTM['!ref']);
+                const bcsgData = [];
+
+                for (let R = 13; R <= Math.min(513, range.e.r); ++R) {
+                    const row = {
+                        tuyenCap: sheetTM[`A${R}`]?.v,
+                        diemDau: sheetTM[`C${R}`]?.v,
+                        diemCuoi: sheetTM[`D${R}`]?.v,
+                        loaiCap: sheetTM[`E${R}`]?.v,
+                        duToan: sheetTM[`F${R}`]?.v
+                    };
+
+                    if (row.duToan > 0) {
+                        bcsgData.push(row);
+                    }
+                }
+
+                // Xóa các hàng BCSG hiện có
+                const bcsgTableBody = document.getElementById('bcsgTableBody');
+                bcsgTableBody.innerHTML = '';
+
+                // Thêm dữ liệu BCSG mới
+                bcsgData.forEach(row => {
+                    themHangBCSG();
+                    const newRow = bcsgTableBody.lastElementChild;
+                    newRow.querySelector('[data-field="tuyenCap"]').value = row.tuyenCap || '';
+                    newRow.querySelector('[data-field="diemDau"]').value = row.diemDau || '';
+                    newRow.querySelector('[data-field="diemCuoi"]').value = row.diemCuoi || '';
+                    newRow.querySelector('[data-field="loaiCap"]').value = row.loaiCap || '';
+                    newRow.querySelector('[data-field="duToan"]').value = row.duToan || '';
+                });
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+        // Hàm xóa hàng BCSG
+        function xoaHangBCSG(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+        // Hàm thêm mới
+        function themMoi(loai) {
+            const giaTri = prompt(`Nhập ${loai} mới:`);
+            if (giaTri && !duLieu[loai].includes(giaTri)) {
+                duLieu[loai].push(giaTri);
+                dienDuLieu(loai);
+                document.getElementById(loai).value = giaTri;
+            }
+        }
+
+        // Điền dữ liệu khi trang load
+        window.onload = function () {
+            document.getElementById('ngayNhan').valueAsDate = new Date();
+            dienDuLieu('khuVuc');
+            dienDuLieu('keHoach');
+            dienDuLieu('nguoiGiaoViec');
+            dienDuLieu('giamSat');
+            themHangBCSG();
+        };
+
+    </script>
+</body>
+
+</html>
