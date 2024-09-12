@@ -7,16 +7,23 @@
     <title>Form Nhập Thông Tin Kế Hoạch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+
+
 </head>
 
 <body class="bg-gray-100 min-h-screen p-8">
+    <div id="fui-toast"></div>
     <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-8xl mx-auto">
         <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Form Nhập Thông Tin Kế Hoạch</h1>
         <input type="file" id="excelFile" accept=".xlsx, .xls" />
         <button onclick="docFileExcel()" type="button"
             class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">Đọc
             file Excel</button>
-        <button type="button"
+        <button type="button" id="submitVote" onclick="sendDataToAppSheet()"
             class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
             Đẩy dữ liệu lên appsheet
         </button>
@@ -115,7 +122,7 @@
                             <th class="py-3 px-6 text-left">Điểm cuối</th>
                             <th class="py-3 px-6 text-left">Loại cáp</th>
                             <th class="py-3 px-6 text-left">Dự toán</th>
-                            <th class="py-3 px-6 text-left">Đội kéo</th>
+                            <th class="py-3 px-6 text-left" hidden>Đội kéo</th>
                             <th class="py-3 px-6 text-center">Thao tác</th>
                         </tr>
                     </thead>
@@ -147,11 +154,6 @@
             giamSat: ['Giám sát A', 'Giám sát B', 'Giám sát C']
         };
 
-        function formatDate(dateString) {
-            const [day, month, year] = dateString.split('/');
-            return `${day}/${month}/${year}`;
-        }
-        // API and Data Management
         function apiRequest(tableName, action, data) {
             const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
             return $.ajax({
@@ -169,94 +171,111 @@
                     },
                     ...data
                 })
+            }).then(response => {
+                return response;
+            }).catch(error => {
+                FuiToast.error("Lỗi hệ thống báo Admin để hỗ trợ.")
+
+                throw error;
             });
         }
+        async function sendDataToAppSheet() {
+            return FuiToast.promise(
+                (async () => {
 
-        // New function to validate data
-        function validateData(data) {
-            const requiredFields = ['Mã kế hoạch', 'POP', 'Khu vực'];
-            for (let field of requiredFields) {
-                if (!data[field]) {
-                    throw new Error(`Trường ${field} là bắt buộc`);
+                    // Kiểm tra dữ liệu đầu vào
+                    const requiredFields = ['maKeHoach', 'tenCongTrinh', 'pop', 'tenCongTrinh', 'diaChiThiCong', 'khuVuc', 'keHoach', 'nguoiGiaoViec'];
+                    for (const field of requiredFields) {
+                        if (!document.getElementById(field).value) {
+
+                            FuiToast.info(`Trường ${field} là bắt buộc.`)
+                            return;
+
+                        }
+                    }
+
+                    const duAnData = {
+                        "Ngày nhận": formatDate(document.getElementById('ngayNhan').value),
+                        "Mã kế hoạch": document.getElementById('maKeHoach').value,
+                        "Tên công trình": document.getElementById('tenCongTrinh').value,
+                        "POP": document.getElementById('pop').value || '',
+                        "Địa chỉ thi công": document.getElementById('diaChiThiCong').value || '',
+                        "Khu vực": document.getElementById('khuVuc').value || '',
+                        "Kế hoạch": document.getElementById('keHoach').value || '',
+                        "Người giao việc": document.getElementById('nguoiGiaoViec').value || '',
+                        "Giám sát": document.getElementById('giamSat').value || '',
+                        "Tổng bộ chia": (document.getElementById('tongBoChua').value) || '',
+                        "Tổng số Tủ/ODF/tập điểm": (document.getElementById('tongTuODFTapDiem').value) || '',
+                        "Dự toán Core": (document.getElementById('duToanCore').value) || ''
+                    };
+
+
+                    const duAnResponse = await apiRequest('DUAN', 'Add', {
+                        Rows: [duAnData]
+                    });
+
+                    if (!duAnResponse || duAnResponse.Failed) {
+                        FuiToast.error(`Lỗi khi thêm dữ liệu vào DUAN: ${duAnResponse.FailureMessage || 'Không xác định'}`)
+                    }
+
+                    console.log("Dữ liệu DUAN đã được gửi thành công!");
+
+                    const bcsgData = [];
+                    document.querySelectorAll('#bcsgTableBody tr').forEach(row => {
+                        const rowData = {
+                            "Mã kế hoạch": duAnData["Mã kế hoạch"],
+                            "POP": duAnData["POP"],
+                            "Khu vực": duAnData["Khu vực"],
+                            "Tuyến cáp": row.querySelector('[data-field="tuyenCap"]').value,
+                            "Điểm đầu": row.querySelector('[data-field="diemDau"]').value,
+                            "Điểm cuối": row.querySelector('[data-field="diemCuoi"]').value,
+                            "Loại cáp": row.querySelector('[data-field="loaiCap"]').value,
+                            "Dự toán": row.querySelector('[data-field="duToan"]').value,
+                            "Đội kéo": row.querySelector('[data-field="doiKeo"]').value
+                        };
+                        if (!rowData["Tuyến cáp"] || !rowData["Điểm đầu"] || !rowData["Điểm cuối"] || !rowData["Loại cáp"] || !rowData["Dự toán"]) {
+                            FuiToast.info('Vui lòng điền đủ thông tin các dòng bạn đã thêm vào báo cáo giáo sát')
+
+                        }
+                        bcsgData.push(rowData);
+                    });
+
+
+                    if (bcsgData.length > 0) {
+
+                        await apiRequest('BCGS', 'Add', { Rows: bcsgData });
+                    }
+
+
+                    return 'Dữ liệu đã được gửi thành công!';
+                })(),
+                {
+                    loading: 'Đang gửi dữ liệu...',
+                    success: (data) => {
+                        console.log(data);
+                        return data;
+                    },
+                    error: (error) => {
+                        console.error('Lỗi khi gửi dữ liệu:', error);
+                        return `Lỗi: ${error.message || 'Không xác định'}`;
+                    },
+                },
+                {
+                    isClose: true
                 }
-            }
+            );
         }
 
-        async function sendDataToAppSheet(duAnData, bcgsData) {
-            try {
-                // Prepare DUAN data
-                const duAnRow = {
-                    'Ngày nhận': formatDate(duAnData['Ngày nhận']),
-                    'Mã kế hoạch': duAnData['Mã kế hoạch'],
-                    'POP': duAnData['POP'],
-                    'Tên công trình': duAnData['Tên công trình'],
-                    'Địa chỉ thi công': duAnData['Địa chỉ thi công'],
-                    'Khu vực': duAnData['Khu vực'],
-                    'Kế hoạch': duAnData['Kế hoạch'],
-                    'Người giao việc': duAnData['Người giao việc'],
-                    'Giám sát': duAnData['Giám sát'],
-                    'Tổng bộ chia': duAnData['Tổng bộ chia'],
-                    'Tổng số Tủ/ODF/tập điểm': duAnData['Tổng số Tủ/ODF/tập điểm'],
-                    'Dự toán Core': duAnData['Dự toán Core']
-                };
-
-                console.log('Sending DUAN data:', JSON.stringify([duAnRow], null, 2));
-                const duanResponse = await apiRequest('DUAN', 'Add', { Rows: duAnRow });
-                console.log('DUAN response:', JSON.stringify(duanResponse, null, 2));
-
-
-
-
-                alert('Dữ liệu đã được gửi thành công!');
-            } catch (error) {
-                console.error('Lỗi khi gửi dữ liệu:', error);
-                if (error.responseJSON) {
-                    console.error('API error details:', JSON.stringify(error.responseJSON, null, 2));
-                }
-                alert(`Có lỗi xảy ra khi gửi dữ liệu: ${error.message}`);
-            }
+        // Hàm hỗ trợ để chuyển đổi chuỗi thành số nguyên hoặc trả về 0 nếu không hợp lệ
+        function parseIntOrZero(value) {
+            const parsedValue = parseInt(value, 10);
+            return isNaN(parsedValue) ? 0 : parsedValue;
         }
 
-        // Function to collect form data
-        function collectFormData() {
-            return {
-                'Ngày nhận':document.getElementById('maKeHoach').value, 
-                'Mã kế hoạch': document.getElementById('maKeHoach').value,
-                'POP': document.getElementById('pop').value,
-                'Tên công trình': document.getElementById('tenCongTrinh').value,
-                'Địa chỉ thi công': document.getElementById('diaChiThiCong').value,
-                'Khu vực': document.getElementById('khuVuc').value,
-                'Kế hoạch': document.getElementById('keHoach').value,
-                'Người giao việc': document.getElementById('nguoiGiaoViec').value,
-                'Giám sát': document.getElementById('giamSat').value,
-                'Tổng bộ chia': document.getElementById('tongBoChua').value,
-                'Tổng số Tủ/ODF/tập điểm': document.getElementById('tongTuODFTapDiem').value,
-                'Dự toán Core': document.getElementById('duToanCore').value
-            };
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
         }
-        // Update the "Đẩy dữ liệu lên appsheet" button click handler
-        document.querySelector('button.bg-blue-600').onclick = async function () {
-            const duAnData = collectFormData();
-
-            // Collect data from BCSG table
-            const bcgsData = [];
-            document.querySelectorAll('#bcsgTableBody tr').forEach(row => {
-                const rowData = {
-
-                    'Mã kế hoạch': duAnData['Mã kế hoạch'],
-                    'Tuyến cáp': row.querySelector('[data-field="tuyenCap"]').value,
-                    'Điểm đầu': row.querySelector('[data-field="diemDau"]').value,
-                    'Điểm cuối': row.querySelector('[data-field="diemCuoi"]').value,
-                    'Loại cáp': row.querySelector('[data-field="loaiCap"]').value,
-                    'Dự toán': row.querySelector('[data-field="duToan"]').value,
-                    'Đội kéo': row.querySelector('[data-field="doiKeo"]').value
-                };
-                bcgsData.push(rowData);
-            });
-
-            // Send data to AppSheet
-            await sendDataToAppSheet(duAnData, bcgsData);
-        };
         // Hàm điền dữ liệu vào select
         function dienDuLieu(id) {
             const select = document.getElementById(id);
