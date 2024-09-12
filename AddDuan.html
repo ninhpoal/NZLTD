@@ -11,15 +11,20 @@
         href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
     <script type="text/javascript"
         src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
 
 
 </head>
 
 <body class="bg-gray-100 min-h-screen p-8">
     <div id="fui-toast"></div>
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-8xl mx-auto">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-xxl mx-auto">
         <h1 class="text-2xl font-bold mb-6 text-center text-blue-600">Form Nhập Thông Tin Kế Hoạch</h1>
-        <input type="file" id="excelFile" accept=".xlsx, .xls" />
+
+        <input
+            class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+            type="file" id="excelFile" accept=".xlsx, .xls">
         <button onclick="docFileExcel()" type="button"
             class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">Đọc
             file Excel</button>
@@ -27,102 +32,132 @@
             class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
             Đẩy dữ liệu lên appsheet
         </button>
-        <div id="keHoachForm" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="ngayNhan" class="block text-sm font-medium text-gray-700">Ngày nhận *</label>
-                    <input type="date" id="ngayNhan" name="ngayNhan" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                </div>
-                <div>
-                    <label for="maKeHoach" class="block text-sm font-medium text-gray-700">Mã kế hoạch *</label>
-                    <input type="text" id="maKeHoach" name="maKeHoach" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                </div>
-                <div>
-                    <label for="pop" class="block text-sm font-medium text-gray-700">POP *</label>
-                    <input type="text" id="pop" name="pop" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                </div>
-                <div>
-                    <label for="tenCongTrinh" class="block text-sm font-medium text-gray-700">Tên công trình *</label>
-                    <input type="text" id="tenCongTrinh" name="tenCongTrinh" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                </div>
-            </div>
-            <div>
-                <label for="diaChiThiCong" class="block text-sm font-medium text-gray-700">Địa chỉ thi công</label>
-                <input type="text" id="diaChiThiCong" name="diaChiThiCong"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label for="khuVuc" class="block text-sm font-medium text-gray-700">Khu vực *</label>
-                    <select id="khuVuc" name="khuVuc" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <option value="">Chọn khu vực</option>
-                    </select>
-                    <button type="button" onclick="themMoi('khuVuc')"
-                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
-                </div>
-                <div>
-                    <label for="keHoach" class="block text-sm font-medium text-gray-700">Kế hoạch *</label>
-                    <select id="keHoach" name="keHoach" required
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <option value="">Chọn kế hoạch</option>
-                    </select>
-                    <button type="button" onclick="themMoi('keHoach')"
-                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
-                </div>
-                <div>
-                    <label for="nguoiGiaoViec" class="block text-sm font-medium text-gray-700">Người giao việc</label>
-                    <select id="nguoiGiaoViec" name="nguoiGiaoViec"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <option value="">Chọn người giao việc</option>
-                    </select>
-                    <button type="button" onclick="themMoi('nguoiGiaoViec')"
-                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
-                </div>
-                <div>
-                    <label for="giamSat" class="block text-sm font-medium text-gray-700">Giám sát</label>
-                    <select id="giamSat" name="giamSat"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                        <option value="">Chọn giám sát</option>
-                    </select>
-                    <button type="button" onclick="themMoi('giamSat')"
-                        class="mt-2 px-2 py-1 bg-green-500 text-white rounded-md text-sm">Thêm mới</button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div id="keHoachForm" class="    mx-auto p-6 bg-white shadow-md rounded-lg">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">Kế Hoạch Form</h1>
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label for="tongBoChua" class="block text-sm font-medium text-gray-700">Tổng bộ chia</label>
+                        <label for="ngayNhan" class="block text-sm font-medium text-gray-700 mb-1">Ngày nhận *</label>
+                        <input type="date" id="ngayNhan" name="ngayNhan" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="deadline" class="block text-sm font-medium text-gray-700 mb-1">Deadline KH *</label>
+                        <input type="date" id="deadline" name="deadline" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="maKeHoach" class="block text-sm font-medium text-gray-700 mb-1">Mã kế hoạch
+                            *</label>
+                        <input type="text" id="maKeHoach" name="maKeHoach" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label for="pop" class="block text-sm font-medium text-gray-700 mb-1">POP *</label>
+                        <input type="text" id="pop" name="pop" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                </div>
+                <div>
+                    <div>
+                        <label for="tenCongTrinh" class="block text-sm font-medium text-gray-700 mb-1">Tên công trình
+                            *</label>
+                        <textarea type="text" id="tenCongTrinh" name="tenCongTrinh" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    <label for="diaChiThiCong" class="block text-sm font-medium text-gray-700 mb-1">Địa chỉ thi
+                        công</label>
+                    <input type="text" id="diaChiThiCong" name="diaChiThiCong"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="khuVuc" class="block text-sm font-medium text-gray-700 mb-1">Khu vực *</label>
+                        <div class="flex items-center space-x-2">
+                            <select id="khuVuc" name="khuVuc" required
+                                class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Chọn khu vực</option>
+                            </select>
+                            <button type="button" onclick="themMoi('khuVuc')"
+                                class="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                Thêm mới
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="keHoach" class="block text-sm font-medium text-gray-700 mb-1">Kế hoạch *</label>
+                        <div class="flex items-center space-x-2">
+                            <select id="keHoach" name="keHoach" required
+                                class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Chọn kế hoạch</option>
+                            </select>
+                            <button type="button" onclick="themMoi('keHoach')"
+                                class="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                Thêm mới
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="nguoiGiaoViec" class="block text-sm font-medium text-gray-700 mb-1">Người giao
+                            việc</label>
+                        <div class="flex items-center space-x-2">
+                            <select id="nguoiGiaoViec" name="nguoiGiaoViec"
+                                class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Chọn người giao việc</option>
+                            </select>
+                            <button type="button" onclick="themMoi('nguoiGiaoViec')"
+                                class="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                Thêm mới
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="giamSat" class="block text-sm font-medium text-gray-700 mb-1">Giám sát</label>
+                        <div class="flex items-center space-x-2">
+                            <select id="giamSat" name="giamSat"
+                                class="flex-grow px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Chọn giám sát</option>
+                            </select>
+                            <button type="button" onclick="themMoi('giamSat')"
+                                class="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                Thêm mới
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label for="tongBoChua" class="block text-sm font-medium text-gray-700 mb-1">Tổng bộ
+                            chia</label>
                         <input type="number" id="tongBoChua" name="tongBoChua"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label for="tongTuODFTapDiem" class="block text-sm font-medium text-gray-700">Tổng số Tủ/ODF/tập
-                            điểm</label>
+                        <label for="tongTuODFTapDiem" class="block text-sm font-medium text-gray-700 mb-1">Tổng số
+                            Tủ/ODF/tập điểm</label>
                         <input type="number" id="tongTuODFTapDiem" name="tongTuODFTapDiem"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label for="duToanCore" class="block text-sm font-medium text-gray-700">Dự toán Core</label>
+                        <label for="duToanCore" class="block text-sm font-medium text-gray-700 mb-1">Dự toán
+                            Core</label>
                         <input type="number" id="duToanCore" name="duToanCore"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
             </div>
 
             <h2 class="text-xl font-semibold mt-8 mb-4">Thông tin BCSG</h2>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto shadow-md rounded-lg">
                 <table id="bcsgTable" class="min-w-full bg-white">
                     <thead>
-                        <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
                             <th class="py-3 px-6 text-left">Tuyến cáp</th>
                             <th class="py-3 px-6 text-left">Điểm đầu</th>
                             <th class="py-3 px-6 text-left">Điểm cuối</th>
                             <th class="py-3 px-6 text-left">Loại cáp</th>
                             <th class="py-3 px-6 text-left">Dự toán</th>
-                            <th class="py-3 px-6 text-left" hidden>Đội kéo</th>
                             <th class="py-3 px-6 text-center">Thao tác</th>
                         </tr>
                     </thead>
@@ -132,11 +167,9 @@
                 </table>
             </div>
             <button type="button" onclick="themHangBCSG()"
-                class="mt-4 px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                 Thêm BCSG
             </button>
-
-
         </div>
     </div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -184,7 +217,7 @@
                 (async () => {
 
                     // Kiểm tra dữ liệu đầu vào
-                    const requiredFields = ['maKeHoach', 'tenCongTrinh', 'pop', 'tenCongTrinh', 'diaChiThiCong', 'khuVuc', 'keHoach', 'nguoiGiaoViec'];
+                    const requiredFields = ['maKeHoach', 'tenCongTrinh', 'pop', 'tenCongTrinh', 'diaChiThiCong', 'khuVuc', 'keHoach', 'nguoiGiaoViec', 'deadline'];
                     for (const field of requiredFields) {
                         if (!document.getElementById(field).value) {
 
@@ -196,6 +229,7 @@
 
                     const duAnData = {
                         "Ngày nhận": formatDate(document.getElementById('ngayNhan').value),
+                        "Deadline KH": formatDate(document.getElementById('deadline').value),
                         "Mã kế hoạch": document.getElementById('maKeHoach').value,
                         "Tên công trình": document.getElementById('tenCongTrinh').value,
                         "POP": document.getElementById('pop').value || '',
@@ -297,9 +331,8 @@
         <td><input type="text" class="border p-1 w-full" data-field="diemCuoi" required></td>
         <td><input type="text" class="border p-1 w-full" data-field="loaiCap" required></td>
         <td><input type="number" class="border p-1 w-full" data-field="duToan" required></td>
-        <td><input type="text" class="border p-1 w-full" data-field="doiKeo"></td>
         <td class="text-center">
-            <button onclick="xoaHangBCSG(this)" class="text-red-500 hover:text-red-700">Xóa</button>
+            <button onclick="xoaHangBCSG(this)"  class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Xóa</button>
         </td>
     `;
             return newRow;
