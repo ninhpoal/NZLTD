@@ -7,8 +7,6 @@
     <title>Form Nhập Thông Tin Kế Hoạch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-    
-    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
     <link rel="stylesheet" type="text/css"
         href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
     <script type="text/javascript"
@@ -155,12 +153,12 @@
                 <table id="bcsgTable" class="min-w-full bg-white">
                     <thead>
                         <tr class="bg-gray-100 text-gray-600 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left">Tuyến cáp</th>
-                            <th class="py-3 px-6 text-left">Điểm đầu</th>
-                            <th class="py-3 px-6 text-left">Điểm cuối</th>
-                            <th class="py-3 px-6 text-left">Loại cáp</th>
-                            <th class="py-3 px-6 text-left">Dự toán</th>
-                            <th class="py-3 px-6 text-center">Thao tác</th>
+                            <th class="py-3 px-2 text-left w-1/12">Tuyến cáp</th>
+                            <th class="py-3 px-6 text-left w-1/4">Điểm đầu</th>
+                            <th class="py-3 px-6 text-left w-1/4">Điểm cuối</th>
+                            <th class="py-3 px-6 text-left w-1/6">Loại cáp</th>
+                            <th class="py-3 px-6 text-left w-1/6">Dự toán</th>
+                            <th class="py-3 px-6 text-center w-1/12">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="bcsgTableBody">
@@ -183,8 +181,8 @@
 
         // Khởi tạo dữ liệu mới
         const duLieu = {
-            khuVuc: ['FPT-HCM', 'FPT-BDG', 'FPT-VTU', 'FPT-BPC', 'FPT-DNI', 'NZ-HCM', 'Intecom', 'Nhật Minh', 'PA VietNam', 'BPC'],
-            keHoach: ['SGx', 'Buiding', 'Di dời', 'Ngầm hóa', 'FTI', 'AON', 'Nâng Cấp', 'XLSC', 'Cắt chuyển', 'Metro', 'Hot', 'Thu hồi', 'Intecom', 'Bảo trì', 'Ring'],
+            khuVuc: ['FPT-HCM', 'FPT-BDG', 'FPT-VTU', 'FPT-TNH', 'FPT-BPC', 'FPT-BTN', 'FPT-LAN', 'NZ-HCM', 'Intecom', 'FPT-DNI', 'Nhật Minh', 'PA VietNam', 'BPC'],
+            keHoach: ['SGxBuiding', 'Di dời', 'Ngầm hóa', 'FTI', 'AON', 'Nâng Cấp', 'XLSC', 'Cắt chuyển', 'Metro', 'Hot', 'Thu hồi', 'Intecom', 'Bảo trì', 'Ring'],
             nguoiGiaoViec: ['Giáp VV', 'Cường TV', 'Sơn VT', 'Nghi NV', 'Thạo NT', 'Cường TQ', 'Kiệt NH', 'QLVH1 (Khiêm ND)', 'QLVH2 (Quý NT)', 'QLVH2 (Thế Anh)', 'QLVH3 (Thiện LTQ)', 'QLVH3 (Nguyên DT)', 'QLVH3 (Quang P)', 'QLVH3 (Khoa NA)', 'Cường LĐ', 'Sơn ĐT', 'Vương NN', 'Nhật NH', 'Hùng NQ DNI', 'Intecom', 'Nhật Minh', 'PhatMA', 'PA VietNam', 'ThanhTNM', 'Nam NQ', 'ThanhNT DNI'],
             giamSat: ['Giám sát A', 'Giám sát B', 'Giám sát C']
         };
@@ -266,7 +264,8 @@
                             "Điểm đầu": row.querySelector('[data-field="diemDau"]').value,
                             "Điểm cuối": row.querySelector('[data-field="diemCuoi"]').value,
                             "Loại cáp": row.querySelector('[data-field="loaiCap"]').value,
-                            "Dự toán": row.querySelector('[data-field="duToan"]').value
+                            "Dự toán": row.querySelector('[data-field="duToan"]').value,
+                            "Đội kéo": row.querySelector('[data-field="doiKeo"]').value
                         };
                         if (!rowData["Tuyến cáp"] || !rowData["Điểm đầu"] || !rowData["Điểm cuối"] || !rowData["Loại cáp"] || !rowData["Dự toán"]) {
                             FuiToast.info('Vui lòng điền đủ thông tin các dòng bạn đã thêm vào báo cáo giáo sát')
@@ -330,17 +329,53 @@
         <td><input type="text" class="border p-1 w-full" data-field="tuyenCap" required></td>
         <td><input type="text" class="border p-1 w-full" data-field="diemDau" required></td>
         <td><input type="text" class="border p-1 w-full" data-field="diemCuoi" required></td>
-        <td><input type="text" class="border p-1 w-full" data-field="loaiCap" required></td>
+        <td>
+            <select class="border p-1 w-full" data-field="loaiCap" required>
+                <option value="">Chọn loại cáp</option>
+                <optgroup label="Cáp treo">
+                    <option value="08FO">08FO</option>
+                    <option value="12FO">12FO</option>
+                    <option value="16FO">16FO</option>
+                    <option value="24FO">24FO</option>
+                    <option value="48FO">48FO</option>
+                    <option value="96FO">96FO</option>
+                    <option value="144FO">144FO</option>
+                </optgroup>
+                <optgroup label="Cáp ngầm">
+                    <option value="04DU">04DU</option>
+                    <option value="06DU">06DU</option>
+                    <option value="08DU">08DU</option>
+                    <option value="12DU">12DU</option>
+                    <option value="16DU">16DU</option>
+                    <option value="24DU">24DU</option>
+                    <option value="48DU">48DU</option>
+                    <option value="96DU">96DU</option>
+                    <option value="144DU">144DU</option>
+
+                </optgroup>
+                <optgroup label="Cáp đồng trục">
+                    <option value="RG6">RG6</option>
+                    <option value="RG11">RG11</option>
+                </optgroup>
+            </select>
+        </td>
         <td><input type="number" class="border p-1 w-full" data-field="duToan" required></td>
         <td class="text-center">
-            <button onclick="xoaHangBCSG(this)"  class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Xóa</button>
+            <button onclick="xoaHangBCSG(this)" class="text-white bg-red-700 hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 font-medium rounded-full text-sm px-5 py-2.5 text-center me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">Xóa</button>
         </td>
     `;
             return newRow;
         }
 
         function docFileExcel() {
-            const file = document.getElementById('excelFile').files[0];
+            const fileInput = document.getElementById('excelFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                FuiToast.error('Vui lòng chọn một file Excel trước khi đọc.');
+                return;
+            }
+
             const reader = new FileReader();
 
             reader.onload = function (e) {
@@ -388,11 +423,17 @@
                     newRow.querySelector('[data-field="loaiCap"]').value = row.loaiCap || '';
                     newRow.querySelector('[data-field="duToan"]').value = row.duToan || '';
                 });
+
+                FuiToast.success('Đã đọc file Excel thành công');
+            };
+
+            reader.onerror = function (ex) {
+                console.error(ex);
+                FuiToast.error('Đã xảy ra lỗi khi đọc file Excel. Vui lòng thử lại.');
             };
 
             reader.readAsArrayBuffer(file);
-        }
-        // Hàm xóa hàng BCSG
+        }    // Hàm xóa hàng BCSG
         function xoaHangBCSG(button) {
             const row = button.closest('tr');
             row.remove();
