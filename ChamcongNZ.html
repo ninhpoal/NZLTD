@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống chấm công</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.10.7/dayjs.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8"
+        src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+</head>
+
+<body class="bg-gray-100">
+    <div id="fui-toast"></div>
+    <div class="min-h-screen bg-gray-100">
+        <nav class="bg-white shadow-lg">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex justify-between">
+                    <div class="flex space-x-7">
+                        <div>
+                            <a href="#" class="flex items-center py-4 px-2">
+                                <i class="fas fa-user-clock text-blue-500 text-2xl mr-2"></i>
+                                <span class="font-semibold text-gray-500 text-lg">Hệ thống chấm công NZ</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button id="refreshButton"
+                            class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-300">
+                            <i class="fas fa-sync-alt mr-2"></i>Làm mới dữ liệu
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container mx-auto p-6">
+            <div class="mb-8 bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">Chọn ngày chấm công</h2>
+                <div class="flex items-center">
+                    <input type="date" id="date"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-4">
+                    <button id="todayButton"
+                        class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+                        <i class="fas fa-calendar-day"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <div class="bg-white shadow-md rounded-lg">
+                    <nav class="flex" aria-label="Tabs">
+                        <button
+                            class="tab-link text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none text-blue-500 border-b-2 font-medium border-blue-500"
+                            data-tab="weldingTab">
+                            <i class="fas fa-users mr-2"></i>Đội Hàn
+                        </button>
+                        <button class="tab-link text-gray-600 py-4 px-6 block hover:text-blue-500 focus:outline-none"
+                            data-tab="adminTab">
+                            <i class="fas fa-user-tie mr-2"></i>Nhân viên Hành chánh
+                        </button>
+                    </nav>
+                </div>
+            </div>
+
+            <div id="weldingTab" class="tab-content mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Đội Hàn</h2>
+                <div id="weldingEmployees" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Welding employee cards will be populated here -->
+                </div>
+            </div>
+
+            <div id="adminTab" class="tab-content mb-8 hidden">
+                <h2 class="text-2xl font-semibold mb-4">Nhân viên Hành chánh</h2>
+                <div id="adminEmployees" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <!-- Admin employee cards will be populated here -->
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-2xl font-semibold mb-4">Bảng chấm công</h2>
+                <div class="overflow-x-auto">
+                    <table id="attendanceTable" class="min-w-full bg-white">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2 border">Mã chấm công</th>
+                                <th class="px-4 py-2 border">Ngày</th>
+                                <th class="px-4 py-2 border">Thứ</th>
+                                <th class="px-4 py-2 border">Mã nhân viên</th>
+                                <th class="px-4 py-2 border">Trạng thái</th>
+                                <th class="px-4 py-2 border">Đi tỉnh</th>
+                                <th class="px-4 py-2 border">Tăng ca đêm</th>
+                                <th class="px-4 py-2 border">Phụ cấp</th>
+                                <th class="px-4 py-2 border">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Rows will be populated dynamically by DataTables -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants for AppSheet API
+        const API_CONFIG = {
+            appId: '4631b2c5-e441-4160-9b16-d1ee76706f3b',
+            accessKey: 'V2-F4iVe-G112C-5U3Is-MhvwZ-Z5RyS-0tNpz-Jjdcb-E0739',
+            region: 'www'
+        };
+
+        let dataTable;
+        let employeesData = [];
+        let attendanceData = [];
+
+        const DAYS_OF_WEEK = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+
+        // Utility functions
+        const setDefaultDate = () => {
+            const today = dayjs().format('YYYY-MM-DD');
+            document.getElementById('date').value = today;
+        };
+
+        const getDayOfWeek = (day) => DAYS_OF_WEEK[day];
+
+        // API functions
+        const apiRequest = async (tableName, action, data = {}) => {
+            const apiUrl = `https://${API_CONFIG.region}.appsheet.com/api/v2/apps/${API_CONFIG.appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': API_CONFIG.accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        Properties: {
+                            Locale: 'vi-VN',
+                            Timezone: 'Asia/Ho_Chi_Minh'
+                        },
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                FuiToast.error(`Lỗi khi gọi API cho ${tableName}. Vui lòng kiểm tra console và liên hệ Admin.`);
+                console.error('API Request Error:', error);
+                throw error;
+            }
+        };
+
+        const fetchEmployees = async () => {
+            try {
+                const response = await apiRequest('NHÂN VIÊN', "Find", {
+                    Selector: `Filter(NHÂN VIÊN, true)`
+                });
+                employeesData = Array.isArray(response) ? response : [];
+            } catch (error) {
+                console.error('Error fetching employees:', error);
+                employeesData = [];
+            }
+        };
+
+        const fetchAttendance = async () => {
+            try {
+                const response = await apiRequest('Chấm công', 'Find', {
+                    Selector: `Filter(Chấm công, true)`
+                });
+                attendanceData = Array.isArray(response) ? response : [];
+            } catch (error) {
+                console.error('Error fetching attendance:', error);
+                attendanceData = [];
+            }
+        };
+
+        const createAttendanceRecord = async (record) => {
+            const createRecordPromise = new Promise(async (resolve, reject) => {
+                try {
+                    const response = await apiRequest('Chấm công', 'Add', { Rows: [record] });
+                    if (response && response.Rows && response.Rows.length > 0) {
+                        attendanceData.push(response.Rows[0]);
+                        console.log("New attendance record added:", response.Rows[0]);
+                        resolve(response.Rows[0]);
+                    } else {
+                        console.error("Unexpected response structure when creating attendance record:", response);
+                        reject(new Error("Unexpected response structure"));
+                    }
+                } catch (error) {
+                    console.error("Error creating attendance record:", error);
+                    reject(error);
+                }
+            });
+
+            return FuiToast.promise(
+                createRecordPromise,
+                {
+                    loading: 'Đang tạo bản ghi chấm công...',
+                    success: (data) => {
+                        console.log(data);
+                        return 'Bản ghi chấm công đã được tạo thành công!';
+                    },
+                    error: 'Không thể tạo bản ghi chấm công. Vui lòng thử lại.',
+                },
+                {
+                    isClose: true
+                }
+            );
+        };
+
+        const deleteAttendanceRecord = async (attendanceId) => {
+            const deletePromise = new Promise(async (resolve, reject) => {
+                try {
+                    const response = await apiRequest('Chấm công', 'Delete', {
+                        Rows: [{ 'Mã chấm công': attendanceId }]
+                    });
+                    if (response && response.Rows && response.Rows.length > 0) {
+                        attendanceData = attendanceData.filter(record => record['Mã chấm công'] !== attendanceId);
+                        console.log("Attendance record deleted:", attendanceId);
+                        resolve(`Đã xóa bản ghi chấm công ${attendanceId}`);
+                    } else {
+                        reject(new Error("Unexpected response structure"));
+                    }
+                } catch (error) {
+                    console.error("Error deleting attendance record:", error);
+                    reject(error);
+                }
+            });
+
+            try {
+                const result = await FuiToast.promise(
+                    deletePromise,
+                    {
+                        loading: 'Đang xóa bản ghi chấm công...',
+                        success: (data) => {
+                            console.log(data);
+                            return data;
+                        },
+                        error: 'Có lỗi xảy ra khi xóa bản ghi chấm công. Vui lòng thử lại.',
+                    },
+                    {
+                        isClose: true
+                    }
+                );
+                updateAttendanceTable();
+                return result;
+            } catch (error) {
+                console.error("Error in deleteAttendanceRecord:", error);
+                throw error;
+            }
+        };
+
+        // UI functions
+        const createEmployeeCard = (employee) => {
+            const card = document.createElement("div");
+            card.className = "bg-white shadow-lg rounded-lg p-6 hover:shadow-xl transition duration-300";
+            card.innerHTML = `
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white text-xl font-bold mr-4">
+                        ${employee['Mã nhân viên'] ? employee['Mã nhân viên'].charAt(5) : 'N'}
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">${employee['Họ và tên'] || 'N/A'}</h3>
+                        <p class="text-gray-600">Mã NV: ${employee['Mã nhân viên'] || 'N/A'}</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 mb-4">${employee['Phòng ban'] || 'N/A'} - ${employee['Chức vụ'] || 'N/A'} - ${employee['Khu vực']}</p>
+             <div class="mb-4">
+                    <label class="inline-flex items-center mr-4">
+                        <input type="radio" class="form-radio text-blue-500" name="businessTrip_${employee['Mã nhân viên']}" value="0" checked>
+                        <span class="ml-2">Không đi tỉnh</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" class="form-radio text-blue-500" name="businessTrip_${employee['Mã nhân viên']}" value="1">
+                        <span class="ml-2">Đi tỉnh</span>
+                    </label>
+                </div>
+                <div class="mb-4">
+                    <label class="inline-flex items-center mr-4">
+                        <input type="radio" class="form-radio text-blue-500" name="nightShift_${employee['Mã nhân viên']}" value="0" checked>
+                        <span class="ml-2">Không tăng ca đêm</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" class="form-radio text-blue-500" name="nightShift_${employee['Mã nhân viên']}" value="1">
+                        <span class="ml-2">Tăng ca đêm</span>
+                    </label>
+                </div>
+                <div class="flex justify-between">
+                   <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded transition duration-300" onclick="markAttendance('${employee['Mã nhân viên']}', 'Có mặt')" title="Có mặt">
+                        <i class="fas fa-check mr-2"></i>
+                    </button>
+                    <button class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded transition duration-300" onclick="markAttendance('${employee['Mã nhân viên']}', 'Vắng có phép')" title="Vắng có phép">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                    </button>
+                    <button class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300" onclick="markAttendance('${employee['Mã nhân viên']}', 'Vắng không phép')" title="Vắng không phép">
+                        <i class="fas fa-times mr-2"></i>
+                    </button>
+                </div>
+            `;
+            return card;
+        };
+
+        const populateEmployeeCards = () => {
+            console.log("Populating employee cards with data:", employeesData);
+            const adminEmployees = document.getElementById("adminEmployees");
+            const weldingEmployees = document.getElementById("weldingEmployees");
+
+            adminEmployees.innerHTML = '';
+            weldingEmployees.innerHTML = '';
+
+            if (!employeesData || employeesData.length === 0) {
+                console.log("No employee data available");
+                adminEmployees.innerHTML = '<p class="text-gray-600">Không có dữ liệu nhân viên.</p>';
+                weldingEmployees.innerHTML = '<p class="text-gray-600">Không có dữ liệu nhân viên.</p>';
+                return;
+            }
+
+            employeesData.forEach(emp => {
+                if (emp['Trạng thái'] === "Còn làm") {
+                    const card = createEmployeeCard(emp);
+                    if (emp['Phòng ban'] === "Hành chánh") {
+                        adminEmployees.appendChild(card);
+                    } else if (emp['Chức vụ'] === "Đội hàn") {
+                        weldingEmployees.appendChild(card);
+                    }
+                }
+            });
+        };
+
+        const markAttendance = async (employeeId, status) => {
+            const date = document.getElementById("date").value;
+            if (!date) {
+                FuiToast.info("Vui lòng chọn ngày trước khi chấm công!");
+                return;
+            }
+
+            const attendanceId = `${dayjs(date).format("DDMMYYYY")}${employeeId}`;
+
+            if (attendanceData.some(a => a['Mã chấm công'] === attendanceId)) {
+                FuiToast.info("Đã chấm công cho nhân viên này vào ngày này!");
+                return;
+            }
+
+            const businessTrip = document.querySelector(`input[name="businessTrip_${employeeId}"]:checked`).value === "1";
+            const nightShift = document.querySelector(`input[name="nightShift_${employeeId}"]:checked`).value === "1";
+
+            let allowance = calculateAllowance(status, date, businessTrip, nightShift);
+
+            const newRecord = {
+                'Mã chấm công': attendanceId,
+                'Ngày': date,
+                'Thứ': getDayOfWeek(dayjs(date).day()),
+                'Mã nhân viên': employeeId,
+                'Trạng thái': status,
+                'Đi tỉnh': businessTrip ? 'Có' : 'Không',
+                'Tăng ca đêm': nightShift ? 'Có' : 'Không',
+                'Phụ cấp': allowance
+            };
+
+            try {
+                await createAttendanceRecord(newRecord);
+
+                updateAttendanceTable();
+            } catch (error) {
+            }
+        };
+
+        const calculateAllowance = (status, date, businessTrip, nightShift) => {
+            let allowance = 0;
+            if (status === 'Có mặt') {
+                const dayOfWeek = dayjs(date).day();
+                if (dayOfWeek === 0) { // Sunday
+                    allowance += 300000;
+                }
+                if (businessTrip) {
+                    allowance += 40000;
+                }
+                if (nightShift) {
+                    allowance += 200000;
+                }
+            }
+            return allowance;
+        };
+
+        const updateAttendanceTable = () => {
+            if (dataTable) {
+                dataTable.clear().rows.add(attendanceData).draw();
+            } else {
+                dataTable = $('#attendanceTable').DataTable({
+                    data: attendanceData,
+                    columns: [
+                        { data: 'Mã chấm công' },
+                        { data: 'Ngày' },
+                        { data: 'Thứ' },
+                        { data: 'Mã nhân viên' },
+                        {
+                            data: 'Trạng thái',
+                            render: function (data) {
+                                let color = 'text-gray-600';
+                                let icon = 'fa-question-circle';
+                                if (data === 'Có mặt') {
+                                    color = 'text-green-600';
+                                    icon = 'fa-check-circle';
+                                } else if (data === 'Vắng có phép') {
+                                    color = 'text-yellow-600';
+                                    icon = 'fa-exclamation-circle';
+                                } else if (data === 'Vắng không phép') {
+                                    color = 'text-red-600';
+                                    icon = 'fa-times-circle';
+                                }
+                                return `<span class="${color}"><i class="fas ${icon} mr-2"></i>${data}</span>`;
+                            }
+                        },
+                        {
+                            data: 'Đi tỉnh',
+                            render: function (data) {
+                                return data === 'Có' ? '<span class="text-blue-600"><i class="fas fa-plane mr-2"></i>Có</span>' : 'Không';
+                            }
+                        },
+                        {
+                            data: 'Tăng ca đêm',
+                            render: function (data) {
+                                return data === 'Có' ? '<span class="text-purple-600"><i class="fas fa-moon mr-2"></i>Có</span>' : 'Không';
+                            }
+                        },
+                        {
+                            data: 'Phụ cấp',
+                            render: function (data) {
+                                return data.toLocaleString() + ' đ';
+                            }
+                        },
+                        {
+                            data: null,
+                            render: function (data, type, row) {
+                                return `<button class="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded transition duration-300" onclick="deleteAttendanceRecord('${row['Mã chấm công']}')"><i class="fas fa-trash-alt mr-1"></i>Xóa</button>`;
+                            }
+                        }
+                    ],
+                    language: {
+                        url: 'https://cdn.datatables.net/plug-ins/1.11.5/i18n/vi.json'
+                    },
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Tất cả"]],
+                    responsive: true,
+                    order: [[1, 'desc']], // Sort by date column descending
+                    drawCallback: function () {
+                        $('.dataTables_paginate > .pagination').addClass('flex justify-center mt-4');
+                    }
+                });
+            }
+        };
+
+        const initializeApp = async () => {
+            setDefaultDate();
+
+            const initializationPromise = new Promise(async (resolve, reject) => {
+                try {
+                    await Promise.all([fetchEmployees(), fetchAttendance()]);
+                    populateEmployeeCards();
+                    updateAttendanceTable();
+                    resolve('Khởi tạo dữ liệu thành công');
+                } catch (error) {
+                    console.error("Error during initialization:", error);
+                    reject(error);
+                }
+            });
+
+            return FuiToast.promise(
+                initializationPromise,
+                {
+                    loading: 'Đang tải dữ liệu...',
+                    success: (data) => {
+                        console.log(data);
+                        return 'Dữ liệu đã được tải thành công!';
+                    },
+                    error: 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng tải lại trang.',
+                },
+                {
+                    isClose: true
+                }
+            );
+        };
+
+        const refreshData = async () => {
+            const refreshPromise = new Promise(async (resolve, reject) => {
+                try {
+                    await Promise.all([fetchEmployees(), fetchAttendance()]);
+                    populateEmployeeCards();
+                    updateAttendanceTable();
+                    resolve('Dữ liệu đã được làm mới thành công.');
+                } catch (error) {
+                    console.error("Error refreshing data:", error);
+                    reject(error);
+                }
+            });
+
+            return FuiToast.promise(
+                refreshPromise,
+                {
+                    loading: 'Đang làm mới dữ liệu...',
+                    success: (data) => {
+                        console.log(data);
+                        return 'Dữ liệu đã được làm mới thành công!';
+                    },
+                    error: 'Có lỗi xảy ra khi làm mới dữ liệu. Vui lòng thử lại.',
+                },
+                {
+                    isClose: true
+                }
+            );
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+
+            document.getElementById('refreshButton').addEventListener('click', refreshData);
+
+            document.getElementById('todayButton').addEventListener('click', setDefaultDate);
+
+            document.querySelectorAll('.tab-link').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tabId = tab.getAttribute('data-tab');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById(tabId).classList.remove('hidden');
+                    document.querySelectorAll('.tab-link').forEach(t => {
+                        t.classList.remove('text-blue-500', 'border-b-2', 'border-blue-500');
+                        t.classList.add('text-gray-600');
+                    });
+                    tab.classList.remove('text-gray-600');
+                    tab.classList.add('text-blue-500', 'border-b-2', 'border-blue-500');
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
