@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Ghi Chi Phí</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <!-- Thêm Toastify CSS và JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        .fixed-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            z-index: 1000;
+        }
+        .form-container {
+            padding-bottom: 80px; /* Add space for the fixed button */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 p-6">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h2 class="text-2xl font-bold mb-4">Ghi nhận Chi Phí NZ</h2>
+        <form id="expenseForm" class="space-y-4">
+            <input type="hidden" id="id_chi" name="id_chi">
+
+            <div>
+                <label for="ngay_chi" class="block text-sm font-medium text-gray-700">Ngày chi</label>
+                <input type="date" id="ngay_chi" name="ngay_chi"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    required>
+            </div>
+
+            <div>
+                <label for="loai_chi_phi" class="block text-sm font-medium text-gray-700">Loại Chi phí</label>
+                <select id="loai_chi_phi" name="loai_chi_phi"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    required>
+                    <option value="">Chọn loại chi phí</option>
+                    <option value="An uong">Ăn uống</option>
+                    <option value="Di chuyen">Di chuyển</option>
+                    <option value="Cho o">Chỗ ở</option>
+                    <option value="Van phong pham">Văn phòng phẩm</option>
+                    <option value="Thiet bi">Thiết bị</option>
+                    <option value="Quang cao">Quảng cáo</option>
+                    <option value="Dao tao">Đào tạo</option>
+                    <option value="Bao hiem">Bảo hiểm</option>
+                    <option value="Thue">Thuế</option>
+                    <option value="Tien ich">Tiện ích</option>
+                    <option value="Bao tri">Bảo trì</option>
+                    <option value="Phi ngan hang">Phí ngân hàng</option>
+                    <option value="Khac">Khác</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="noi_dung" class="block text-sm font-medium text-gray-700">Nội dung</label>
+                <input type="text" id="noi_dung" name="noi_dung"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    required>
+            </div>
+
+            <div>
+                <label for="nhan_vien" class="block text-sm font-medium text-gray-700">Nhân viên</label>
+                <input type="text" id="nhan_vien" name="nhan_vien"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    readonly>
+            </div>
+
+            <div>
+                <label for="so_tien" class="block text-sm font-medium text-gray-700">Số tiền</label>
+                <div class="relative mt-1 rounded-md shadow-sm">
+                    <input type="text" id="so_tien" name="so_tien" class="block w-full rounded-md border-gray-300 pl-3 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="0" required>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <span class="text-gray-500 sm:text-sm">VND</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="so_tien_chu" class="block text-sm font-medium text-gray-700">Số tiền bằng chữ</label>
+                <input type="text" id="so_tien_chu" name="so_tien_chu" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" readonly>
+            </div>
+            <div>
+                <label for="hinh_anh" class="block text-sm font-medium text-gray-700">Hình ảnh (tối đa 2 ảnh)</label>
+                <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*" multiple
+                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                <div id="image_preview" class="mt-2 flex space-x-2"></div>
+            </div>
+
+            <div>
+                <label for="ghi_chu" class="block text-sm font-medium text-gray-700">Ghi chú</label>
+                <textarea id="ghi_chu" name="ghi_chu" rows="3"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"></textarea>
+            </div>
+
+            <div>
+                <label for="doi_tuong" class="block text-sm font-medium text-gray-700">Đối tượng</label>
+                <input type="text" id="doi_tuong" name="doi_tuong"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+
+            <div>
+                <label for="khach_hang" class="block text-sm font-medium text-gray-700">Khách hàng</label>
+                <input type="text" id="khach_hang" name="khach_hang"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+
+            <div>
+                <label for="mda" class="block text-sm font-medium text-gray-700">MDA</label>
+                <input type="text" id="mda" name="mda"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            </div>
+
+            <div class="fixed-button">
+                <button type="submit" form="expenseForm"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Gửi
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tạo ID_CHI (ẩn)
+            const idChiInput = document.getElementById('id_chi');
+            idChiInput.value = `EXP-${Date.now()}`;
+
+            // Đặt ngày hiện tại cho trường ngày chi
+            const ngayChiInput = document.getElementById('ngay_chi');
+            ngayChiInput.value = luxon.DateTime.now().toFormat('yyyy-MM-dd');
+
+            // Lấy tên nhân viên từ URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const manv = urlParams.get('manv');
+            if (manv) {
+                document.getElementById('nhan_vien').value = manv;
+            }
+
+            // Khởi tạo Choices.js cho select loại chi phí
+            const loaiChiPhiSelect = new Choices('#loai_chi_phi', {
+                searchEnabled: true,
+                searchPlaceholderValue: "Tìm kiếm loại chi phí",
+                noResultsText: 'Không tìm thấy kết quả',
+                itemSelectText: 'Nhấn để chọn',
+                classNames: {
+                    containerOuter: 'choices',
+                    containerInner: 'choices__inner',
+                    input: 'choices__input',
+                    inputCloned: 'choices__input--cloned',
+                    list: 'choices__list',
+                    listItems: 'choices__list--multiple',
+                    listSingle: 'choices__list--single',
+                    listDropdown: 'choices__list--dropdown',
+                    item: 'choices__item',
+                    itemSelectable: 'choices__item--selectable',
+                    itemDisabled: 'choices__item--disabled',
+                    itemChoice: 'choices__item--choice',
+                    placeholder: 'choices__placeholder',
+                    group: 'choices__group',
+                    groupHeading: 'choices__heading',
+                    button: 'choices__button',
+                    activeState: 'is-active',
+                    focusState: 'is-focused',
+                    openState: 'is-open',
+                    disabledState: 'is-disabled',
+                    highlightedState: 'is-highlighted',
+                    selectedState: 'is-selected',
+                    flippedState: 'is-flipped',
+                    loadingState: 'is-loading',
+                    noResults: 'has-no-results',
+                    noChoices: 'has-no-choices'
+                },
+            });
+            
+             // Xử lý số tiền và chuyển đổi sang chữ
+             const soTienInput = document.getElementById('so_tien');
+            const soTienChuInput = document.getElementById('so_tien_chu');
+
+            soTienInput.addEventListener('input', function(e) {
+                // Lấy giá trị hiện tại của input
+                let value = e.target.value;
+                
+                // Loại bỏ tất cả các ký tự không phải số
+                value = value.replace(/[^\d]/g, '');
+                
+                // Chuyển đổi sang số
+                let numericValue = parseInt(value, 10);
+                
+                if (isNaN(numericValue)) {
+                    // Nếu không phải số hợp lệ, đặt giá trị trống
+                    e.target.value = '';
+                    soTienChuInput.value = '';
+                } else {
+                    // Định dạng số với dấu phẩy ngăn cách hàng nghìn
+                    let formattedValue = numericValue.toLocaleString('en-US');
+                    
+                    // Cập nhật giá trị của input
+                    e.target.value = formattedValue;
+                    
+                    // Cập nhật số tiền bằng chữ
+                    soTienChuInput.value = numberToWords(numericValue) + ' đồng';
+                }
+            });
+
+
+            // Xử lý preview hình ảnh
+            const hinhAnhInput = document.getElementById('hinh_anh');
+            const imagePreview = document.getElementById('image_preview');
+            hinhAnhInput.addEventListener('change', function (e) {
+                imagePreview.innerHTML = '';
+                const files = e.target.files;
+                for (let i = 0; i < Math.min(files.length, 2); i++) {
+                    const file = files[i];
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.className = 'h-20 w-20 object-cover rounded-md';
+                        imagePreview.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Cập nhật xử lý gửi form
+            document.getElementById('expenseForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                // Kiểm tra các trường bắt buộc
+                const requiredFields = ['ngay_chi', 'loai_chi_phi', 'noi_dung', 'so_tien'];
+                const missingFields = [];
+
+                requiredFields.forEach(field => {
+                    const input = this.elements[field];
+                    if (!input.value.trim()) {
+                        missingFields.push(input.previousElementSibling.textContent);
+                    }
+                });
+
+                if (missingFields.length > 0) {
+                    // Hiển thị thông báo lỗi nếu thiếu thông tin
+                    Toastify({
+                        text: `Vui lòng nhập đầy đủ thông tin: ${missingFields.join(', ')}`,
+                        duration: 4000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                    }).showToast();
+                    return;
+                }
+
+                // Thu thập dữ liệu form
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+
+                // Xử lý số tiền (loại bỏ dấu phẩy)
+                data.so_tien = data.so_tien.replace(/,/g, '');
+
+                // Log dữ liệu ra console
+                console.log('Form Data:', data);
+
+                // Hiển thị thông báo thành công
+                Toastify({
+                    text: "Form đã được gửi thành công!",
+                    duration: 3000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                }).showToast();
+
+                // Reset form (tùy chọn)
+                // this.reset();
+            });
+        });
+
+          // Hàm chuyển đổi số thành chữ
+          function numberToWords(number) {
+            const units = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+            const teens = ['mười', 'mười một', 'mười hai', 'mười ba', 'mười bốn', 'mười lăm', 'mười sáu', 'mười bảy', 'mười tám', 'mười chín'];
+            const tens = ['', '', 'hai mươi', 'ba mươi', 'bốn mươi', 'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi'];
+            const scales = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+
+            if (number === 0) return 'không';
+
+            const numString = number.toString();
+            const parts = [];
+
+            for (let i = numString.length; i > 0; i -= 3) {
+                parts.unshift(numString.slice(Math.max(0, i - 3), i));
+            }
+
+            function convertGroup(n) {
+                let result = '';
+                if (n[0] !== '0') {
+                    result += units[n[0]] + ' trăm ';
+                    if (n[1] === '0' && n[2] !== '0') result += 'lẻ ';
+                }
+                if (n[1] === '1') {
+                    result += teens[parseInt(n[2])];
+                } else {
+                    if (n[1] !== '0') result += tens[n[1]] + ' ';
+                    if (n[2] !== '0') result += units[n[2]];
+                }
+                return result.trim();
+            }
+
+            return parts.map((part, i) => {
+                if (parseInt(part) !== 0) {
+                    return convertGroup(part.padStart(3, '0')) + (scales[parts.length - 1 - i] ? ' ' + scales[parts.length - 1 - i] : '');
+                }
+                return '';
+            }).filter(Boolean).join(' ');
+        }
+    </script>
+</body>
+
+</html>
