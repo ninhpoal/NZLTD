@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê dự án</title>
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.3/highcharts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#3B82F6',
+                    secondary: '#10B981',
+                    accent: '#8B5CF6',
+                    warning: '#FBBF24',
+                    danger: '#EF4444',
+                }
+            }
+        }
+    }
+</script>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div class="fixed top-0 left-0 right-0 z-10">
+        <nav class="bg-white dark:bg-gray-800 shadow-md">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="Logo N có bóng/Logo N.png" alt="NZ LTĐ" class="h-8 mr-4">
+                    <h1 class="text-2xl font-bold text-primary dark:text-white">NZ ERP PRO</h1>
+                </div>
+                <button id="darkModeToggle"
+                    class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-300">
+                    <i class="fas fa-moon text-gray-800 dark:text-white"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="bg-white dark:bg-gray-800 shadow-md">
+            <div class="container mx-auto px-4 py-3">
+                <h2 class="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Bộ lọc</h2>
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+                    <select id="khuVucFilter"
+                        class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                        <option value="">Khu vực</option>
+                    </select>
+                    <select id="dateRangeFilter"
+                        class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                        <option value="">Chọn phạm vi ngày</option>
+                    </select>
+                    <select id="keHoanhFilter"
+                        class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                        <option value="">Kế hoạch</option>
+                    </select>
+                    <select id="nguoiGiaoViecFilter"
+                        class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                        <option value="">Người giao việc</option>
+                    </select>
+                    <select id="trangThaiFilter"
+                        class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                        <option value="">Trạng thái dự án</option>
+                    </select>
+                    <button id="resetFilters"
+                        class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        <i class="fas fa-sync-alt mr-2"></i>Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br>
+    <div class="container mx-auto px-4 py-8 mt-32">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div id="monthlyRevenueChart" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"></div>
+            <div id="monthlyTable" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"></div>
+            <div id="regionRevenueChart" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"></div>
+            <div id="statisticsTable" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"></div>
+            <div id="planRevenueChart" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"></div>
+            <div id="assignerRevenueChart" class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow"></div>
+        </div>
+    </div>
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const htmlElement = document.documentElement;
+        const appId = '0ffda765-62b7-4260-b7ed-5bcbb530b113';
+        const accessKey = 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF';
+        const region = 'www';
+
+        let allData = [];
+        let filteredData = [];
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function toggleDarkMode() {
+            htmlElement.classList.toggle('dark');
+            updateDashboard(filteredData.length > 0 ? filteredData : allData);
+            const isDarkMode = htmlElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateDarkModeIcon();
+        }
+
+        function updateDarkModeIcon() {
+            const isDarkMode = htmlElement.classList.contains('dark');
+            darkModeToggle.innerHTML = isDarkMode
+                ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
+        }
+
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+
+        async function apiRequest(tableName, action, data) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        Properties: {},
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+                console.log("API response:", responseData);
+                return responseData;
+            } catch (error) {
+                console.error("Lỗi API:", error);
+                throw error;
+            }
+        }
+
+        async function fetchDataFromAppSheet() {
+            try {
+                const response = await apiRequest('DUAN', 'Find', {
+                    Selector: "Filter(DUAN, true)"
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    console.error("Không nhận được dữ liệu hợp lệ từ API:", response);
+                    throw new Error("Dữ liệu không hợp lệ");
+                }
+                allData = response;
+                console.log("Data fetched from AppSheet:", allData);
+                return allData;
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu từ AppSheet:", error);
+                throw error;
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('khuVucFilter').value = '';
+            document.getElementById('dateRangeFilter').value = '';
+            document.getElementById('keHoanhFilter').value = '';
+            document.getElementById('nguoiGiaoViecFilter').value = '';
+            document.getElementById('trangThaiFilter').value = '';
+
+            filteredData = allData;
+            updateDashboard(filteredData);
+        }
+
+        function populateFilters(data) {
+            populateSelectFilter('khuVucFilter', 'Khu vực', data);
+            populateSelectFilter('keHoanhFilter', 'Kế hoạch', data);
+            populateSelectFilter('nguoiGiaoViecFilter', 'Người giao việc', data);
+            populateSelectFilter('trangThaiFilter', 'Trạng thái dự án', data);
+            populateDateRangeFilter(data);
+        }
+
+        function populateSelectFilter(filterId, dataKey, data) {
+            const filterElement = document.getElementById(filterId);
+            const uniqueValues = [...new Set(data.map(item => item[dataKey]))];
+            filterElement.innerHTML = '<option value="">Tất cả</option>';
+            uniqueValues.forEach(value => {
+                filterElement.innerHTML += `<option value="${value}">${value}</option>`;
+            });
+        }
+
+        function populateDateRangeFilter(data) {
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            const dates = data.map(item => new Date(item['Ngày nhận']));
+            const minDate = new Date(Math.min.apply(null, dates));
+            const maxDate = new Date(Math.max.apply(null, dates));
+
+            dateRangeFilter.innerHTML = '<option value="">Tất cả</option>';
+
+            let currentDate = new Date(minDate);
+            while (currentDate <= maxDate) {
+                const monthYear = `${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+                dateRangeFilter.innerHTML += `<option value="${monthYear}">${monthYear}</option>`;
+                currentDate.setMonth(currentDate.getMonth() + 1);
+            }
+
+            const years = new Set(dates.map(date => date.getFullYear()));
+            years.forEach(year => {
+                dateRangeFilter.innerHTML += `<option value="${year}">${year}</option>`;
+            });
+        }
+
+        function calculateStatistics(data) {
+            const statistics = {
+                byMonth: {},
+                byRegion: {},
+                byPlan: {},
+                byAssigner: {}
+            };
+
+            data.forEach(item => {
+                const date = new Date(item['Ngày nhận']);
+                const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                const region = item['Khu vực'];
+                const plan = item['Kế hoạch'];
+                const assigner = item['Người giao việc'];
+                const revenue = parseFloat(item['Số tiền HSHC Trước thuế']) || 0;
+
+                updateStatistic(statistics.byMonth, month, revenue);
+                updateStatistic(statistics.byRegion, region, revenue);
+                updateStatistic(statistics.byPlan, plan, revenue);
+                updateStatistic(statistics.byAssigner, assigner, revenue);
+            });
+
+            calculateCumulativeRevenue(statistics.byMonth);
+
+            return statistics;
+        }
+
+        function updateStatistic(statObject, key, revenue) {
+            if (!statObject[key]) {
+                statObject[key] = { count: 0, revenue: 0 };
+            }
+            statObject[key].count++;
+            statObject[key].revenue += revenue;
+        }
+
+        function calculateCumulativeRevenue(monthlyStats) {
+            let cumulativeRevenue = 0;
+            Object.keys(monthlyStats).sort().forEach(month => {
+                cumulativeRevenue += monthlyStats[month].revenue;
+                monthlyStats[month].cumulativeRevenue = cumulativeRevenue;
+            });
+        }
+
+    function renderMonthlyRevenueChart(statistics) {
+            const months = Object.keys(statistics.byMonth).sort();
+            const revenueData = months.map(month => statistics.byMonth[month].revenue);
+            const cumulativeRevenueData = months.map(month => statistics.byMonth[month].cumulativeRevenue);
+            const projectCountData = months.map(month => statistics.byMonth[month].count);
+
+            Highcharts.chart('monthlyRevenueChart', {
+                chart: { type: 'column' },
+                title: { text: 'Doanh thu và số công trình theo tháng' },
+                xAxis: { categories: months },
+                yAxis: [{
+                    title: { text: 'Doanh thu' }
+                }, {
+                    title: { text: 'Doanh thu lũy kế' },
+                    opposite: true
+                }, {
+                    title: { text: 'Số công trình' },
+                    opposite: true
+                }],
+                series: [{
+                    name: 'Doanh thu',
+                    data: revenueData
+                }, {
+                    name: 'Doanh thu lũy kế',
+                    type: 'line',
+                    yAxis: 1,
+                    data: cumulativeRevenueData
+                }, {
+                    name: 'Số công trình',
+                    type: 'line',
+                    yAxis: 2,
+                    data: projectCountData
+                }],
+                tooltip: {
+                    shared: true,
+                    formatter: function() {
+                        let tooltip = '<b>' + this.x + '</b><br/>';
+                        this.points.forEach(function(point) {
+                            tooltip += point.series.name + ': ' + 
+                                (point.series.name.includes('Doanh thu') ? formatCurrency(point.y) : point.y) + '<br/>';
+                        });
+                        return tooltip;
+                    }
+                }
+            });
+        }
+        function renderMonthlyTable(statistics) {
+    const tableContainer = document.getElementById('monthlyTable');
+    const months = Object.keys(statistics.byMonth).sort();
+    
+    let tableHTML = `
+        <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-white">Bảng thống kê hàng tháng</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700">
+                <thead>
+                    <tr class="bg-gray-100 dark:bg-gray-700">
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tháng</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Số công trình</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Doanh thu</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Doanh thu lũy kế</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    months.forEach(month => {
+        const monthData = statistics.byMonth[month];
+        tableHTML += `
+            <tr class="border-b border-gray-300 dark:border-gray-700">
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">${month}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700 dark:text-gray-300">${monthData.count}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700 dark:text-gray-300">${formatCurrency(monthData.revenue)}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-right text-gray-700 dark:text-gray-300">${formatCurrency(monthData.cumulativeRevenue)}</td>
+            </tr>
+        `;
+    });
+
+    tableHTML += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    tableContainer.innerHTML = tableHTML;
+}
+        function renderStatisticsTable(statistics) {
+            const tableContainer = document.getElementById('statisticsTable');
+            let tableHTML = `
+                <table class="min-w-full bg-white dark:bg-gray-800">
+                    <thead>
+                        <tr>
+                            <th class="px-4 py-2 text-left">Chỉ tiêu</th>
+                            <th class="px-4 py-2 text-right">Số công trình</th>
+                            <th class="px-4 py-2 text-right">Doanh thu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            const totalProjects = Object.values(statistics.byMonth).reduce((sum, month) => sum + month.count, 0);
+            const totalRevenue = Object.values(statistics.byMonth).reduce((sum, month) => sum + month.revenue, 0);
+            tableHTML += `
+                <tr>
+                    <td class="px-4 py-2 font-bold">Tổng số</td>
+                    <td class="px-4 py-2 text-right">${totalProjects}</td>
+                    <td class="px-4 py-2 text-right">${formatCurrency(totalRevenue)}</td>
+                </tr>
+            `;
+
+            Object.entries(statistics.byRegion).forEach(([region, data]) => {
+                tableHTML += `
+                    <tr>
+                        <td class="px-4 py-2">${region}</td>
+                        <td class="px-4 py-2 text-right">${data.count}</td>
+                        <td class="px-4 py-2 text-right">${formatCurrency(data.revenue)}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                </table>
+            `;
+
+            tableContainer.innerHTML = tableHTML;
+        }
+
+        function renderRegionRevenueChart(statistics) {
+            const regions = Object.keys(statistics.byRegion);
+            const data = regions.map(region => ({
+                name: region,
+                y: statistics.byRegion[region].revenue
+            }));
+
+            Highcharts.chart('regionRevenueChart', {
+                chart: { type: 'pie' },
+                title: { text: 'Doanh thu theo khu vực' },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                        }
+                    }
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                },
+                series: [{
+                    name: 'Doanh thu',
+                    data: data
+                }]
+            });
+        }
+
+        function renderPlanRevenueChart(statistics) {
+            const plans = Object.keys(statistics.byPlan);
+            const data = plans.map(plan => ({
+                name: plan,
+                y: statistics.byPlan[plan].revenue
+            }));
+
+            Highcharts.chart('planRevenueChart', {
+                chart: { type: 'bar' },
+                title: { text: 'Doanh thu theo kế hoạch' },
+                xAxis: { categories: plans },
+                yAxis: { title: { text: 'Doanh thu' } },
+                legend: { enabled: false },
+                tooltip: {
+                    pointFormat: 'Doanh thu: <b>{point.y}</b>'
+                },
+                series: [{ name: 'Doanh thu', data: data }]
+            });
+        }
+
+        function renderAssignerRevenueChart(statistics) {
+            const assigners = Object.keys(statistics.byAssigner);
+            const data = assigners.map(assigner => ({
+                name: assigner,
+                y: statistics.byAssigner[assigner].revenue
+            }));
+
+            Highcharts.chart('assignerRevenueChart', {
+                chart: { type: 'column' },
+                title: { text: 'Doanh thu theo người giao việc' },
+                xAxis: { categories: assigners },
+                yAxis: { title: { text: 'Doanh thu' } },
+                legend: { enabled: false },
+                tooltip: {
+                    pointFormat: 'Doanh thu: <b>{point.y}</b>'
+                },
+                series: [{ name: 'Doanh thu', data: data }]
+            });
+        }
+
+        function updateDashboard(data) {
+            const statistics = calculateStatistics(data);
+            renderMonthlyRevenueChart(statistics);
+            renderRegionRevenueChart(statistics);
+            renderPlanRevenueChart(statistics);
+            renderAssignerRevenueChart(statistics);
+            renderStatisticsTable(statistics);
+            renderMonthlyTable(statistics);
+        }
+
+        document.getElementById('khuVucFilter').addEventListener('change', applyFilters);
+        document.getElementById('dateRangeFilter').addEventListener('change', applyFilters);
+        document.getElementById('keHoanhFilter').addEventListener('change', applyFilters);
+        document.getElementById('nguoiGiaoViecFilter').addEventListener('change', applyFilters);
+        document.getElementById('trangThaiFilter').addEventListener('change', applyFilters);
+        document.getElementById('resetFilters').addEventListener('click', resetFilters);
+
+        function applyFilters() {
+            const khuVucFilter = document.getElementById('khuVucFilter').value;
+            const dateRangeFilter = document.getElementById('dateRangeFilter').value;
+            const keHoanhFilter = document.getElementById('keHoanhFilter').value;
+            const nguoiGiaoViecFilter = document.getElementById('nguoiGiaoViecFilter').value;
+            const trangThaiFilter = document.getElementById('trangThaiFilter').value;
+
+            filteredData = allData.filter(item => {
+                if (khuVucFilter && item['Khu vực'] !== khuVucFilter) return false;
+                
+                if (dateRangeFilter) {
+                    const itemDate = new Date(item['Ngày nhận']);
+                    if (dateRangeFilter.includes('/')) {
+                        const [month, year] = dateRangeFilter.split('/');
+                        if (itemDate.getMonth() + 1 !== parseInt(month) || itemDate.getFullYear() !== parseInt(year)) {
+                            return false;
+                        }
+                    } else {
+                        if (itemDate.getFullYear() !== parseInt(dateRangeFilter)) {
+                            return false;
+                        }
+                    }
+                }
+
+                if (keHoanhFilter && item['Kế hoạch'] !== keHoanhFilter) return false;
+                if (nguoiGiaoViecFilter && item['Người giao việc'] !== nguoiGiaoViecFilter) return false;
+                if (trangThaiFilter && item['Trạng thái dự án'] !== trangThaiFilter) return false;
+
+                return true;
+            });
+
+            updateDashboard(filteredData);
+        }
+
+        function updateFilterOptions() {
+            updateFilterSelect('khuVucFilter', 'Khu vực');
+            updateFilterSelect('keHoanhFilter', 'Kế hoạch');
+            updateFilterSelect('nguoiGiaoViecFilter', 'Người giao việc');
+            updateFilterSelect('trangThaiFilter', 'Trạng thái dự án');
+            updateDateRangeFilter();
+        }
+
+        function updateFilterSelect(filterId, dataKey) {
+            const filterElement = document.getElementById(filterId);
+            const currentValue = filterElement.value;
+            const options = [...new Set(filteredData.map(item => item[dataKey]))];
+
+            filterElement.innerHTML = `<option value="">Tất cả</option>`;
+            options.forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                optionElement.textContent = option;
+                if (option === currentValue) {
+                    optionElement.selected = true;
+                }
+                filterElement.appendChild(optionElement);
+            });
+        }
+
+        function updateDateRangeFilter() {
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
+            const currentValue = dateRangeFilter.value;
+            const dates = filteredData.map(item => new Date(item['Ngày nhận']));
+            const minDate = new Date(Math.min.apply(null, dates));
+            const maxDate = new Date(Math.max.apply(null, dates));
+
+            dateRangeFilter.innerHTML = `<option value="">Tất cả</option>`;
+
+            let currentDate = new Date(minDate);
+            while (currentDate <= maxDate) {
+                const monthYear = `${currentDate.getMonth() + 1}/${currentDate.getFullYear()}`;
+                const optionElement = document.createElement('option');
+                optionElement.value = monthYear;
+                optionElement.textContent = monthYear;
+                if (monthYear === currentValue) {
+                    optionElement.selected = true;
+                }
+                dateRangeFilter.appendChild(optionElement);
+                currentDate.setMonth(currentDate.getMonth() + 1);
+            }
+
+            const years = new Set(dates.map(date => date.getFullYear()));
+            years.forEach(year => {
+                const optionElement = document.createElement('option');
+                optionElement.value = year.toString();
+                optionElement.textContent = year.toString();
+                if (year.toString() === currentValue) {
+                    optionElement.selected = true;
+                }
+                dateRangeFilter.appendChild(optionElement);
+            });
+        }
+
+        async function init() {
+            try {
+                allData = await fetchDataFromAppSheet();
+                populateFilters(allData);
+                updateDashboard(allData);
+            } catch (error) {
+                console.error("Lỗi khởi tạo ứng dụng:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
