@@ -344,7 +344,7 @@
                     }).showToast();
                     return;
                 }
-
+              
                 // Thu thập dữ liệu form
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData.entries());
@@ -376,10 +376,12 @@
                 };
 
                 console.log(thuChiData);
+                disableForm();
+                showLoadingOverlay();
                 const duAnResponse = await apiRequest('Chi phí', 'Add', {
                     Rows: [thuChiData]
                 });
-
+             
 
 
 
@@ -392,12 +394,80 @@
                     position: "right",
                     backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
                 }).showToast();
+                // Reset form (giữ lại trường nhân viên)
+                const nhanVienValue = this.elements['nhan_vien'].value;
+                this.reset();
+                this.elements['nhan_vien'].value = nhanVienValue;
+                // Reset các trường khác
+                document.getElementById('image_preview').innerHTML = '';
+                document.getElementById('so_tien_chu').value = '';
 
-                // Reset form (tùy chọn)
-                // this.reset();
+              
+                enableForm();
+                hideLoadingOverlay();
             });
         });
+        // Hàm để disable form
+        function disableForm() {
+            const form = document.getElementById('expenseForm');
+            const elements = form.elements;
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].disabled = true;
+            }
+        }
 
+        // Hàm để enable form
+        function enableForm() {
+            const form = document.getElementById('expenseForm');
+            const elements = form.elements;
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].disabled = false;
+            }
+        }
+
+        // Hàm để hiển thị loading overlay
+        function showLoadingOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '9999';
+
+            const spinner = document.createElement('div');
+            spinner.style.border = '4px solid #f3f3f3';
+            spinner.style.borderTop = '4px solid #3498db';
+            spinner.style.borderRadius = '50%';
+            spinner.style.width = '50px';
+            spinner.style.height = '50px';
+            spinner.style.animation = 'spin 1s linear infinite';
+
+            const keyframes = document.createElement('style');
+            keyframes.textContent = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+
+            document.head.appendChild(keyframes);
+            overlay.appendChild(spinner);
+            document.body.appendChild(overlay);
+        }
+
+        // Hàm để ẩn loading overlay
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
         // Hàm chuyển đổi số thành chữ
         function numberToWords(number) {
             const units = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
