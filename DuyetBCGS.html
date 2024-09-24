@@ -10,7 +10,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.3/highcharts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
- 
+
     <link rel="stylesheet" type="text/css"
         href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
     <script type="text/javascript"
@@ -112,7 +112,7 @@
         const appId = '0ffda765-62b7-4260-b7ed-5bcbb530b113';
         const accessKey = 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF';
         const region = 'www';
-        let dataAll =[]
+        let dataAll = []
 
 
         function formatCurrency(amount) {
@@ -167,14 +167,20 @@
             const urlParams = new URLSearchParams(window.location.search);
             const manv = urlParams.get('manv');
             const makh = urlParams.get('makh');
+            const key = urlParams.get('key');
+            if (!key  ) {
+                FuiToast.info('Tài khoản của bạn không có quyền để truy cập.')
+                return;
+            }
 
-            if (!manv || !makh) {
-                console.error("Missing required URL parameters");
+            if (!manv || !makh ) {
+                FuiToast.info("Thông tin không đủ.")
                 return;
             }
 
             const fetchPromise = async () => {
-                try {2
+                try {
+                    2
                     const response = await apiRequest('BCGS', 'Find', {}, {
                         Properties: { Selector: `Filter(BCGS, [Mã kế hoạch] = "${makh}")` }
                     });
@@ -184,7 +190,7 @@
                     }
 
                     console.log("Data fetched from AppSheet:", response);
-                  
+
                     return response;
                 } catch (error) {
                     console.error("Lỗi khi lấy dữ liệu từ AppSheet:", error);
@@ -282,7 +288,7 @@
         async function init() {
             try {
                 await fetchDataFromAppSheet();
-              
+
             } catch (error) {
                 console.error("Lỗi khởi tạo ứng dụng:", error);
                 alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
