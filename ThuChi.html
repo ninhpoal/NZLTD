@@ -22,8 +22,10 @@
             max-width: 600px;
             z-index: 1000;
         }
+
         .form-container {
-            padding-bottom: 80px; /* Add space for the fixed button */
+            padding-bottom: 80px;
+            /* Add space for the fixed button */
         }
     </style>
 </head>
@@ -47,19 +49,58 @@
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                     required>
                     <option value="">Chọn loại chi phí</option>
-                    <option value="An uong">Ăn uống</option>
-                    <option value="Di chuyen">Di chuyển</option>
-                    <option value="Cho o">Chỗ ở</option>
-                    <option value="Van phong pham">Văn phòng phẩm</option>
-                    <option value="Thiet bi">Thiết bị</option>
-                    <option value="Quang cao">Quảng cáo</option>
-                    <option value="Dao tao">Đào tạo</option>
-                    <option value="Bao hiem">Bảo hiểm</option>
-                    <option value="Thue">Thuế</option>
-                    <option value="Tien ich">Tiện ích</option>
-                    <option value="Bao tri">Bảo trì</option>
-                    <option value="Phi ngan hang">Phí ngân hàng</option>
-                    <option value="Khac">Khác</option>
+                    <option value="Chi phí phát sinh">Chi phí phát sinh</option>
+                    <option value="Điện lực">Điện lực</option>
+                    <option value="Nước Uống, cafe">Nước Uống, cafe</option>
+                    <option value="Mua ty kẹp">Mua ty kẹp</option>
+                    <option value="Chuyển hồ sơ">Chuyển hồ sơ</option>
+                    <option value="Điện, Dịch Vụ Tòa Nhà">Điện, Dịch Vụ Tòa Nhà</option>
+                    <option value="Đường Điện Thoại">Đường Điện Thoại</option>
+                    <option value="In Ấn Công Chứng">In Ấn Công Chứng</option>
+                    <option value="Internet">Internet</option>
+                    <option value="Thi Công Vp">Thi Công Vp</option>
+                    <option value="Thuê Văn Phòng">Thuê Văn Phòng</option>
+                    <option value="Văn Phòng Phẩm">Văn Phòng Phẩm</option>
+                    <option value="Giải chi Chi phí">Giải chi Chi phí</option>
+                    <option value="Giải chi Ứng Lương">Giải chi Ứng Lương</option>
+                    <option value="Thuê xe">Thuê xe</option>
+                    <option value="Mua vật tư">Mua vật tư</option>
+                    <option value="Công Tác Phí">Công Tác Phí</option>
+                    <option value="Khách Sạn">Khách Sạn</option>
+                    <option value="Vé Máy Bay">Vé Máy Bay</option>
+                    <option value="Visa">Visa</option>
+                    <option value="Phí Khác">Phí Khác</option>
+                    <option value="Chi Phí Đi Lại">Chi Phí Đi Lại</option>
+                    <option value="Dịch Vụ Khác">Dịch Vụ Khác</option>
+                    <option value="Phí Nộp, Chuyển Tiền">Phí Nộp, Chuyển Tiền</option>
+                    <option value="Phí Cloud, Server, License">Phí Cloud, Server, License</option>
+                    <option value="Sửa Chữa, Bảo Hành">Sửa Chữa, Bảo Hành</option>
+                    <option value="Du Lịch">Du Lịch</option>
+                    <option value="Sinh Nhật Công Ty">Sinh Nhật Công Ty</option>
+                    <option value="Hoạt Động Khác">Hoạt Động Khác</option>
+                    <option value="Tất niên">Tất niên</option>
+                    <option value="Lương">Lương</option>
+                    <option value="Bảo Hiểm">Bảo Hiểm</option>
+                    <option value="Hỗ Trợ Đào Tạo">Hỗ Trợ Đào Tạo</option>
+                    <option value="Khám Sức Khỏe">Khám Sức Khỏe</option>
+                    <option value="Sinh Nhật">Sinh Nhật</option>
+                    <option value="Thưởng Khác">Thưởng Khác</option>
+                    <option value="Phân Bổ CCDC">Phân Bổ CCDC</option>
+                    <option value="Trang Thiết Bị VP">Trang Thiết Bị VP</option>
+                    <option value="Thiết Bị Khác">Thiết Bị Khác</option>
+                    <option value="Đăng Tuyển">Đăng Tuyển</option>
+                    <option value="Giới Thiệu Nhân Sự">Giới Thiệu Nhân Sự</option>
+                    <option value="Chi phí khác">Chi phí khác</option>
+                    <option value="Chi phí sinh hoạt">Chi phí sinh hoạt</option>
+                    <option value="Thuê xe vận chuyển giao máy hàn Hiển Sửa">Thuê xe vận chuyển giao máy hàn Hiển Sửa
+                    </option>
+                    <option value="Mua hàng">Mua hàng</option>
+                    <option value="Vận chuyển">Vận chuyển</option>
+                    <option value="Ăn Uống">Ăn Uống</option>
+                    <option value="Xăng, Dầu">Xăng, Dầu</option>
+                    <option value="Tiếp khách">Tiếp khách</option>
+                    <option value="Thi Công">Thi Công</option>
+                    <option value="Hỗ Trợ chi phí thi công">Hỗ Trợ chi phí thi công</option>
                 </select>
             </div>
 
@@ -80,7 +121,9 @@
             <div>
                 <label for="so_tien" class="block text-sm font-medium text-gray-700">Số tiền</label>
                 <div class="relative mt-1 rounded-md shadow-sm">
-                    <input type="text" id="so_tien" name="so_tien" class="block w-full rounded-md border-gray-300 pl-3 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="0" required>
+                    <input type="text" id="so_tien" name="so_tien"
+                        class="block w-full rounded-md border-gray-300 pl-3 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="0" required>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                         <span class="text-gray-500 sm:text-sm">VND</span>
                     </div>
@@ -89,13 +132,15 @@
 
             <div>
                 <label for="so_tien_chu" class="block text-sm font-medium text-gray-700">Số tiền bằng chữ</label>
-                <input type="text" id="so_tien_chu" name="so_tien_chu" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" readonly>
+                <input type="text" id="so_tien_chu" name="so_tien_chu"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    readonly>
             </div>
             <div>
-                <label for="hinh_anh" class="block text-sm font-medium text-gray-700">Hình ảnh (tối đa 2 ảnh)</label>
-                <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*" multiple
+                <label for="hinh_anh" class="block text-sm font-medium text-gray-700">Hình ảnh</label>
+                <input type="file" id="hinh_anh" name="hinh_anh" accept="image/*"
                     class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                <div id="image_preview" class="mt-2 flex space-x-2"></div>
+                <div id="image_preview" class="mt-2"></div>
             </div>
 
             <div>
@@ -130,8 +175,48 @@
             </div>
         </form>
     </div>
-
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+        // Constants for AppSheet API
+        const appId = '3429512c-79d0-44f0-8197-e6a77f2bb498';
+        const accessKey = 'V2-CmjiU-ViCzw-1xjZc-QAlWm-zNnZ4-eTiEz-lODjW-fqJmt';
+        const region = 'www';
+        function apiRequest(tableName, action, data) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            return $.ajax({
+                url: apiUrl,
+                method: 'POST',
+                headers: {
+                    'ApplicationAccessKey': accessKey,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    Action: action,
+                    Properties: {
+                        Locale: 'vi-VN',
+                        Timezone: 'Asia/Ho_Chi_Minh'
+                    },
+                    ...data
+                })
+            }).then(response => {
+                return response;
+            }).catch(error => {
+
+                throw error;
+            });
+        }
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+
+            });
+        }
+
+
         document.addEventListener('DOMContentLoaded', function () {
             // Tạo ID_CHI (ẩn)
             const idChiInput = document.getElementById('id_chi');
@@ -183,21 +268,21 @@
                     noChoices: 'has-no-choices'
                 },
             });
-            
-             // Xử lý số tiền và chuyển đổi sang chữ
-             const soTienInput = document.getElementById('so_tien');
+
+            // Xử lý số tiền và chuyển đổi sang chữ
+            const soTienInput = document.getElementById('so_tien');
             const soTienChuInput = document.getElementById('so_tien_chu');
 
-            soTienInput.addEventListener('input', function(e) {
+            soTienInput.addEventListener('input', function (e) {
                 // Lấy giá trị hiện tại của input
                 let value = e.target.value;
-                
+
                 // Loại bỏ tất cả các ký tự không phải số
                 value = value.replace(/[^\d]/g, '');
-                
+
                 // Chuyển đổi sang số
                 let numericValue = parseInt(value, 10);
-                
+
                 if (isNaN(numericValue)) {
                     // Nếu không phải số hợp lệ, đặt giá trị trống
                     e.target.value = '';
@@ -205,24 +290,22 @@
                 } else {
                     // Định dạng số với dấu phẩy ngăn cách hàng nghìn
                     let formattedValue = numericValue.toLocaleString('en-US');
-                    
+
                     // Cập nhật giá trị của input
                     e.target.value = formattedValue;
-                    
+
                     // Cập nhật số tiền bằng chữ
                     soTienChuInput.value = numberToWords(numericValue) + ' đồng';
                 }
             });
-
 
             // Xử lý preview hình ảnh
             const hinhAnhInput = document.getElementById('hinh_anh');
             const imagePreview = document.getElementById('image_preview');
             hinhAnhInput.addEventListener('change', function (e) {
                 imagePreview.innerHTML = '';
-                const files = e.target.files;
-                for (let i = 0; i < Math.min(files.length, 2); i++) {
-                    const file = files[i];
+                const file = e.target.files[0];
+                if (file) {
                     const reader = new FileReader();
                     reader.onload = function (e) {
                         const img = document.createElement('img');
@@ -235,7 +318,7 @@
             });
 
             // Cập nhật xử lý gửi form
-            document.getElementById('expenseForm').addEventListener('submit', function (e) {
+            document.getElementById('expenseForm').addEventListener('submit', async function (e) {
                 e.preventDefault();
 
                 // Kiểm tra các trường bắt buộc
@@ -269,8 +352,36 @@
                 // Xử lý số tiền (loại bỏ dấu phẩy)
                 data.so_tien = data.so_tien.replace(/,/g, '');
 
+
+                const fileInput = document.getElementById('hinh_anh');
+                let filebase = "";
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    filebase = await readFile(file);
+                }
                 // Log dữ liệu ra console
                 console.log('Form Data:', data);
+                const thuChiData = {
+                    "Ngày chi": data.ngay_chi,
+                    "Loại Chi phí": data.loai_chi_phi,
+                    "Nội dung": data.noi_dung,
+                    "Nhân viên": data.nhan_vien,
+                    "Số tiền": data.so_tien,
+                    "Hình ảnh 1": filebase,
+                    "Ghi chú": data.ghi_chu,
+                    "Lịch sử": data.nhan_vien + ' đã tạo phiếu vào ngày ' + data.ngay_chi + "(Phiếu được tạo bằng api)",
+                    "Đối tượng": data.doi_tuong,
+                    "Khách hàng": data.khach_hang
+
+                };
+
+                console.log(thuChiData);
+                const duAnResponse = await apiRequest('Chi phí', 'Add', {
+                    Rows: [thuChiData]
+                });
+
+
+
 
                 // Hiển thị thông báo thành công
                 Toastify({
@@ -287,8 +398,8 @@
             });
         });
 
-          // Hàm chuyển đổi số thành chữ
-          function numberToWords(number) {
+        // Hàm chuyển đổi số thành chữ
+        function numberToWords(number) {
             const units = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
             const teens = ['mười', 'mười một', 'mười hai', 'mười ba', 'mười bốn', 'mười lăm', 'mười sáu', 'mười bảy', 'mười tám', 'mười chín'];
             const tens = ['', '', 'hai mươi', 'ba mươi', 'bốn mươi', 'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi'];
