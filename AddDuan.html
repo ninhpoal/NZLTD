@@ -33,6 +33,10 @@
             class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
             Đẩy dữ liệu lên appsheet
         </button>
+        <button type="button" id="addBCGSButton" onclick="addBCGSData()"
+    class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+    Thêm dữ liệu BCGS
+</button>
         <div id="keHoachForm" class="    mx-auto p-6 bg-white shadow-md rounded-lg">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">Kế Hoạch Form</h1>
             <div class="space-y-6">
@@ -265,10 +269,10 @@
                         "Giám sát": document.getElementById('giamSat').value || '',
                         "Tổng bộ chia": (document.getElementById('tongBoChua').value) || '',
                         "Tổng số Tủ/ODF/tập điểm": (document.getElementById('tongTuODFTapDiem').value) || '',
-                        "Dự toán Core": (document.getElementById('duToanCore').value) || '',
-                        "Trạng thái dự án": "1/ Nhận Kế Hoạch"
+                        "Dự toán Core": (document.getElementById('duToanCore').value) || ''
                     };
 
+                    console.log(duAnData)
 
                     const duAnResponse = await apiRequest('DUAN', 'Add', {
                         Rows: [duAnData]
@@ -289,6 +293,7 @@
                             "Tuyến cáp": row.querySelector('[data-field="tuyenCap"]').value,
                             "Điểm đầu": row.querySelector('[data-field="diemDau"]').value,
                             "Điểm cuối": row.querySelector('[data-field="diemCuoi"]').value,
+
                             "Loại cáp": row.querySelector('[data-field="loaiCap"]').value,
                             "Dự toán": row.querySelector('[data-field="duToan"]').value
                         };
@@ -307,7 +312,7 @@
                     const file = document.getElementById('excelFile').files[0];
                     filebase = await readFile(file);
                     const fileData = {
-                        "Tên File": "File dự toán" +" "+ duAnData["Mã kế hoạch"] +" - "+ duAnData["POP"],
+                        "Tên File": "File dự toán" + duAnData["Mã kế hoạch"] + duAnData["POP"],
                         "Key": duAnData["Mã kế hoạch"],
                         "File": filebase
                     };
@@ -333,7 +338,65 @@
                 }
             );
         }
+        function addBCGSData() {
+            return FuiToast.promise(
+                (async () => {
+                    const bcsgData = [];
+                    const maKeHoach = document.getElementById('maKeHoach').value;
+                    const pop = document.getElementById('pop').value;
+                    const khuVuc = document.getElementById('khuVuc').value;
 
+                    if (!maKeHoach || !pop || !khuVuc) {
+                        throw new Error('Vui lòng điền đầy đủ thông tin Mã kế hoạch, POP và Khu vực.');
+                    }
+
+                    document.querySelectorAll('#bcsgTableBody tr').forEach(row => {
+                        const rowData = {
+                            "Mã kế hoạch": maKeHoach,
+                            "POP": pop,
+                            "Khu vực": khuVuc,
+                            "Tuyến cáp": row.querySelector('[data-field="tuyenCap"]').value,
+                            "Điểm đầu": row.querySelector('[data-field="diemDau"]').value,
+                            "Điểm cuối": row.querySelector('[data-field="diemCuoi"]').value,
+                            "Loại cáp": row.querySelector('[data-field="loaiCap"]').value,
+                            "Dự toán": row.querySelector('[data-field="duToan"]').value
+                        };
+
+                        if (!rowData["Tuyến cáp"] || !rowData["Điểm đầu"] || !rowData["Điểm cuối"] || !rowData["Loại cáp"] || !rowData["Dự toán"]) {
+                            throw new Error('Vui lòng điền đủ thông tin các dòng bạn đã thêm vào báo cáo giám sát');
+                        }
+
+                        bcsgData.push(rowData);
+                    });
+
+                    if (bcsgData.length === 0) {
+                        throw new Error('Không có dữ liệu BCGS để thêm.');
+                    }
+
+                    const response = await apiRequest('BCGS', 'Add', { Rows: bcsgData });
+
+                    if (!response || response.Failed) {
+                        throw new Error(`Lỗi khi thêm dữ liệu vào BCGS: ${response.FailureMessage || 'Không xác định'}`);
+                    }
+
+                    return 'Dữ liệu BCGS đã được gửi thành công!';
+                })(),
+                {
+                    loading: 'Đang gửi dữ liệu BCGS...',
+                    success: (data) => {
+                        console.log(data);
+                        return data;
+                    },
+                    error: (error) => {
+                        console.error('Lỗi khi gửi dữ liệu BCGS:', error);
+                        return `Lỗi: ${error.message || 'Không xác định'}`;
+                    },
+                },
+                {
+                    isClose: true
+                }
+            );
+        }
         // Hàm hỗ trợ để chuyển đổi chuỗi thành số nguyên hoặc trả về 0 nếu không hợp lệ
         function parseIntOrZero(value) {
             const parsedValue = parseInt(value, 10);
