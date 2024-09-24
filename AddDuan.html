@@ -307,7 +307,7 @@
                     const file = document.getElementById('excelFile').files[0];
                     filebase = await readFile(file);
                     const fileData = {
-                        "Tên File": "File dự toán" + duAnData["Mã kế hoạch"] + duAnData["POP"],
+                        "Tên File": "File dự toán" +" "+ duAnData["Mã kế hoạch"] +" - "+ duAnData["POP"],
                         "Key": duAnData["Mã kế hoạch"],
                         "File": filebase
                     };
