@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZ ERP DUYỆT BCGS</title>
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.3/highcharts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+ 
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/css/toast@1.0.1/fuiToast.min.css">
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/gh/lelinh014756/fui-toast-js@master/assets/js/toast@1.0.1/fuiToast.min.js"></script>
+
+</head>
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#3B82F6',
+                    secondary: '#10B981',
+                    accent: '#8B5CF6',
+                    warning: '#FBBF24',
+                    danger: '#EF4444',
+                }
+            }
+        }
+    }
+</script>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div id="fui-toast"></div>
+    <div class="fixed top-0 left-0 right-0 z-10">
+        <nav class="bg-white dark:bg-gray-800 shadow-md">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="Logo N có bóng/Logo N.png" alt="NZ LTĐ" class="h-8 mr-4">
+                    <h1 class="text-2xl font-bold text-primary dark:text-white">NZ ERP PRO</h1>
+                </div>
+
+                <button type="button"
+                    class="text-blue-700 hover:text-white border border-blue-600 bg-white hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-full text-base font-medium px-5 py-2.5 text-center me-3 mb-3 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:bg-gray-900 dark:focus:ring-blue-800">Xuất
+                    File BCGS</button>
+                <button type="button"
+                    class="text-gray-900 border border-white hover:border-gray-200 dark:border-gray-900 dark:bg-gray-900 dark:hover:border-gray-700 bg-white focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-full text-base font-medium px-5 py-2.5 text-center me-3 mb-3 dark:text-white dark:focus:ring-gray-800">Đồng
+                    bộ dữ liệu</button>
+                <button type="button"
+                    class="text-gray-900 border border-white hover:border-gray-200 dark:border-gray-900 dark:bg-gray-900 dark:hover:border-gray-700 bg-white focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-full text-base font-medium px-5 py-2.5 text-center me-3 mb-3 dark:text-white dark:focus:ring-gray-800">Loại
+                    bỏ các thay đổi</button>
+                <button type="button" onclick="fetchDataFromAppSheet()"
+                    class="text-gray-900 border border-white hover:border-gray-200 dark:border-gray-900 dark:bg-gray-900 dark:hover:border-gray-700 bg-white focus:ring-4 focus:outline-none focus:ring-gray-300 rounded-full text-base font-medium px-5 py-2.5 text-center me-3 mb-3 dark:text-white dark:focus:ring-gray-800">Lấy
+                    dữ liệu mới nhất</button>
+                <button id="darkModeToggle"
+                    class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-300">
+                    <i class="fas fa-moon text-gray-800 dark:text-white"></i>
+                </button>
+            </div>
+        </nav>
+
+    </div>
+    <br>
+    <br>
+    <br>
+
+
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+        <table id="productTable" class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th scope="col" class="p-4">
+                        <div class="flex items-center">
+                            <input id="checkbox-all-search" type="checkbox"
+                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <label for="checkbox-all-search" class="sr-only">checkbox</label>
+                        </div>
+                    </th>
+                    <th scope="col" class="px-6 py-3">Tuyến cáp</th>
+                    <th scope="col" class="px-6 py-3">Tên tuyến</th>
+                    <th scope="col" class="px-6 py-3">Loại cáp</th>
+                    <th scope="col" class="px-6 py-3">Dự toán</th>
+                    <th scope="col" class="px-6 py-3">Địa chỉ điểm đầu</th>
+                    <th scope="col" class="px-6 py-3">Địa chỉ điểm cuối</th>
+                    <th scope="col" class="px-6 py-3">Số mét TC</th>
+                    <th scope="col" class="px-6 py-3">TDN SỐ ĐẦU</th>
+                    <th scope="col" class="px-6 py-3">TDN SỐ CUỐI</th>
+                    <th scope="col" class="px-6 py-3">SDN SỐ ĐẦU</th>
+                    <th scope="col" class="px-6 py-3">SDN SỐ CUỐI</th>
+                    <th scope="col" class="px-6 py-3">Mã cáp</th>
+                    <th scope="col" class="px-6 py-3">Đội kéo</th>
+                    <th scope="col" class="px-6 py-3">Đội hàn</th>
+                    <th scope="col" class="px-6 py-3">Trạng thái</th>
+                    <th scope="col" class="px-6 py-3">Số tiền</th>
+                    <th scope="col" class="px-6 py-3">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Table rows will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+
+
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const htmlElement = document.documentElement;
+        const appId = '0ffda765-62b7-4260-b7ed-5bcbb530b113';
+        const accessKey = 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF';
+        const region = 'www';
+        let dataAll =[]
+
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function toggleDarkMode() {
+            htmlElement.classList.toggle('dark');
+            updateDashboard(filteredData.length > 0 ? filteredData : allData);
+            const isDarkMode = htmlElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateDarkModeIcon();
+        }
+
+        function updateDarkModeIcon() {
+            const isDarkMode = htmlElement.classList.contains('dark');
+            darkModeToggle.innerHTML = isDarkMode
+                ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
+        }
+
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+
+        async function apiRequest(tableName, action, data, properties) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...properties,
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+                return responseData;
+            } catch (error) {
+                console.error("Lỗi API:", error);
+                throw error;
+            }
+        }
+        async function fetchDataFromAppSheet() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const manv = urlParams.get('manv');
+            const makh = urlParams.get('makh');
+
+            if (!manv || !makh) {
+                console.error("Missing required URL parameters");
+                return;
+            }
+
+            const fetchPromise = async () => {
+                try {2
+                    const response = await apiRequest('BCGS', 'Find', {}, {
+                        Properties: { Selector: `Filter(BCGS, [Mã kế hoạch] = "${makh}")` }
+                    });
+
+                    if (!Array.isArray(response) || response.length === 0) {
+                        throw new Error("Dữ liệu không hợp lệ");
+                    }
+
+                    console.log("Data fetched from AppSheet:", response);
+                  
+                    return response;
+                } catch (error) {
+                    console.error("Lỗi khi lấy dữ liệu từ AppSheet:", error);
+                    throw error;
+                }
+            };
+
+            FuiToast.promise(
+                fetchPromise(),
+                {
+                    loading: 'Đang tải dữ liệu...',
+                    success: (data) => {
+                        console.log("Dữ liệu đã được tải thành công:", data);
+                        dataAll = data
+                        updateTable(dataAll);
+                        return 'Dữ liệu đã được tải thành công!';
+                    },
+                    error: 'Có lỗi xảy ra khi tải dữ liệu!',
+                },
+                {
+                    isClose: true
+                }
+            );
+        }
+
+        function updateTable(data) {
+            const tableBody = document.querySelector('#productTable tbody');
+            tableBody.innerHTML = '';
+
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700  ';
+
+                row.innerHTML = `
+                    <td class="w-4 p-4">
+                        <div class="flex items-center">
+                            <input id="checkbox-table-search-${index}" type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                            <label for="checkbox-table-search-${index}" class="sr-only">checkbox</label>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">${item['Tuyến cáp']}</td>
+                    <td class="px-6 py-4">${item['Điểm đầu']} => ${item['Điểm cuối']}</td>
+       
+                    <td class="px-6 py-4">${item['Loại cáp']}</td>
+                        <td class="px-6 py-4">${item['Dự toán']}</td>
+                    <td class="px-6 py-4">${item['Đ/C Điểm đầu']}</td>
+                    <td class="px-6 py-4">${item['Đ/C Điểm cuối']}</td>
+                    <td class="px-6 py-4">${item['Số mét T/C']}</td>
+                    <td class="px-6 py-4">${item['TDN Số đầu']}</td>
+                    <td class="px-6 py-4">${item['TDN Số cuối']}</td>
+                    <td class="px-6 py-4">${item['SDN Số đầu']}</td>
+                    <td class="px-6 py-4">${item['SDN Số cuối']}</td>
+                    <td class="px-6 py-4">${item['Mã cáp']}</td>
+                    <td class="px-6 py-4">${item['Đội kéo']}</td>
+                    <td class="px-6 py-4">${item['Đội hàn']}</td>
+                    <td class="px-6 py-4">${item['Trạng thái']}</td>
+                    <td class="px-6 py-4">${item['Số tiền'] ? formatCurrency(item['Số tiền']) : ''}</td>
+                  <td class="px-6 py-4 flex items-center space-x-2">
+    <button type="button" class="text-blue-700 hover:text-white border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-sm text-sm p-2.5 text-center inline-flex items-center me-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:hover:bg-blue-500 dark:focus:ring-blue-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+        <span class="sr-only">Duyệt</span>
+    </button>
+    
+    <button type="button" class="text-red-700 hover:text-white border border-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-sm text-sm p-2.5 text-center inline-flex items-center me-2 dark:border-red-500 dark:text-red-500 dark:hover:text-white dark:hover:bg-red-600 dark:focus:ring-red-900">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+        <span class="sr-only">Không duyệt</span>
+    </button>
+
+    <button data-modal-target="authentication-modal" data-modal-toggle="authentication-modal" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-sm text-sm p-2.5 text-center inline-flex items-center me-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+        </svg>
+        <span class="sr-only">Chi tiết</span>
+    </button>
+</td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function duyetTuyen() {
+
+        }
+
+        function koduyetTuyen() {
+
+        }
+
+        async function init() {
+            try {
+                await fetchDataFromAppSheet();
+              
+            } catch (error) {
+                console.error("Lỗi khởi tạo ứng dụng:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
