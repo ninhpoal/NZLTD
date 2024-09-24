@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Ghi Chi Phí</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <!-- Thêm Toastify CSS và JS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        .fixed-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 40px);
+            max-width: 600px;
+            z-index: 1000;
+        }
+
+        .form-container {
+            padding-bottom: 80px;
+            /* Add space for the fixed button */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 p-6">
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl p-6">
+        <h2 class="text-2xl font-bold mb-4">Form ứng tiền</h2>
+        <form id="expenseForm" class="space-y-4">
+            <input type="hidden" id="id_chi" name="id_chi">
+
+            <div>
+                <label for="ngay_chi" class="block text-sm font-medium text-gray-700">Ngày ứng</label>
+                <input type="date" id="ngay_chi" name="ngay_chi"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    required>
+            </div>
+
+            <div>
+                <ul class="grid w-full gap-6 md:grid-cols-2">
+                    <li>
+                        <input type="radio" id="hosting-small" name="hosting" value="hosting-small" class="hidden peer"
+                            required  checked/>
+                        <label for="hosting-small"
+                            class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
+                            <div class="block">
+                                <div class="w-full text-lg font-semibold">Ứng chi Phí</div>
+                            </div>
+
+                        </label>
+                    </li>
+                    <li>
+                        <input type="radio" id="hosting-big" name="hosting" value="hosting-big" class="hidden peer">
+                        <label for="hosting-big"
+                            class="inline-flex items-center justify-between w-full p-5 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700">
+                            <div class="block">
+                                <div class="w-full text-lg font-semibold">Ứng lương</div>
+                            </div>
+
+                        </label>
+                    </li>
+                </ul>
+
+
+            </div>
+
+            <div>
+                <label for="noi_dung" class="block text-sm font-medium text-gray-700">Nội dung</label>
+                <input type="text" id="noi_dung" name="noi_dung"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    required>
+            </div>
+
+            <div>
+                <label for="nhan_vien" class="block text-sm font-medium text-gray-700">Nhân viên</label>
+                <input type="text" id="nhan_vien" name="nhan_vien"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    readonly>
+            </div>
+
+            <div>
+                <label for="so_tien" class="block text-sm font-medium text-gray-700">Số tiền</label>
+                <div class="relative mt-1 rounded-md shadow-sm">
+                    <input type="text" id="so_tien" name="so_tien"
+                        class="block w-full rounded-md border-gray-300 pl-3 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        placeholder="0" required>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <span class="text-gray-500 sm:text-sm">VND</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label for="so_tien_chu" class="block text-sm font-medium text-gray-700">Số tiền bằng chữ</label>
+                <input type="text" id="so_tien_chu" name="so_tien_chu"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                    readonly>
+            </div>
+
+
+
+            <div class="fixed-button">
+                <button type="submit" form="expenseForm"
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Gửi
+                </button>
+            </div>
+        </form>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        // Constants for AppSheet API
+        const appId = '3429512c-79d0-44f0-8197-e6a77f2bb498';
+        const accessKey = 'V2-CmjiU-ViCzw-1xjZc-QAlWm-zNnZ4-eTiEz-lODjW-fqJmt';
+        const region = 'www';
+
+        function apiRequest(tableName, action, data) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            return $.ajax({
+                url: apiUrl,
+                method: 'POST',
+                headers: {
+                    'ApplicationAccessKey': accessKey,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    Action: action,
+                    Properties: {
+                        Locale: 'vi-VN',
+                        Timezone: 'Asia/Ho_Chi_Minh'
+                    },
+                    ...data
+                })
+            }).then(response => {
+                return response;
+            }).catch(error => {
+                throw error;
+            });
+        }
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tạo ID_CHI (ẩn)
+            const idChiInput = document.getElementById('id_chi');
+            idChiInput.value = `EXP-${Date.now()}`;
+
+            // Đặt ngày hiện tại cho trường ngày chi
+            const ngayChiInput = document.getElementById('ngay_chi');
+            ngayChiInput.value = luxon.DateTime.now().toFormat('yyyy-MM-dd');
+
+            // Lấy tên nhân viên từ URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const manv = urlParams.get('manv');
+            if (manv) {
+                document.getElementById('nhan_vien').value = manv;
+            }
+
+            // Cập nhật xử lý gửi form
+            document.getElementById('expenseForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                // Kiểm tra các trường bắt buộc
+                const requiredFields = ['ngay_chi', 'noi_dung', 'so_tien', 'hosting'];
+                const missingFields = [];
+
+                requiredFields.forEach(field => {
+                    const input = this.elements[field];
+                    if (!input.value.trim()) {
+                        missingFields.push(input.previousElementSibling.textContent);
+                    }
+                });
+
+                if (missingFields.length > 0) {
+                    Toastify({
+                        text: `Vui lòng nhập đầy đủ thông tin: ${missingFields.join(', ')}`,
+                        duration: 4000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                    }).showToast();
+                    return;
+                }
+
+                // Thu thập dữ liệu form
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+
+                // Xử lý số tiền (loại bỏ dấu phẩy)
+                data.so_tien = data.so_tien.replace(/,/g, '');
+
+                // Xác định loại chi phí dựa trên radio button
+                const loaiChiPhi = data.hosting === 'hosting-small' ? 'Ứng chi phí' : 'Ứng lương';
+
+                // Log dữ liệu ra console
+                console.log('Form Data:', data);
+
+                const thuChiData = {
+                    "MA_UNG": data.id_chi,
+                    "Thời gian": data.ngay_chi,
+                    "Mục": loaiChiPhi,
+                    "Nội dung": data.noi_dung,
+                    "Nhân viên": data.nhan_vien,
+                    "Số tiền": data.so_tien,
+                    "Lịch sử": `${data.nhan_vien} đã tạo phiếu vào ngày ${data.ngay_chi} (Phiếu được tạo bằng api)`
+                };
+
+                console.log(thuChiData);
+                disableForm();
+                showLoadingOverlay();
+
+                try {
+                    const response = await apiRequest('Ứng', 'Add', {
+                        Rows: [thuChiData]
+                    });
+
+                    Toastify({
+                        text: "Form đã được gửi thành công!",
+                        duration: 3000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                    }).showToast();
+
+                    // Reset form (giữ lại trường nhân viên)
+                    const nhanVienValue = this.elements['nhan_vien'].value;
+                    this.reset();
+                    this.elements['nhan_vien'].value = nhanVienValue;
+                    this.elements['id_chi'].value = `EXP-${Date.now()}`;
+                    document.getElementById('so_tien_chu').value = '';
+
+                } catch (error) {
+                    console.error('Error submitting form:', error);
+                    Toastify({
+                        text: "Có lỗi xảy ra khi gửi form. Vui lòng thử lại.",
+                        duration: 4000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        backgroundColor: "linear-gradient(to right, #ff5f6d, #ffc371)",
+                    }).showToast();
+                } finally {
+                    enableForm();
+                    hideLoadingOverlay();
+                }
+            });
+
+            // Add event listener for so_tien input to update so_tien_chu
+            document.getElementById('so_tien').addEventListener('input', function (e) {
+                const soTien = parseInt(this.value.replace(/,/g, ''));
+                if (!isNaN(soTien)) {
+                    document.getElementById('so_tien_chu').value = numberToWords(soTien) + ' đồng';
+                } else {
+                    document.getElementById('so_tien_chu').value = '';
+                }
+            });
+        });
+
+        // Hàm để disable form
+        function disableForm() {
+            const form = document.getElementById('expenseForm');
+            const elements = form.elements;
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].disabled = true;
+            }
+        }
+
+        // Hàm để enable form
+        function enableForm() {
+            const form = document.getElementById('expenseForm');
+            const elements = form.elements;
+            for (let i = 0; i < elements.length; i++) {
+                elements[i].disabled = false;
+            }
+        }
+
+        // Hàm để hiển thị loading overlay
+        function showLoadingOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.style.position = 'fixed';
+            overlay.style.top = '0';
+            overlay.style.left = '0';
+            overlay.style.width = '100%';
+            overlay.style.height = '100%';
+            overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+            overlay.style.display = 'flex';
+            overlay.style.justifyContent = 'center';
+            overlay.style.alignItems = 'center';
+            overlay.style.zIndex = '9999';
+
+            const spinner = document.createElement('div');
+            spinner.style.border = '4px solid #f3f3f3';
+            spinner.style.borderTop = '4px solid #3498db';
+            spinner.style.borderRadius = '50%';
+            spinner.style.width = '50px';
+            spinner.style.height = '50px';
+            spinner.style.animation = 'spin 1s linear infinite';
+
+            const keyframes = document.createElement('style');
+            keyframes.textContent = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+
+            document.head.appendChild(keyframes);
+            overlay.appendChild(spinner);
+            document.body.appendChild(overlay);
+        }
+
+        // Hàm để ẩn loading overlay
+        function hideLoadingOverlay() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Hàm chuyển đổi số thành chữ
+        function numberToWords(number) {
+            const units = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+            const teens = ['mười', 'mười một', 'mười hai', 'mười ba', 'mười bốn', 'mười lăm', 'mười sáu', 'mười bảy', 'mười tám', 'mười chín'];
+            const tens = ['', '', 'hai mươi', 'ba mươi', 'bốn mươi', 'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi'];
+            const scales = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+
+            if (number === 0) return 'không';
+
+            const numString = number.toString();
+            const parts = [];
+
+            for (let i = numString.length; i > 0; i -= 3) {
+                parts.unshift(numString.slice(Math.max(0, i - 3), i));
+            }
+
+            function convertGroup(n) {
+                let result = '';
+                if (n[0] !== '0') {
+                    result += units[n[0]] + ' trăm ';
+                    if (n[1] === '0' && n[2] !== '0') result += 'lẻ ';
+                }
+                if (n[1] === '1') {
+                    result += teens[parseInt(n[2])];
+                } else {
+                    if (n[1] !== '0') result += tens[n[1]] + ' ';
+                    if (n[2] !== '0') result += units[n[2]];
+                }
+                return result.trim();
+            }
+
+            return parts.map((part, i) => {
+                if (parseInt(part) !== 0) {
+                    return convertGroup(part.padStart(3, '0')) + (scales[parts.length - 1 - i] ? ' ' + scales[parts.length - 1 - i] : '');
+                }
+                return '';
+            }).filter(Boolean).join(' ');
+        }
+    </script>
+</body>
+
+</html>
