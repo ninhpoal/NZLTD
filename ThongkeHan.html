@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê sản phẩm</title>
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.3/highcharts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        @media (max-width: 640px) {
+            .filter-dropdown {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 50;
+                display: none;
+            }
+
+            .filter-dropdown.active {
+                display: block;
+            }
+
+            .filter-content {
+                background-color: white;
+                padding: 1rem;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                border-top-left-radius: 1rem;
+                border-top-right-radius: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    primary: '#3B82F6',
+                    secondary: '#10B981',
+                    accent: '#8B5CF6',
+                    warning: '#FBBF24',
+                    danger: '#EF4444',
+                }
+            }
+        }
+    }
+</script>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div class="fixed top-0 left-0 right-0 z-10">
+        <nav class="bg-white dark:bg-gray-800 shadow-md">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="Logo N có bóng/Logo N.png" alt="NZ LTĐ" class="h-8 mr-4">
+                    <h1 class="text-xl font-bold text-primary dark:text-white">NZ ERP PRO</h1>
+                </div>
+                <div class="flex items-center">
+                    <button id="filterToggle"
+                        class="mr-2 p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-300 sm:hidden">
+                        <i class="fas fa-filter text-gray-800 dark:text-white"></i>
+                    </button>
+                    <button id="darkModeToggle"
+                        class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-300">
+                        <i class="fas fa-moon text-gray-800 dark:text-white"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <div class="filter-dropdown">
+        <div class="filter-content">
+            <h2 class="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Bộ lọc</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <select id="khuVucFilter"
+                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                    <option value="">Khu vực</option>
+                </select>
+                <input type="date" id="startDate"
+                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
+                    placeholder="Từ ngày">
+                <input type="date" id="endDate"
+                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
+                    placeholder="Đến ngày">
+                <select id="keHoanhFilter"
+                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                    <option value="">Chọn dự án</option>
+                </select>
+                <button id="applyFilters"
+                    class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Áp dụng
+                </button>
+                <button id="resetFilters"
+                    class="w-full bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                    Đặt lại
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 mt-16">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số sản phẩm</h3>
+                <p id="totalInvoices" class="text-xl font-bold text-primary">0</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng lương sản phẩm</h3>
+                <p id="totalRevenue" class="text-xl font-bold text-secondary">0 ₫</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số ngày công</h3>
+                <p id="averageDiscount" class="text-xl font-bold text-accent">0</p>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng phụ cấp</h3>
+                <p id="averageVAT" class="text-xl font-bold text-warning">0 ₫</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-4">
+        <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Bảng dữ liệu sản phẩm</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+                <thead class="bg-gray-200 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Thời gian</th>
+                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Khu vực</th>
+                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Mã kế hoạch</th>
+                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Loại sản phẩm</th>
+                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số lượng</th>
+                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số tiền</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                    <!-- Table rows will be populated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const htmlElement = document.documentElement;
+        const appId = '4631b2c5-e441-4160-9b16-d1ee76706f3b';
+        const accessKey = 'V2-F4iVe-G112C-5U3Is-MhvwZ-Z5RyS-0tNpz-Jjdcb-E0739';
+        const region = 'www';
+
+        let cong = [];
+        let sanpham = [];
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function toggleDarkMode() {
+            htmlElement.classList.toggle('dark');
+            const isDarkMode = htmlElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateDarkModeIcon();
+        }
+
+        function updateDarkModeIcon() {
+            const isDarkMode = htmlElement.classList.contains('dark');
+            darkModeToggle.innerHTML = isDarkMode
+                ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>'
+                : '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
+        }
+
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        const filterToggle = document.getElementById('filterToggle');
+        const filterDropdown = document.querySelector('.filter-dropdown');
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+
+        filterToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            filterDropdown.classList.toggle('active');
+        });
+
+        applyFiltersBtn.addEventListener('click', () => {
+            applyFilters();
+            filterDropdown.classList.remove('active');
+        });
+
+        // Close filter dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!filterDropdown.contains(event.target) && !filterToggle.contains(event.target)) {
+                filterDropdown.classList.remove('active');
+            }
+        });
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const responseData = await response.json();
+                console.log("API response:", responseData);
+                return responseData;
+            } catch (error) {
+                console.error("Lỗi API:", error);
+                throw error;
+            }
+        }
+
+        async function sanphamapi() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const manv = urlParams.get('manv');
+
+            try {
+                const response = await apiRequest('BCHN_DETAIL', 'Find', {}, {
+                    Properties: { Selector: `Filter(BCHN_DETAIL, [Nhân sự tham gia] = "${manv}")` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    console.error("Không nhận được dữ liệu hợp lệ từ API:", response);
+                    throw new Error("Dữ liệu không hợp lệ");
+                }
+                return response;
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu từ AppSheet:", error);
+                throw error;
+            }
+        }
+        async function congapi() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const manv = urlParams.get('manv');
+
+            try {
+                const response = await apiRequest('Chấm công', 'Find', {}, {
+                    Properties: { Selector: `Filter(Chấm công, [Mã nhân viên] = "${manv}")` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    console.error("Không nhận được dữ liệu hợp lệ từ API:", response);
+                    throw new Error("Dữ liệu không hợp lệ");
+                }
+                return response;
+            } catch (error) {
+                console.error("Lỗi khi lấy dữ liệu từ AppSheet:", error);
+                throw error;
+            }
+        }
+        function updateStats() {
+            const totalProducts = sanpham.reduce((sum, item) => sum + parseInt(item["Số lượng"]), 0);
+            const totalRevenue = sanpham.reduce((sum, item) => sum + parseInt(item["Số tiền"]), 0);
+            const totalWorkDays = cong.length;
+            const totalAllowance = cong.reduce((sum, item) => sum + parseInt(item["Phụ cấp"]), 0);
+
+            document.getElementById('totalInvoices').textContent = totalProducts;
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('averageDiscount').textContent = totalWorkDays;
+            document.getElementById('averageVAT').textContent = formatCurrency(totalAllowance);
+        }
+        function populateFilters() {
+            const khuVucFilter = document.getElementById('khuVucFilter');
+            const keHoanhFilter = document.getElementById('keHoanhFilter');
+
+            // Populate khu vực filter
+            const khuVucSet = new Set(sanpham.map(item => item["Khu vực"]));
+            khuVucSet.forEach(khuVuc => {
+                const option = document.createElement('option');
+                option.value = khuVuc;
+                option.textContent = khuVuc;
+                khuVucFilter.appendChild(option);
+            });
+
+            // Populate kế hoạch filter
+            const keHoanhSet = new Set(sanpham.map(item => item["Mã kế hoạch"]));
+            keHoanhSet.forEach(keHoanh => {
+                const option = document.createElement('option');
+                option.value = keHoanh;
+                option.textContent = keHoanh;
+                keHoanhFilter.appendChild(option);
+            });
+
+            const allDates = [...sanpham.map(item => new Date(item["Thời gian"])), ...cong.map(item => new Date(item["Ngày"]))];
+            const minDate = new Date(Math.min.apply(null, allDates));
+            const maxDate = new Date(Math.max.apply(null, allDates));
+
+            startDateInput.min = minDate.toISOString().split('T')[0];
+            startDateInput.max = maxDate.toISOString().split('T')[0];
+            endDateInput.min = minDate.toISOString().split('T')[0];
+            endDateInput.max = maxDate.toISOString().split('T')[0];
+        }
+        function applyFilters() {
+            const khuVuc = document.getElementById('khuVucFilter').value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            const keHoanh = document.getElementById('keHoanhFilter').value;
+
+            const filteredSanPham = sanpham.filter(item => {
+                const khuVucMatch = khuVuc === "" || item["Khu vực"] === khuVuc;
+                const keHoanhMatch = keHoanh === "" || item["Mã kế hoạch"] === keHoanh;
+                const dateMatch = isDateInRange(item["Thời gian"], startDate, endDate);
+                return khuVucMatch && keHoanhMatch && dateMatch;
+            });
+
+            const filteredCong = cong.filter(item => {
+                return isDateInRange(item["Ngày"], startDate, endDate);
+            });
+
+            updateFilteredStats(filteredSanPham, filteredCong);
+            updateDataTable(filteredSanPham);
+        }
+        function updateDataTable(data) {
+            const tableBody = document.getElementById('dataTableBody');
+            tableBody.innerHTML = '';
+
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-2 text-gray-800 dark:text-gray-200">${item["Thời gian"]}</td>
+                    <td class="px-4 py-2 text-gray-800 dark:text-gray-200">${item["Khu vực"]}</td>
+                    <td class="px-4 py-2 text-gray-800 dark:text-gray-200">${item["Mã kế hoạch"]}</td>
+                    <td class="px-4 py-2 text-gray-800 dark:text-gray-200">${item["Loại sản phẩm"]}</td>
+                    <td class="px-4 py-2 text-gray-800 dark:text-gray-200">${item["Số lượng"]}</td>
+                    <td class="px-4 py-2 text-gray-800 dark:text-gray-200">${formatCurrency(item["Số tiền"])}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        function isDateInRange(dateString, startDate, endDate) {
+            if (!startDate && !endDate) return true;
+            const date = new Date(dateString);
+            const start = startDate ? new Date(startDate) : new Date(0);
+            const end = endDate ? new Date(endDate) : new Date(8640000000000000);
+            return date >= start && date <= end;
+        }
+
+        function updateFilteredStats(filteredSanPham, filteredCong) {
+            const totalProducts = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số lượng"]), 0);
+            const totalRevenue = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số tiền"]), 0);
+            const totalWorkDays = filteredCong.length;
+            const totalAllowance = filteredCong.reduce((sum, item) => sum + parseInt(item["Phụ cấp"]), 0);
+
+            document.getElementById('totalInvoices').textContent = totalProducts;
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('averageDiscount').textContent = totalWorkDays;
+            document.getElementById('averageVAT').textContent = formatCurrency(totalAllowance);
+        }
+
+        function resetFilters() {
+            document.getElementById('khuVucFilter').value = "";
+            document.getElementById('startDate').value = "";
+            document.getElementById('endDate').value = "";
+            document.getElementById('keHoanhFilter').value = "";
+            updateStats();
+            updateDataTable(sanpham);
+        }
+
+        document.getElementById('khuVucFilter').addEventListener('change', applyFilters);
+        document.getElementById('keHoanhFilter').addEventListener('change', applyFilters);
+        document.getElementById('resetFilters').addEventListener('click', resetFilters);
+        async function init() {
+            try {
+                sanpham = await sanphamapi();
+                cong = await congapi();
+                updateStats();
+                populateFilters();
+            } catch (error) {
+                console.error("Lỗi khởi tạo ứng dụng:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
