@@ -38,6 +38,21 @@
                 border-top-right-radius: 1rem;
             }
         }
+
+        @media (min-width: 641px) {
+            .filter-dropdown {
+                position: static;
+                display: block;
+                background-color: transparent;
+            }
+
+            .filter-content {
+                background-color: transparent;
+                padding: 0;
+                position: static;
+                border-radius: 0;
+            }
+        }
     </style>
 </head>
 
@@ -80,75 +95,80 @@
         </nav>
     </div>
 
-    <div class="filter-dropdown">
-        <div class="filter-content">
-            <h2 class="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Bộ lọc</h2>
-            <div class="grid grid-cols-1 gap-4">
-                <select id="khuVucFilter"
-                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
-                    <option value="">Khu vực</option>
-                </select>
-                <input type="date" id="startDate"
-                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
-                    placeholder="Từ ngày">
-                <input type="date" id="endDate"
-                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
-                    placeholder="Đến ngày">
-                <select id="keHoanhFilter"
-                    class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
-                    <option value="">Chọn dự án</option>
-                </select>
-                <button id="applyFilters"
-                    class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    Áp dụng
-                </button>
-                <button id="resetFilters"
-                    class="w-full bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                    Đặt lại
-                </button>
-            </div>
-        </div>
-    </div>
-
     <div class="container mx-auto px-4 py-8 mt-16">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số sản phẩm</h3>
-                <p id="totalInvoices" class="text-xl font-bold text-primary">0</p>
+        <div class="flex flex-col md:flex-row gap-4">
+            <div class="md:w-1/4">
+                <div class="filter-dropdown bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                    <div class="filter-content">
+                        <h2 class="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Bộ lọc</h2>
+                        <div class="grid grid-cols-1 gap-4">
+                            <select id="khuVucFilter"
+                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                                <option value="">Khu vực</option>
+                            </select>
+                            <input type="date" id="startDate"
+                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
+                                placeholder="Từ ngày">
+                            <input type="date" id="endDate"
+                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
+                                placeholder="Đến ngày">
+                            <select id="keHoanhFilter"
+                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
+                                <option value="">Chọn dự án</option>
+                            </select>
+                            <button id="applyFilters"
+                                class="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                Áp dụng
+                            </button>
+                            <button id="resetFilters"
+                                class="w-full bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
+                                Đặt lại
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng lương sản phẩm</h3>
-                <p id="totalRevenue" class="text-xl font-bold text-secondary">0 ₫</p>
-            </div>
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số ngày công</h3>
-                <p id="averageDiscount" class="text-xl font-bold text-accent">0</p>
-            </div>
-            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng phụ cấp</h3>
-                <p id="averageVAT" class="text-xl font-bold text-warning">0 ₫</p>
-            </div>
-        </div>
-    </div>
+            <div class="md:w-3/4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số sản phẩm</h3>
+                        <p id="totalInvoices" class="text-xl font-bold text-primary">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng lương sản phẩm</h3>
+                        <p id="totalRevenue" class="text-xl font-bold text-secondary">0 ₫</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số ngày công</h3>
+                        <p id="averageDiscount" class="text-xl font-bold text-accent">0</p>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng phụ cấp</h3>
+                        <p id="averageVAT" class="text-xl font-bold text-warning">0 ₫</p>
+                    </div>
+                </div>
 
-    <div class="container mx-auto px-4 py-4">
-        <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Bảng dữ liệu sản phẩm</h2>
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
-                <thead class="bg-gray-200 dark:bg-gray-700">
-                    <tr>
-                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Thời gian</th>
-                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Khu vực</th>
-                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Mã kế hoạch</th>
-                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Loại sản phẩm</th>
-                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số lượng</th>
-                        <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số tiền</th>
-                    </tr>
-                </thead>
-                <tbody id="dataTableBody">
-                    <!-- Table rows will be populated dynamically -->
-                </tbody>
-            </table>
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Bảng dữ liệu sản phẩm</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-gray-200 dark:bg-gray-700">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Thời gian</th>
+                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Khu vực</th>
+                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Mã kế hoạch</th>
+                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Loại sản phẩm</th>
+                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số lượng</th>
+                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody">
+                                <!-- Table rows will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script>
