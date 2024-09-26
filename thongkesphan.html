@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" class="h-full">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thống kê sản phẩm</title>
+    <title>Thống kê sản phẩm - NZ ERP PRO</title>
     <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.3.3/highcharts.js"></script>
@@ -13,7 +13,44 @@
     <link href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <style>
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .filter-dropdown {
+            transition: all 0.3s ease-in-out;
+        }
+
         @media (max-width: 640px) {
             .filter-dropdown {
                 position: fixed;
@@ -39,536 +76,767 @@
                 right: 0;
                 border-top-left-radius: 1rem;
                 border-top-right-radius: 1rem;
-            }
-        }
-
-        @media (min-width: 641px) {
-            .filter-dropdown {
-                position: static;
-                display: block;
-                background-color: transparent;
-            }
-
-            .filter-content {
-                background-color: transparent;
-                padding: 0;
-                position: static;
-                border-radius: 0;
+                max-height: 80vh;
+                overflow-y: auto;
             }
         }
     </style>
-</head>
-
-<script>
-    tailwind.config = {
-        darkMode: 'class',
-        theme: {
-            extend: {
-                colors: {
-                    primary: '#3B82F6',
-                    secondary: '#10B981',
-                    accent: '#8B5CF6',
-                    warning: '#FBBF24',
-                    danger: '#EF4444',
+     <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        warning: '#EF4444',
+                    }
                 }
             }
         }
-    }
-</script>
+    </script>
+</head>
 
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
-    <div class="fixed top-0 left-0 right-0 z-10">
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300 h-full">
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+    </div>
+    <div class="flex flex-col h-full">
         <nav class="bg-white dark:bg-gray-800 shadow-md">
-            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-                <div class="flex items-center">
-                    <img src="Logo N có bóng/Logo N.png" alt="NZ LTĐ" class="h-8 mr-4">
-                    <h1 class="text-xl font-bold text-primary dark:text-white">NZ ERP PRO</h1>
-                </div>
-                <div class="flex items-center">
-                    <button id="filterToggle"
-                        class="mr-2 p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-300 sm:hidden">
-                        <i class="fas fa-filter text-gray-800 dark:text-white"></i>
-                    </button>
-                    <button id="darkModeToggle"
-                        class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 transition-colors duration-300">
-                        <i class="fas fa-moon text-gray-800 dark:text-white"></i>
-                    </button>
+            <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <img class="h-8 w-auto" src="Logo N có bóng/Logo N.png" alt="NZ LTĐ">
+                            <h1 class="ml-2 text-xl font-bold text-gray-800 dark:text-white">NZ ERP PRO</h1>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <button id="filterToggle" hidden
+                            class="mr-2 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:hidden">
+                            <span class="sr-only">Open filters</span>
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button id="exportExcel"
+                            class="mr-2 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600">
+                            <span class="sr-only">Export to Excel</span>
+                            <i class="fas fa-file-excel"></i>
+                        </button>
+                        <button id="darkModeToggle"
+                            class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                            <span class="sr-only">Toggle dark mode</span>
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
-    </div>
 
-    <div class="container mx-auto px-4 py-8 mt-16">
-        <div class="flex flex-col md:flex-row gap-4">
-            <div class="md:w-1/4">
-                <div class="filter-dropdown bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                    <div class="filter-content">
-                        <h2 class="text-xl font-semibold mb-2 text-gray-800 dark:text-white">Bộ lọc</h2>
-                        <div class="grid grid-cols-1 gap-4">
-                            <select id="khuVucFilter"
-                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
-                                <option value="">Khu vực</option>
-                            </select>
-                            <input type="date" id="startDate"
-                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
-                                placeholder="Từ ngày">
-                            <input type="date" id="endDate"
-                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300"
-                                placeholder="Đến ngày">
-                            <select id="keHoanhFilter"
-                                class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
-                                <option value="">Chọn dự án</option>
-                            </select>
-                            <select id="nhanvienFilter"
-                            class="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-primary transition-all duration-300">
-                            <option value="">Chọn nhân viên</option>
-                        </select>
-                            
-                            <button id="resetFilters"
-                                class="w-full bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400">
-                                Đặt lại
-                            </button>
-                            <button id="dong">Đóng</button>
+        <div class="flex-grow p-6">
+            <div class="max-w-10xl mx-auto">
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="md:w-1/6">
+                        <div class="filter-dropdown bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
+                            <div class="filter-content">
+                                <h2 class="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Bộ lọc</h2>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="khuVucFilter"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Khu
+                                            vực</label>
+                                        <select id="khuVucFilter"
+                                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                            <option value="">Tất cả</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="startDate"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Từ
+                                            ngày</label>
+                                        <input type="date" id="startDate"
+                                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                    </div>
+                                    <div>
+                                        <label for="endDate"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Đến
+                                            ngày</label>
+                                        <input type="date" id="endDate"
+                                            class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                    </div>
+                                    <div>
+                                        <label for="keHoanhFilter"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mã kế
+                                            hoạch</label>
+                                        <select id="keHoanhFilter"
+                                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                            <option value="">Tất cả</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="nhanvienFilter"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nhân
+                                            viên</label>
+                                        <select id="nhanvienFilter"
+                                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                            <option value="">Tất cả</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="trangThaiFilter"
+                                            class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trạng
+                                            thái</label>
+                                        <select id="trangThaiFilter"
+                                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                            <option value="">Tất cả</option>
+                                            <option value="Đã duyệt">Đã duyệt</option>
+                                            <option value="Chưa duyệt">Chưa duyệt</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button id="applyFilters"
+                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Áp dụng
+                                        </button>
+                                        <button id="resetFilters"
+                                            class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Đặt lại
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-5/6">
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                                            <i class="fas fa-box-open text-white"></i>
+                                        </div>
+                                        <div class="ml-5 w-0 flex-1">
+                                            <dl>
+                                                <dt
+                                                    class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                    Tổng số sản phẩm
+                                                </dt>
+                                                <dd>
+                                                    <div id="totalProducts"
+                                                        class="text-lg font-medium text-gray-900 dark:text-white">
+                                                        0
+                                                    </div>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                            <i class="fas fa-money-bill-wave text-white"></i>
+                                        </div>
+                                        <div class="ml-5 w-0 flex-1">
+                                            <dl>
+                                                <dt
+                                                    class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                    Tổng lương sản phẩm
+                                                </dt>
+                                                <dd>
+                                                    <div id="totalRevenue"
+                                                        class="text-lg font-medium text-gray-900 dark:text-white">
+                                                        0 ₫
+                                                    </div>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                            <i class="fas fa-calendar-day text-white"></i>
+                                        </div>
+                                        <div class="ml-5 w-0 flex-1">
+                                            <dl>
+                                                <dt
+                                                    class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                    Tổng số ngày công
+                                                </dt>
+                                                <dd>
+                                                    <div id="totalWorkDays"
+                                                        class="text-lg font-medium text-gray-900 dark:text-white">
+                                                        0
+                                                    </div>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                <div class="p-5">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                                            <i class="fas fa-hand-holding-usd text-white"></i>
+                                        </div>
+                                        <div class="ml-5 w-0 flex-1">
+                                            <dl>
+                                                <dt
+                                                    class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                    Tổng phụ cấp
+                                                </dt>
+                                                <dd>
+                                                    <div id="totalAllowance"
+                                                        class="text-lg font-medium text-gray-900 dark:text-white">
+                                                        0 ₫
+                                                    </div>
+                                                </dd>
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div class="p-5">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Biểu đồ thống kê
+                                    theo nhân viên</h3>
+                                <div class="mt-5">
+                                    <div id="staffChart" style="width:100%; height:400px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bảng tổng hợp
+                                    theo nhân sự</h3>
+                                <div class="mt-5 flow-root">
+                                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                            <table id="staffSummaryTable"
+                                                class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col"
+                                                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-0">
+                                                            Nhân viên</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Tổng số sản phẩm</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Tổng lương sản phẩm</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Số ngày công</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Tổng phụ cấp</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="staffSummaryTableBody"
+                                                    class="divide-y divide-gray-200 dark:divide-gray-700">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                            <div class="px-4 py-5 sm:p-6">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bảng dữ liệu sản
+                                    phẩm</h3>
+                                <div class="mt-5 flow-root">
+                                    <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                            <table id="dataTable"
+                                            class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                                <thead>
+                                                    <tr>
+                                                        <th scope="col"
+                                                            class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-0">
+                                                            Thời gian</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Khu vực</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Mã kế hoạch</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Loại sản phẩm</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Số lượng</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Số tiền</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Nhân viên</th>
+                                                        <th scope="col"
+                                                            class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                            Trạng thái</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="dataTableBody"
+                                                    class="divide-y divide-gray-200 dark:divide-gray-700">
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="md:w-3/4">
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số sản phẩm</h3>
-                        <p id="totalInvoices" class="text-xl font-bold text-primary">0</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng lương sản phẩm</h3>
-                        <p id="totalRevenue" class="text-xl font-bold text-secondary">0 ₫</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng số ngày công</h3>
-                        <p id="averageDiscount" class="text-xl font-bold text-accent">0</p>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                        <h3 class="text-sm font-semibold mb-1 text-gray-800 dark:text-white">Tổng phụ cấp</h3>
-                        <p id="averageVAT" class="text-xl font-bold text-warning">0 ₫</p>
-                    </div>
-                </div>
-                
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-8">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Biểu đồ thống kê theo nhân viên</h2>
-                    <div id="staffChart" style="width:100%; height:400px;"></div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Bảng tổng thống kê theo nhân sự</h2>
-                    <div class="overflow-x-auto">
-                        <table id="staffSummaryTable" class="min-w-full">
-                            <thead class="bg-gray-200 dark:bg-gray-700">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Nhân viên</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Tổng số sản phẩm</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Tổng lương sản phẩm</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số ngày công</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Tổng phụ cấp</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Table rows will be populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md mb-8">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Bảng dữ liệu sản phẩm</h2>
-                    <div class="overflow-x-auto">
-                        <table id="dataTable" class="min-w-full">
-                            <thead class="bg-gray-200 dark:bg-gray-700">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Thời gian</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Khu vực</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Mã kế hoạch</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Loại sản phẩm</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số lượng</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Số tiền</th>
-                                    <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-200">Nhân viên</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Table rows will be populated dynamically -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-             
-            </div>
         </div>
-    </div>
-    <script>
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const htmlElement = document.documentElement;
-        const appId = '4631b2c5-e441-4160-9b16-d1ee76706f3b';
-        const accessKey = 'V2-F4iVe-G112C-5U3Is-MhvwZ-Z5RyS-0tNpz-Jjdcb-E0739';
-        const region = 'www';
 
-        let cong = [];
-        let sanpham = [];
-        let dataTable;
-        let staffSummaryTable;
+        <script>
+            const appId = '4631b2c5-e441-4160-9b16-d1ee76706f3b';
+            const accessKey = 'V2-F4iVe-G112C-5U3Is-MhvwZ-Z5RyS-0tNpz-Jjdcb-E0739';
+            const region = 'www';
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-        }
+            let sanpham = [];
+            let cong = [];
+            let dataTable;
+            let staffSummaryTable;
+            let chart;
+            const formatCurrency = amount => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 
-        function toggleDarkMode() {
-            htmlElement.classList.toggle('dark');
-            const isDarkMode = htmlElement.classList.contains('dark');
-            localStorage.setItem('darkMode', isDarkMode);
-            updateDarkModeIcon();
-        }
-
-        function updateDarkModeIcon() {
-            const isDarkMode = htmlElement.classList.contains('dark');
-            darkModeToggle.innerHTML = isDarkMode
-                ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>'
-                : '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>';
-        }
-
-        darkModeToggle.addEventListener('click', toggleDarkMode);
-        const filterToggle = document.getElementById('filterToggle');
-        const filterDropdown = document.querySelector('.filter-dropdown');
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-        
-        document.getElementById('dong').addEventListener('click', () => {
-            applyFilters();
-            filterDropdown.classList.remove('active');
-        });
-
-        filterToggle.addEventListener('click', (event) => {
-            event.stopPropagation();
-            filterDropdown.classList.toggle('active');
-        });
-
-        // Close filter dropdown when clicking outside
-        document.addEventListener('click', (event) => {
-            if (!filterDropdown.contains(event.target) && !filterToggle.contains(event.target)) {
-                filterDropdown.classList.remove('active');
+            function showLoading() {
+                document.getElementById('loading').classList.remove('hidden');
             }
-        });
 
-        async function apiRequest(tableName, action, data, Properties) {
-            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'ApplicationAccessKey': accessKey,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        Action: action,
-                        ...Properties,
-                        ...data
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const responseData = await response.json();
-                console.log("API response:", responseData);
-                return responseData;
-            } catch (error) {
-                console.error("Lỗi API:", error);
-                throw error;
+            function hideLoading() {
+                document.getElementById('loading').classList.add('hidden');
             }
-        }
 
-        async function sanphamapi() {
-            try {
-                const response = await apiRequest('BCHN_DETAIL', 'Find', {}, {
-                    Properties: { Selector: `Filter(BCHN_DETAIL, true)` }
-                });
-                if (!Array.isArray(response) || response.length === 0) {
-                    console.error("Không nhận được dữ liệu hợp lệ từ API:", response);
-                    throw new Error("Dữ liệu không hợp lệ");
-                }
-                return response;
-            } catch (error) {
-                console.error("Lỗi khi lấy dữ liệu từ AppSheet:", error);
-                throw error;
+            function toggleDarkMode() {
+                document.documentElement.classList.toggle('dark');
+                localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+                updateDarkModeIcon();
+                updateChartTheme();
             }
-        }
 
-        async function congapi() {
-            try {
-                const response = await apiRequest('Chấm công', 'Find', {}, {
-                    Properties: { Selector: `Filter(Chấm công, true)` }
-                });
-                if (!Array.isArray(response) || response.length === 0) {
-                    console.error("Không nhận được dữ liệu hợp lệ từ API:", response);
-                    throw new Error("Dữ liệu không hợp lệ");
-                }
-                return response;
-            } catch (error) {
-                console.error("Lỗi khi lấy dữ liệu từ AppSheet:", error);
-                throw error;
+            function updateDarkModeIcon() {
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                darkModeToggle.innerHTML = document.documentElement.classList.contains('dark')
+                    ? '<i class="fas fa-sun"></i>'
+                    : '<i class="fas fa-moon"></i>';
             }
-        }
 
-        function updateStats(filteredSanPham, filteredCong) {
-            const totalProducts = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số lượng"]), 0);
-            const totalRevenue = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số tiền"]), 0);
-            const totalWorkDays = filteredCong.length;
-            const totalAllowance = filteredCong.reduce((sum, item) => sum + parseInt(item["Phụ cấp"]), 0);
-
-            document.getElementById('totalInvoices').textContent = totalProducts;
-            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
-            document.getElementById('averageDiscount').textContent = totalWorkDays;
-            document.getElementById('averageVAT').textContent = formatCurrency(totalAllowance);
-        }
-
-        function populateFilters() {
-            const khuVucFilter = document.getElementById('khuVucFilter');
-            const keHoanhFilter = document.getElementById('keHoanhFilter');
-            const nhanvienFilter = document.getElementById('nhanvienFilter');
-
-            // Populate khu vực filter
-            const khuVucSet = new Set(sanpham.map(item => item["Khu vực"]));
-            khuVucSet.forEach(khuVuc => {
-                const option = document.createElement('option');
-                option.value = khuVuc;
-                option.textContent = khuVuc;
-                khuVucFilter.appendChild(option);
-            });
-
-            // Populate kế hoạch filter
-            const keHoanhSet = new Set(sanpham.map(item => item["Mã kế hoạch"]));
-            keHoanhSet.forEach(keHoanh => {
-                const option = document.createElement('option');
-                option.value = keHoanh;
-                option.textContent = keHoanh;
-                keHoanhFilter.appendChild(option);
-            });
-
-            // Populate nhân viên filter
-            const nhanvienSet = new Set(sanpham.map(item => item["Nhân sự tham gia"]));
-            nhanvienSet.forEach(nhanvien => {
-                const option = document.createElement('option');
-                option.value = nhanvien;
-                option.textContent = nhanvien;
-                nhanvienFilter.appendChild(option);
-            });
-
-            const allDates = [...sanpham.map(item => new Date(item["Thời gian"])), ...cong.map(item => new Date(item["Ngày"]))];
-            const minDate = new Date(Math.min.apply(null, allDates));
-            const maxDate = new Date(Math.max.apply(null, allDates));
-
-            startDateInput.min = minDate.toISOString().split('T')[0];
-            startDateInput.max = maxDate.toISOString().split('T')[0];
-            endDateInput.min = minDate.toISOString().split('T')[0];
-            endDateInput.max = maxDate.toISOString().split('T')[0];
-        }
-
-        function applyFilters() {
-            const khuVuc = document.getElementById('khuVucFilter').value;
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-            const keHoanh = document.getElementById('keHoanhFilter').value;
-            const nhanvien = document.getElementById('nhanvienFilter').value;
-
-            const filteredSanPham = sanpham.filter(item => {
-                const khuVucMatch = khuVuc === "" || item["Khu vực"] === khuVuc;
-                const keHoanhMatch = keHoanh === "" || item["Mã kế hoạch"] === keHoanh;
-                const nhanvienMatch = nhanvien === "" || item["Nhân sự tham gia"] === nhanvien;
-                const dateMatch = isDateInRange(item["Thời gian"], startDate, endDate);
-                return khuVucMatch && keHoanhMatch && dateMatch && nhanvienMatch;
-            });
-
-            const filteredCong = cong.filter(item => {
-                const nhanvienMatch = nhanvien === "" || item["Nhân viên"] === nhanvien;
-                return isDateInRange(item["Ngày"], startDate, endDate) && nhanvienMatch;
-            });
-
-            updateStats(filteredSanPham, filteredCong);
-            updateDataTable(filteredSanPham);
-            updateStaffSummary(filteredSanPham, filteredCong);
-        }
-
-        function updateDataTable(data) {
-            if (dataTable) {
-                dataTable.clear().rows.add(data).draw();
-            } else {
-                dataTable = $('#dataTable').DataTable({
-                    data: data,
-                    columns: [
-                        { data: "Thời gian" },
-                        { data: "Khu vực" },
-                        { data: "Mã kế hoạch" },
-                        { data: "Loại sản phẩm" },
-                        { data: "Số lượng" },
-                        { 
-                            data: "Số tiền",
-                            render: function(data) {
-                                return formatCurrency(data);
+            function updateChartTheme() {
+                if (chart) {
+                    const isDarkMode = document.documentElement.classList.contains('dark');
+                    chart.update({
+                        chart: {
+                            backgroundColor: isDarkMode ? '#1f2937' : '#ffffff'
+                        },
+                        title: {
+                            style: {
+                                color: isDarkMode ? '#ffffff' : '#333333'
                             }
                         },
-                        { data: "Nhân sự tham gia" }
-                    ],
-                    responsive: true,
-                    order: [[0, 'desc']]
-                });
-            }
-        }
-
-        function updateStaffSummary(filteredSanPham, filteredCong) {
-            const staffSummary = {};
-
-            filteredSanPham.forEach(item => {
-                const staff = item["Nhân sự tham gia"];
-                if (!staffSummary[staff]) {
-                    staffSummary[staff] = { totalProducts: 0, totalRevenue: 0, workDays: 0, totalAllowance: 0 };
-                }
-                staffSummary[staff].totalProducts += parseInt(item["Số lượng"]);
-                staffSummary[staff].totalRevenue += parseInt(item["Số tiền"]);
-            });
-
-            filteredCong.forEach(item => {
-                const staff = item["Mã nhân viên"];
-                if (!staffSummary[staff]) {
-                    staffSummary[staff] = { totalProducts: 0, totalRevenue: 0, workDays: 0, totalAllowance: 0 };
-                }
-                staffSummary[staff].workDays += 1;
-                staffSummary[staff].totalAllowance += parseInt(item["Phụ cấp"]);
-            });
-
-            const summaryData = Object.entries(staffSummary).map(([staff, data]) => ({
-                staff,
-                ...data
-            }));
-
-            updateStaffChart(summaryData);
-
-            if (staffSummaryTable) {
-                staffSummaryTable.clear().rows.add(summaryData).draw();
-            } else {
-                staffSummaryTable = $('#staffSummaryTable').DataTable({
-                    data: summaryData,
-                    columns: [
-                        { data: "staff", title: "Nhân viên" },
-                        { data: "totalProducts", title: "Tổng số sản phẩm" },
-                        { 
-                            data: "totalRevenue", 
-                            title: "Tổng lương sản phẩm",
-                            render: function(data) {
-                                return formatCurrency(data);
+                        xAxis: {
+                            labels: {
+                                style: {
+                                    color: isDarkMode ? '#d1d5db' : '#666666'
+                                }
                             }
                         },
-                        { data: "workDays", title: "Số ngày công" },
-                        { 
-                            data: "totalAllowance", 
-                            title: "Tổng phụ cấp",
-                            render: function(data) {
-                                return formatCurrency(data);
+                        yAxis: [{
+                            title: {
+                                style: {
+                                    color: isDarkMode ? '#d1d5db' : '#666666'
+                                }
+                            },
+                            labels: {
+                                style: {
+                                    color: isDarkMode ? '#d1d5db' : '#666666'
+                                }
+                            }
+                        }, {
+                            title: {
+                                style: {
+                                    color: isDarkMode ? '#d1d5db' : '#666666'
+                                }
+                            },
+                            labels: {
+                                style: {
+                                    color: isDarkMode ? '#d1d5db' : '#666666'
+                                }
+                            }
+                        }],
+                        legend: {
+                            itemStyle: {
+                                color: isDarkMode ? '#d1d5db' : '#333333'
                             }
                         }
-                    ],
-                    responsive: true,
-                    order: [[1, 'desc']]
+                    });
+                }
+            }
+
+            async function apiRequest(tableName, action, data, Properties) {
+                showLoading();
+                const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'ApplicationAccessKey': accessKey,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            Action: action,
+                            ...Properties,
+                            ...data
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    return await response.json();
+                } catch (error) {
+                    console.error("API Error:", error);
+                    throw error;
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            async function fetchSanPhamData() {
+                try {
+                    const response = await apiRequest('BCHN_DETAIL', 'Find', {}, {
+                        Properties: { Selector: `Filter(BCHN_DETAIL, true)` }
+                    });
+                    if (!Array.isArray(response) || response.length === 0) {
+                        throw new Error("Invalid data received from API");
+                    }
+                    return response;
+                } catch (error) {
+                    console.error("Error fetching data from AppSheet:", error);
+                    throw error;
+                }
+            }
+
+            async function fetchCongData() {
+                try {
+                    const response = await apiRequest('Chấm công', 'Find', {}, {
+                        Properties: { Selector: `Filter(Chấm công, true)` }
+                    });
+                    if (!Array.isArray(response) || response.length === 0) {
+                        throw new Error("Invalid data received from API");
+                    }
+                    return response;
+                } catch (error) {
+                    console.error("Error fetching data from AppSheet:", error);
+                    throw error;
+                }
+            }
+
+            function updateStats(filteredSanPham, filteredCong) {
+                const totalProducts = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số lượng"] || 0), 0);
+                const totalRevenue = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số tiền"] || 0), 0);
+                const totalWorkDays = filteredCong.length;
+                const totalAllowance = filteredCong.reduce((sum, item) => sum + parseInt(item["Phụ cấp"] || 0), 0);
+
+                document.getElementById('totalProducts').textContent = totalProducts;
+                document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+                document.getElementById('totalWorkDays').textContent = totalWorkDays;
+                document.getElementById('totalAllowance').textContent = formatCurrency(totalAllowance);
+            }
+
+            function populateFilters() {
+                const khuVucFilter = document.getElementById('khuVucFilter');
+                const keHoanhFilter = document.getElementById('keHoanhFilter');
+                const nhanvienFilter = document.getElementById('nhanvienFilter');
+
+                const khuVucSet = new Set(sanpham.map(item => item["Khu vực"]));
+                const keHoanhSet = new Set(sanpham.map(item => item["Mã kế hoạch"]));
+                const nhanvienSet = new Set(sanpham.map(item => item["Nhân sự tham gia"]));
+
+                populateDropdown(khuVucFilter, khuVucSet);
+                populateDropdown(keHoanhFilter, keHoanhSet);
+                populateDropdown(nhanvienFilter, nhanvienSet);
+
+                const allDates = [
+                    ...sanpham.map(item => new Date(item["Thời gian"])),
+                    ...cong.map(item => new Date(item["Ngày"]))
+                ];
+                const minDate = new Date(Math.min.apply(null, allDates));
+                const maxDate = new Date(Math.max.apply(null, allDates));
+
+                document.getElementById('startDate').min = minDate.toISOString().split('T')[0];
+                document.getElementById('startDate').max = maxDate.toISOString().split('T')[0];
+                document.getElementById('endDate').min = minDate.toISOString().split('T')[0];
+                document.getElementById('endDate').max = maxDate.toISOString().split('T')[0];
+            }
+
+            function populateDropdown(dropdown, dataSet) {
+                dropdown.innerHTML = '<option value="">Tất cả</option>' +
+                    Array.from(dataSet).sort().map(value => `<option value="${value}">${value}</option>`).join('');
+            }
+
+            function applyFilters() {
+                const khuVuc = document.getElementById('khuVucFilter').value;
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const keHoanh = document.getElementById('keHoanhFilter').value;
+                const nhanvien = document.getElementById('nhanvienFilter').value;
+                const trangThai = document.getElementById('trangThaiFilter').value;
+
+                const filteredSanPham = sanpham.filter(item => {
+                    const itemDate = new Date(item["Thời gian"]);
+                    return (!khuVuc || item["Khu vực"] === khuVuc) &&
+                        (!startDate || itemDate >= new Date(startDate)) &&
+                        (!endDate || itemDate <= new Date(endDate)) &&
+                        (!keHoanh || item["Mã kế hoạch"] === keHoanh) &&
+                        (!nhanvien || item["Nhân sự tham gia"] === nhanvien) &&
+                        (!trangThai || item["Trạng thái"] === trangThai);
                 });
-            }
-        }
-        function updateStaffChart(summaryData) {
-            const categories = summaryData.map(item => item.staff);
-            const totalProducts = summaryData.map(item => item.totalProducts);
-            const totalRevenue = summaryData.map(item => item.totalRevenue);
 
-            Highcharts.chart('staffChart', {
-                chart: {
-                    type: 'column'
-                },
-                title: {
-                    text: 'Thống kê sản phẩm theo nhân viên'
-                },
-                xAxis: {
-                    categories: categories,
-                    crosshair: true
-                },
-                yAxis: [{
-                    min: 0,
-                    title: {
-                        text: 'Số lượng sản phẩm'
+                const filteredCong = cong.filter(item => {
+                    const itemDate = new Date(item["Ngày"]);
+                    return (!startDate || itemDate >= new Date(startDate)) &&
+                        (!endDate || itemDate <= new Date(endDate)) &&
+                        (!nhanvien || item["Nhân viên"] === nhanvien);
+                });
+
+                updateStats(filteredSanPham, filteredCong);
+                updateDataTable(filteredSanPham);
+                updateStaffSummary(filteredSanPham, filteredCong);
+                updateChart(filteredSanPham, filteredCong);
+            }
+
+            function resetFilters() {
+                document.getElementById('khuVucFilter').value = "";
+                document.getElementById('startDate').value = "";
+                document.getElementById('endDate').value = "";
+                document.getElementById('keHoanhFilter').value = "";
+                document.getElementById('nhanvienFilter').value = "";
+                document.getElementById('trangThaiFilter').value = "";
+                applyFilters();
+            }
+
+            function updateDataTable(data) {
+                if (dataTable) {
+                    dataTable.clear().rows.add(data).draw();
+                } else {
+                    dataTable = $('#dataTable').DataTable({
+                        data: data,
+                        columns: [
+                            { data: "Thời gian" },
+                            { data: "Khu vực" },
+                            { data: "Mã kế hoạch" },
+                            { data: "Loại sản phẩm" },
+                            { data: "Số lượng" },
+                            {
+                                data: "Số tiền",
+                                render: function (data) {
+                                    return formatCurrency(data);
+                                }
+                            },
+                            { data: "Nhân sự tham gia" },
+                            { data: "Trạng thái" }
+                        ],
+                        responsive: true,
+                        order: [[0, 'desc']],
+                        language: {
+                            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json'
+                        }
+                    });
+                }
+            }
+
+            function updateStaffSummary(filteredSanPham, filteredCong) {
+                const staffSummary = {};
+
+                filteredSanPham.forEach(item => {
+                    const staff = item["Nhân sự tham gia"];
+                    if (!staffSummary[staff]) {
+                        staffSummary[staff] = { totalProducts: 0, totalRevenue: 0, workDays: 0, totalAllowance: 0 };
                     }
-                }, {
-                    min: 0,
-                    title: {
-                        text: 'Tổng lương sản phẩm'
+                    staffSummary[staff].totalProducts += parseInt(item["Số lượng"] || 0);
+                    staffSummary[staff].totalRevenue += parseInt(item["Số tiền"] || 0);
+                });
+
+                filteredCong.forEach(item => {
+                    const staff = item["Mã nhân viên"];
+                    if (!staffSummary[staff]) {
+                        staffSummary[staff] = { totalProducts: 0, totalRevenue: 0, workDays: 0, totalAllowance: 0 };
+                    }
+                    staffSummary[staff].workDays += 1;
+                    staffSummary[staff].totalAllowance += parseInt(item["Phụ cấp"] || 0);
+                });
+
+                const summaryData = Object.entries(staffSummary).map(([staff, data]) => ({
+                    staff,
+                    ...data
+                }));
+
+                if (staffSummaryTable) {
+                    staffSummaryTable.clear().rows.add(summaryData).draw();
+                } else {
+                    staffSummaryTable = $('#staffSummaryTable').DataTable({
+                        data: summaryData,
+                        columns: [
+                            { data: "staff", title: "Nhân viên" },
+                            { data: "totalProducts", title: "Tổng số sản phẩm" },
+                            {
+                                data: "totalRevenue",
+                                title: "Tổng lương sản phẩm",
+                                render: function (data) {
+                                    return formatCurrency(data);
+                                }
+                            },
+                            { data: "workDays", title: "Số ngày công" },
+                            {
+                                data: "totalAllowance",
+                                title: "Tổng phụ cấp",
+                                render: function (data) {
+                                    return formatCurrency(data);
+                                }
+                            }
+                        ],
+                        responsive: true,
+                        order: [[1, 'desc']],
+                        language: {
+                            url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json'
+                        }
+                    });
+                }
+            }
+
+            function updateChart(filteredSanPham, filteredCong) {
+                const staffData = {};
+
+                filteredSanPham.forEach(item => {
+                    const staff = item["Nhân sự tham gia"];
+                    if (!staffData[staff]) {
+                        staffData[staff] = { totalProducts: 0, totalRevenue: 0 };
+                    }
+                    staffData[staff].totalProducts += parseInt(item["Số lượng"] || 0);
+                    staffData[staff].totalRevenue += parseInt(item["Số tiền"] || 0);
+                });
+
+                const categories = Object.keys(staffData);
+                const totalProducts = categories.map(staff => staffData[staff].totalProducts);
+                const totalRevenue = categories.map(staff => staffData[staff].totalRevenue);
+
+                Highcharts.chart('staffChart', {
+                    chart: {
+                        type: 'column'
                     },
-                    opposite: true
-                }],
-                tooltip: {
-                    shared: true
-                },
-                plotOptions: {
-                    column: {
-                        pointPadding: 0.2,
-                        borderWidth: 0
-                    }
-                },
-                series: [{
-                    name: 'Số lượng sản phẩm',
-                    data: totalProducts,
-                    yAxis: 0
-                }, {
-                    name: 'Tổng lương sản phẩm',
-                    data: totalRevenue,
-                    yAxis: 1,
+                    title: {
+                        text: 'Thống kê sản phẩm và doanh thu theo nhân viên'
+                    },
+                    xAxis: {
+                        categories: categories,
+                        crosshair: true
+                    },
+                    yAxis: [{
+                        min: 0,
+                        title: {
+                            text: 'Số lượng sản phẩm'
+                        }
+                    }, {
+                        min: 0,
+                        title: {
+                            text: 'Doanh thu'
+                        },
+                        opposite: true
+                    }],
                     tooltip: {
-                        valuePrefix: '₫'
-                    }
-                }]
-            });
-        }
-        function isDateInRange(dateString, startDate, endDate) {
-            if (!startDate && !endDate) return true;
-            const date = new Date(dateString);
-            const start = startDate ? new Date(startDate) : new Date(0);
-            const end = endDate ? new Date(endDate) : new Date(8640000000000000);
-            return date >= start && date <= end;
-        }
-
-        function resetFilters() {
-            document.getElementById('khuVucFilter').value = "";
-            document.getElementById('startDate').value = "";
-            document.getElementById('endDate').value = "";
-            document.getElementById('keHoanhFilter').value = "";
-            document.getElementById('nhanvienFilter').value = "";
-            applyFilters();
-        }
-
-        endDateInput.addEventListener('change', applyFilters);
-        startDateInput.addEventListener('change', applyFilters);
-        document.getElementById('nhanvienFilter').addEventListener('change', applyFilters);
-        document.getElementById('khuVucFilter').addEventListener('change', applyFilters);
-        document.getElementById('keHoanhFilter').addEventListener('change', applyFilters);
-        document.getElementById('resetFilters').addEventListener('click', resetFilters);
-
-        async function init() {
-            try {
-                sanpham = await sanphamapi();
-                cong = await congapi();
-                updateStats(sanpham, cong);
-                populateFilters();
-                updateDataTable(sanpham);
-                updateStaffSummary(sanpham, cong);
-            } catch (error) {
-                console.error("Lỗi khởi tạo ứng dụng:", error);
-                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+                        shared: true
+                    },
+                    legend: {
+                        align: 'left',
+                        verticalAlign: 'top',
+                        y: 0,
+                        x: 80
+                    },
+                    series: [{
+                        name: 'Số lượng sản phẩm',
+                        type: 'column',
+                        yAxis: 0,
+                        data: totalProducts,
+                        tooltip: {
+                            valueSuffix: ' sản phẩm'
+                        }
+                    }, {
+                        name: 'Doanh thu',
+                        type: 'spline',
+                        yAxis: 1,
+                        data: totalRevenue,
+                        tooltip: {
+                            valuePrefix: '₫'
+                        }
+                    }]
+                });
+                updateChartTheme();
             }
-        }
 
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
+            function exportToExcel() {
+                const workbook = XLSX.utils.book_new();
+
+                // Export summary data
+                const summaryData = staffSummaryTable.data().toArray();
+                const summaryWS = XLSX.utils.json_to_sheet(summaryData);
+                XLSX.utils.book_append_sheet(workbook, summaryWS, "Tổng hợp theo nhân sự");
+
+                // Export detailed data
+                const detailedData = dataTable.data().toArray();
+                const detailedWS = XLSX.utils.json_to_sheet(detailedData);
+                XLSX.utils.book_append_sheet(workbook, detailedWS, "Chi tiết sản phẩm");
+
+                // Save the file
+                XLSX.writeFile(workbook, "Thong_ke_san_pham.xlsx");
+            }
+
+            // Event Listeners
+            document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+            document.getElementById('applyFilters').addEventListener('click', applyFilters);
+            document.getElementById('resetFilters').addEventListener('click', resetFilters);
+            document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+
+            // Initialize
+            async function init() {
+                try {
+                    showLoading();
+                    sanpham = await fetchSanPhamData();
+                    cong = await fetchCongData();
+                    populateFilters();
+                    applyFilters();
+                    hideLoading();
+                } catch (error) {
+                    console.error("Error initializing app:", error);
+                    alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+                    hideLoading();
+                }
+            }
+
+            // Check for saved dark mode preference
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.documentElement.classList.add('dark');
+            }
+            updateDarkModeIcon();
+
+            // Initialize app when DOM is loaded
+            document.addEventListener('DOMContentLoaded', init);
+        </script>
 </body>
 
 </html>
