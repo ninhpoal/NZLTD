@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi" class="h-full">
 
@@ -7,6 +8,7 @@
     <title>Thống kê sản phẩm</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.1/dist/flowbite.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
@@ -33,7 +35,7 @@
 <body class="bg-gray-100 dark:bg-gray-900 h-full">
     <div class="min-h-full">
         <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <div class="flex-shrink-0 flex items-center">
@@ -43,11 +45,7 @@
                     </div>
                   
                     <div class="flex items-center">
-                        <button id="filterToggle"
-                            class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:hidden">
-                            <span class="sr-only">Open filters</span>
-                            <i class="fas fa-filter"></i>
-                        </button>
+                  
                         <button id="darkModeToggle"
                             class="ml-3 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
                             <span class="sr-only">Toggle dark mode</span>
@@ -58,14 +56,14 @@
             </div>
         </nav>
 
-        <div class="py-10">
+        <div class="py-1">
 
             <main>
-                <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                    <div class="px-4 py-8 sm:px-0">
+                <div class="max-w-10xl mx-auto sm:px-6 lg:px-8">
+                    <div class="px-4 py-1 sm:px-0">
                         <div class="flex flex-col md:flex-row gap-6">
                             <!-- Filters -->
-                            <div class="md:w-1/4">
+                            <div class="md:w-1/6">
                                 <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                                     <div class="px-4 py-5 sm:p-6">
                                         <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bộ lọc
@@ -144,7 +142,7 @@
                             </div>
 
                             <!-- Main content -->
-                            <div class="md:w-3/4">
+                            <div class="md:w-5/6">
                                 <!-- Stats -->
                                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
                                     <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
@@ -254,6 +252,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                
                                 <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                                     <div class="px-4 py-5 sm:p-6">
                                         <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bảng dữ
@@ -351,7 +350,6 @@
         // DOM elements
         const darkModeToggle = document.getElementById('darkModeToggle');
         const htmlElement = document.documentElement;
-        const filterToggle = document.getElementById('filterToggle');
         const filterDropdown = document.querySelector('.md\\:w-1\\/4');
         const applyFiltersBtn = document.getElementById('applyFilters');
         const resetFiltersBtn = document.getElementById('resetFilters');
@@ -435,7 +433,7 @@
 
             try {
                 const response = await apiRequest('BCGS', 'Find', {}, {
-                    Properties: { Selector: `Filter(BCGS, [Đội kéo] <> "")` }
+                    Properties: { Selector: `Filter(BCGS, and( [Đội kéo] <> "",[Trạng thái]<>"Tuyến mới",[Trạng thái]<>"Chưa duyệt"))` }
                 });
                 if (!Array.isArray(response) || response.length === 0) {
                     throw new Error("Invalid data received from API");
@@ -704,19 +702,13 @@
 
         // Event listeners
         darkModeToggle.addEventListener('click', toggleDarkMode);
-        filterToggle.addEventListener('click', () => filterDropdown.classList.toggle('active'));
         applyFiltersBtn.addEventListener('click', applyFilters);
         resetFiltersBtn.addEventListener('click', resetFilters);
         [khuVucFilter, startDateInput, endDateInput, keHoanhFilter, trangthaiFilter, nhanvienFilter].forEach(el =>
             el.addEventListener('change', applyFilters)
         );
 
-        // Close filter dropdown when clicking outside
-        document.addEventListener('click', (event) => {
-            if (!filterDropdown.contains(event.target) && !filterToggle.contains(event.target)) {
-                filterDropdown.classList.remove('active');
-            }
-        });
+     
 
         // Initialize app when DOM is loaded
         document.addEventListener('DOMContentLoaded', init);
