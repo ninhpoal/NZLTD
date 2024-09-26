@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thống kê sản phẩm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                        warning: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 h-full">
+    <div class="min-h-full">
+        <nav class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex">
+                        <div class="flex-shrink-0 flex items-center">
+                            <img class="h-8 w-auto" src="Logo N có bóng/Logo N.png" alt="NZ LTĐ">
+                            <h1 class="ml-2 text-xl font-bold text-gray-800 dark:text-white">NZ ERP PRO</h1>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <button id="filterToggle"
+                            class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:hidden">
+                            <span class="sr-only">Open filters</span>
+                            <i class="fas fa-filter"></i>
+                        </button>
+                        <button id="darkModeToggle"
+                            class="ml-3 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                            <span class="sr-only">Toggle dark mode</span>
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="py-10">
+
+            <main>
+                <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div class="px-4 py-8 sm:px-0">
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <!-- Filters -->
+                            <div class="md:w-1/4">
+                                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                    <div class="px-4 py-5 sm:p-6">
+                                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bộ lọc
+                                        </h3>
+                                        <div class="mt-5 space-y-4">
+                                            <div>
+                                                <label for="khuVucFilter"
+                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Khu
+                                                    vực</label>
+                                                <select id="khuVucFilter"
+                                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                                    <option value="">Tất cả</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="startDate"
+                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Từ
+                                                    ngày</label>
+                                                <input type="date" id="startDate"
+                                                    class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                            </div>
+                                            <div>
+                                                <label for="endDate"
+                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Đến
+                                                    ngày</label>
+                                                <input type="date" id="endDate"
+                                                    class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
+                                            </div>
+                                            <div>
+                                                <label for="keHoanhFilter"
+                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mã
+                                                    kế hoạch</label>
+                                                <select id="keHoanhFilter"
+                                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                                    <option value="">Tất cả</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="nhanvienFilter"
+                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Nhân
+                                                    viên</label>
+                                                <select id="nhanvienFilter"
+                                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                                    <option value="">Tất cả</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label for="trangthaiFilter"
+                                                    class="block text-sm font-medium text-gray-700 dark:text-gray-300">Trạng
+                                                    thái</label>
+                                                <select id="trangthaiFilter"
+                                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                                    <option value="">Tất cả</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex space-x-2">
+                                                <button id="applyFilters"
+                                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    Áp dụng
+                                                </button>
+                                                <button id="resetFilters"
+                                                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    Đặt lại
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Main content -->
+                            <div class="md:w-3/4">
+                                <!-- Stats -->
+                                <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                        <div class="p-5">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                                                    <i class="fas fa-ruler text-white"></i>
+                                                </div>
+                                                <div class="ml-5 w-0 flex-1">
+                                                    <dl>
+                                                        <dt
+                                                            class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                            Mét đã duyệt
+                                                        </dt>
+                                                        <dd>
+                                                            <div id="totalInvoices"
+                                                                class="text-lg font-medium text-gray-900 dark:text-white">
+                                                                0
+                                                            </div>
+                                                        </dd>
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                        <div class="p-5">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                                    <i class="fas fa-money-bill-wave text-white"></i>
+                                                </div>
+                                                <div class="ml-5 w-0 flex-1">
+                                                    <dl>
+                                                        <dt
+                                                            class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                            Thành tiền
+                                                        </dt>
+                                                        <dd>
+                                                            <div id="totalRevenue"
+                                                                class="text-lg font-medium text-gray-900 dark:text-white">
+                                                                0 ₫
+                                                            </div>
+                                                        </dd>
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                        <div class="p-5">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                                    <i class="fas fa-clock text-white"></i>
+                                                </div>
+                                                <div class="ml-5 w-0 flex-1">
+                                                    <dl>
+                                                        <dt
+                                                            class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                            Mét chưa duyệt
+                                                        </dt>
+                                                        <dd>
+                                                            <div id="averageDiscount"
+                                                                class="text-lg font-medium text-gray-900 dark:text-white">
+                                                                0
+                                                            </div>
+                                                        </dd>
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                        <div class="p-5">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 bg-red-500 rounded-md p-3">
+                                                    <i class="fas fa-money-bill-wave text-white"></i>
+                                                </div>
+                                                <div class="ml-5 w-0 flex-1">
+                                                    <dl>
+                                                        <dt
+                                                            class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
+                                                            Tổng phụ cấp
+                                                        </dt>
+                                                        <dd>
+                                                            <div id="averageVAT"
+                                                                class="text-lg font-medium text-gray-900 dark:text-white">
+                                                                0 ₫
+                                                            </div>
+                                                        </dd>
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Chart -->
+                                <div class="mt-5 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                    <div class="p-5">
+                                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Biểu đồ
+                                            thống kê số mét thi công và số tiền thi công theo nhân viên</h3>
+                                        <div class="mt-5">
+                                            <div id="statsChart" class="w-full" style="height: 400px;"></div>
+                                        </div>
+                                    </div>
+                                </div> <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                    <div class="px-4 py-5 sm:p-6">
+                                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bảng dữ liệu nhóm</h3>
+                                        <div class="mt-5 flow-root">
+                                            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                                                        <thead>
+                                                            <tr>
+                                                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-0">Mã nhân viên</th>
+                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Khu vực</th>
+                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Số mét T/C (Đã duyệt)</th>
+                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Số mét T/C (Chưa duyệt)</th>
+                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Số tiền</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="groupDataTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                                            <!-- Dữ liệu nhóm sẽ được thêm vào đây bằng JavaScript -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-5 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                    <div class="px-4 py-5 sm:p-6">
+                                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bảng
+                                            tổng hợp theo loại sản phẩm</h3>
+                                        <div class="mt-5 flow-root">
+                                            <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                                <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                                                    <table
+                                                        class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                                                        <thead>
+                                                            <tr>
+                                                                <th scope="col"
+                                                                    class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-0">
+                                                                    Loại sản phẩm kéo</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Dự toán</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Số mét T/C</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Số tiền</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Đơn giá trung bình</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Trạng thái</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="dataTableBody"
+                                                            class="divide-y divide-gray-200 dark:divide-gray-700">
+                                                            <!-- Table rows will be dynamically inserted here -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const appId = '0ffda765-62b7-4260-b7ed-5bcbb530b113';
+        const accessKey = 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF';
+        const region = 'www';
+
+        let sanpham = [];
+        let chart;
+
+        // DOM elements
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const htmlElement = document.documentElement;
+        const filterToggle = document.getElementById('filterToggle');
+        const filterDropdown = document.querySelector('.md\\:w-1\\/4');
+        const applyFiltersBtn = document.getElementById('applyFilters');
+        const resetFiltersBtn = document.getElementById('resetFilters');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const khuVucFilter = document.getElementById('khuVucFilter');
+        const keHoanhFilter = document.getElementById('keHoanhFilter');
+        const nhanvienFilter = document.getElementById('nhanvienFilter');
+        const trangthaiFilter = document.getElementById('trangthaiFilter');
+
+        // Utility functions
+        const formatCurrency = amount => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        const formatDate = dateString => {
+            const date = new Date(dateString);
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        };
+
+        // Dark mode toggle
+        function toggleDarkMode() {
+            htmlElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', htmlElement.classList.contains('dark'));
+            updateDarkModeIcon();
+            updateChartTheme();
+        }
+
+        function updateDarkModeIcon() {
+            darkModeToggle.innerHTML = htmlElement.classList.contains('dark')
+                ? '<i class="fas fa-sun"></i>'
+                : '<i class="fas fa-moon"></i>';
+        }
+
+        // API request function
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        // Fetch data from API
+        async function fetchSanphamData() {
+
+
+            try {
+                const response = await apiRequest('BCGS', 'Find', {}, {
+                    Properties: { Selector: `Filter(BCGS, [Đội kéo] <> "")` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return response;
+            } catch (error) {
+                console.error("Error fetching data from AppSheet:", error);
+                throw error;
+            }
+        }
+
+        // Update statistics
+        function updateStatistics(data) {
+            const stats = data.reduce((acc, item) => {
+                acc.totalMeters += parseFloat(item['Số mét T/C']) || 0;
+                acc.totalMoney += parseFloat(item['Số tiền']) || 0;
+                acc.totalUnapproved += item['Trạng thái'] !== 'Đã duyệt' ? parseFloat(item['Số mét T/C']) || 0 : 0;
+                acc.totalAllowance += parseFloat(item['Phụ cấp tuyến']) || 0;
+                return acc;
+            }, { totalMeters: 0, totalMoney: 0, totalUnapproved: 0, totalAllowance: 0 });
+
+            document.getElementById('totalInvoices').textContent = stats.totalMeters.toFixed(0);
+            document.getElementById('totalRevenue').textContent = formatCurrency(stats.totalMoney);
+            document.getElementById('averageDiscount').textContent = stats.totalUnapproved.toFixed(0);
+            document.getElementById('averageVAT').textContent = formatCurrency(stats.totalAllowance);
+
+            if (chart) {
+                updateChart(data);
+            }
+        }
+        // Populate data table
+        function populateDataTable(data) {
+            const tableBody = document.getElementById('dataTableBody');
+            tableBody.innerHTML = data.map(item => {
+                const donGiaTrungBinh = item['Số mét T/C'] !== 0 ? item['Số tiền'] / item['Số mét T/C'] : 0;
+                return `
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-0">${item['LSPCHECK']}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${item['Dự toán'].toFixed(2)}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${item['Số mét T/C'].toFixed(2)}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${formatCurrency(item['Số tiền'])}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${formatCurrency(donGiaTrungBinh)}</td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${item['Trạng thái']}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        function groupDataByEmployeeAndArea(data) {
+        return data.reduce((acc, item) => {
+            const key = `${item['Đội kéo']}-${item['Khu vực']}`;
+            if (!acc[key]) {
+                acc[key] = {
+                    'Đội kéo': item['Đội kéo'],
+                    'Khu vực': item['Khu vực'],
+                    'Số mét T/C (Đã duyệt)': 0,
+                    'Số mét T/C (Chưa duyệt)': 0,
+                    'Số tiền': 0
+                };
+            }
+            if (item['Trạng thái'] === 'Đã duyệt') {
+                acc[key]['Số mét T/C (Đã duyệt)'] += parseFloat(item['Số mét T/C']) || 0;
+            } else {
+                acc[key]['Số mét T/C (Chưa duyệt)'] += parseFloat(item['Số mét T/C']) || 0;
+            }
+            acc[key]['Số tiền'] += parseFloat(item['Số tiền']) || 0;
+            return acc;
+        }, {});
+    }
+     // Hàm mới để cập nhật bảng dữ liệu nhóm
+     function updateGroupDataTable(data) {
+        const groupedData = groupDataByEmployeeAndArea(data);
+        const tableBody = document.getElementById('groupDataTableBody');
+        tableBody.innerHTML = Object.values(groupedData).map(item => `
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-0">${item['Đội kéo']}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${item['Khu vực']}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${item['Số mét T/C (Đã duyệt)'].toFixed(2)}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${item['Số mét T/C (Chưa duyệt)'].toFixed(2)}</td>
+                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${formatCurrency(item['Số tiền'])}</td>
+            </tr>
+        `).join('');
+    }
+        // Group data
+        function groupData(data) {
+            return Object.values(data.reduce((acc, item) => {
+                const key = `${item['LSPCHECK']}-${item['Trạng thái']}-${item['Đội kéo']}`;
+                if (!acc[key]) {
+                    acc[key] = {
+                        'LSPCHECK': item['LSPCHECK'],
+                        'Dự toán': 0,
+                        'Số mét T/C': 0,
+                        'Số tiền': 0,
+                        'Trạng thái': item['Trạng thái'],
+                        'Đội kéo': item['Đội kéo']
+                    };
+                }
+                acc[key]['Dự toán'] += parseFloat(item['Dự toán']) || 0;
+                acc[key]['Số mét T/C'] += parseFloat(item['Số mét T/C']) || 0;
+                acc[key]['Số tiền'] += parseFloat(item['Số tiền']) || 0;
+                return acc;
+            }, {}));
+        }
+
+        // Apply filters
+        function applyFilters() {
+            const khuVuc = khuVucFilter.value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            const keHoanh = keHoanhFilter.value;
+            const trangThai = trangthaiFilter.value;
+            const nhanvien = nhanvienFilter.value;
+            const filteredData = sanpham.filter(item => {
+                const itemDate = new Date(item['Thời gian']);
+                return (!khuVuc || item['Khu vực'] === khuVuc) &&
+                    (!startDate || itemDate >= new Date(startDate)) &&
+                    (!endDate || itemDate <= new Date(endDate)) &&
+
+                    (!keHoanh || item['Mã kế hoạch'].includes(keHoanh)) &&
+                    (!trangThai || item['Trạng thái'] === trangThai) &&
+                    (!nhanvien || item['Đội kéo'] === nhanvien);
+            });
+
+            const groupedData = groupData(filteredData);
+            updateStatistics(groupedData);
+            populateDataTable(groupedData);
+            updateChart(groupedData);
+            updateGroupDataTable(filteredData); 
+            filterDropdown.classList.remove('active');
+        }
+
+        // Reset filters
+        function resetFilters() {
+            [khuVucFilter, startDateInput, endDateInput, keHoanhFilter, trangthaiFilter, nhanvienFilter].forEach(el => el.value = '');
+            const groupedData = groupData(sanpham);
+            updateStatistics(groupedData);
+            populateDataTable(groupedData);
+            updateChart(groupedData);
+        }
+
+        // Populate filter dropdowns
+        function populateFilterDropdowns() {
+            const uniqueValues = sanpham.reduce((acc, item) => {
+                acc.khuVuc.add(item['Khu vực']);
+                acc.keHoanh.add(item['Mã kế hoạch']);
+                acc.trangThai.add(item['Trạng thái']);
+                acc.nhanvien.add(item['Đội kéo']);
+                return acc;
+            }, { khuVuc: new Set(), keHoanh: new Set(), trangThai: new Set(), nhanvien: new Set() });
+
+            populateDropdown(khuVucFilter, uniqueValues.khuVuc);
+            populateDropdown(keHoanhFilter, uniqueValues.keHoanh);
+            populateDropdown(trangthaiFilter, uniqueValues.trangThai);
+            populateDropdown(nhanvienFilter, uniqueValues.nhanvien);
+        }
+
+        function populateDropdown(dropdown, dataSet) {
+            dropdown.innerHTML = '<option value="">Tất cả</option>' +
+                Array.from(dataSet).map(value => `<option value="${value}">${value}</option>`).join('');
+        }
+
+        function updateChart(data) {
+            const employeeData = data.reduce((acc, item) => {
+                if (!acc[item['Đội kéo']]) {
+                    acc[item['Đội kéo']] = { meters: 0, money: 0 };
+                }
+                acc[item['Đội kéo']].meters += parseFloat(item['Số mét T/C']) || 0;
+                acc[item['Đội kéo']].money += parseFloat(item['Số tiền']) || 0;
+                return acc;
+            }, {});
+
+            const chartData = Object.entries(employeeData).map(([employee, stats]) => ({
+                name: employee,
+                meters: stats.meters,
+                money: stats.money
+            }));
+
+            Highcharts.chart('statsChart', {
+                chart: {
+                    type: 'column',
+                    backgroundColor: htmlElement.classList.contains('dark') ? '#1f2937' : '#ffffff'
+                },
+                title: {
+                    text: 'Thống kê theo nhân viên',
+                    style: {
+                        color: htmlElement.classList.contains('dark') ? '#ffffff' : '#333333'
+                    }
+                },
+                xAxis: {
+                    categories: chartData.map(item => item.name),
+                    labels: {
+                        style: {
+                            color: htmlElement.classList.contains('dark') ? '#d1d5db' : '#666666'
+                        }
+                    }
+                },
+                yAxis: [{
+                    title: {
+                        text: 'Số mét thi công',
+                        style: {
+                            color: htmlElement.classList.contains('dark') ? '#d1d5db' : '#666666'
+                        }
+                    },
+                    labels: {
+                        style: {
+                            color: htmlElement.classList.contains('dark') ? '#d1d5db' : '#666666'
+                        }
+                    }
+                }, {
+                    title: {
+                        text: 'Số tiền thi công',
+                        style: {
+                            color: htmlElement.classList.contains('dark') ? '#d1d5db' : '#666666'
+                        }
+                    },
+                    opposite: true,
+                    labels: {
+                        style: {
+                            color: htmlElement.classList.contains('dark') ? '#d1d5db' : '#666666'
+                        }
+                    }
+                }],
+                legend: {
+                    itemStyle: {
+                        color: htmlElement.classList.contains('dark') ? '#d1d5db' : '#333333'
+                    }
+                },
+                series: [{
+                    name: 'Số mét thi công',
+                    data: chartData.map(item => item.meters),
+                    color: '#4f46e5'
+                }, {
+                    name: 'Số tiền thi công',
+                    type: 'spline',
+                    data: chartData.map(item => item.money),
+                    yAxis: 1,
+                    color: '#10b981'
+                }],
+                tooltip: {
+                    shared: true,
+                    formatter: function () {
+                        return `<b>${this.x}</b><br/>` +
+                            `Số mét thi công: ${Highcharts.numberFormat(this.points[0].y, 0)} mét<br/>` +
+                            `Số tiền thi công: ${formatCurrency(this.points[1].y)}`;
+                    }
+                },
+                credits: {
+                    enabled: false
+                }
+            });
+        }
+        async function init() {
+            try {
+                sanpham = await fetchSanphamData();
+                sanpham = sanpham.map(item => ({
+                    ...item,
+                    'Thời gian': formatDate(item['Thời gian'])
+                }));
+                const groupedData = groupData(sanpham);
+                updateGroupDataTable(sanpham);  
+                updateStatistics(groupedData);
+                populateDataTable(groupedData);
+                populateFilterDropdowns();
+                updateChart(groupedData);
+            } catch (error) {
+                console.error("Error initializing app:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            }
+        }
+
+        // Event listeners
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        filterToggle.addEventListener('click', () => filterDropdown.classList.toggle('active'));
+        applyFiltersBtn.addEventListener('click', applyFilters);
+        resetFiltersBtn.addEventListener('click', resetFilters);
+        [khuVucFilter, startDateInput, endDateInput, keHoanhFilter, trangthaiFilter, nhanvienFilter].forEach(el =>
+            el.addEventListener('change', applyFilters)
+        );
+
+        // Close filter dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!filterDropdown.contains(event.target) && !filterToggle.contains(event.target)) {
+                filterDropdown.classList.remove('active');
+            }
+        });
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Set initial dark mode based on user preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            htmlElement.classList.add('dark');
+        }
+        updateDarkModeIcon();
+
+        // Responsive design for mobile
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                filterDropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+
+</html>
