@@ -12,6 +12,7 @@
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -40,6 +41,7 @@
                             <h1 class="ml-2 text-xl font-bold text-gray-800 dark:text-white">NZ ERP PRO</h1>
                         </div>
                     </div>
+                  
                     <div class="flex items-center">
                         <button id="filterToggle"
                             class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:hidden">
@@ -124,10 +126,17 @@
                                                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                     Áp dụng
                                                 </button>
+                                               
+                                                    <button id="exportExcel"
+                                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                        <i class="fas fa-file-excel mr-2"></i> Xuất Excel
+                                                    </button>
+                                                
                                                 <button id="resetFilters"
                                                     class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                     Đặt lại
                                                 </button>
+
                                             </div>
                                         </div>
                                     </div>
@@ -244,23 +253,37 @@
                                             <div id="statsChart" class="w-full" style="height: 400px;"></div>
                                         </div>
                                     </div>
-                                </div> <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+                                </div>
+                                <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
                                     <div class="px-4 py-5 sm:p-6">
-                                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bảng dữ liệu nhóm</h3>
+                                        <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">Bảng dữ
+                                            liệu nhóm</h3>
                                         <div class="mt-5 flow-root">
                                             <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                                                 <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                                                    <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
+                                                    <table
+                                                        class="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
                                                         <thead>
                                                             <tr>
-                                                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-0">Mã nhân viên</th>
-                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Khu vực</th>
-                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Số mét T/C (Đã duyệt)</th>
-                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Số mét T/C (Chưa duyệt)</th>
-                                                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Số tiền</th>
+                                                                <th scope="col"
+                                                                    class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-0">
+                                                                    Mã nhân viên</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Khu vực</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Số mét T/C (Đã duyệt)</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Số mét T/C (Chưa duyệt)</th>
+                                                                <th scope="col"
+                                                                    class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">
+                                                                    Số tiền</th>
                                                             </tr>
                                                         </thead>
-                                                        <tbody id="groupDataTableBody" class="divide-y divide-gray-200 dark:divide-gray-700">
+                                                        <tbody id="groupDataTableBody"
+                                                            class="divide-y divide-gray-200 dark:divide-gray-700">
                                                             <!-- Dữ liệu nhóm sẽ được thêm vào đây bằng JavaScript -->
                                                         </tbody>
                                                     </table>
@@ -359,7 +382,25 @@
                 ? '<i class="fas fa-sun"></i>'
                 : '<i class="fas fa-moon"></i>';
         }
+        // Function to export data to Excel
+        function exportToExcel(groupedData, filteredData) {
+            // Create workbook and worksheets
+            const wb = XLSX.utils.book_new();
+            const wsGrouped = XLSX.utils.json_to_sheet(groupedData);
+            const wsFiltered = XLSX.utils.json_to_sheet(filteredData);
 
+            // Add worksheets to workbook
+            XLSX.utils.book_append_sheet(wb, wsGrouped, "Dữ liệu nhóm");
+            XLSX.utils.book_append_sheet(wb, wsFiltered, "Dữ liệu chi tiết");
+
+            // Save the workbook
+            XLSX.writeFile(wb, "Thong_ke_san_pham.xlsx");
+        }
+        // Event listener for export button
+        document.getElementById('exportExcel').addEventListener('click', () => {
+            const groupedData = groupData(filteredData);
+            exportToExcel(groupedData, filteredData);
+        });
         // API request function
         async function apiRequest(tableName, action, data, Properties) {
             const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
@@ -443,31 +484,31 @@
             }).join('');
         }
         function groupDataByEmployeeAndArea(data) {
-        return data.reduce((acc, item) => {
-            const key = `${item['Đội kéo']}-${item['Khu vực']}`;
-            if (!acc[key]) {
-                acc[key] = {
-                    'Đội kéo': item['Đội kéo'],
-                    'Khu vực': item['Khu vực'],
-                    'Số mét T/C (Đã duyệt)': 0,
-                    'Số mét T/C (Chưa duyệt)': 0,
-                    'Số tiền': 0
-                };
-            }
-            if (item['Trạng thái'] === 'Đã duyệt') {
-                acc[key]['Số mét T/C (Đã duyệt)'] += parseFloat(item['Số mét T/C']) || 0;
-            } else {
-                acc[key]['Số mét T/C (Chưa duyệt)'] += parseFloat(item['Số mét T/C']) || 0;
-            }
-            acc[key]['Số tiền'] += parseFloat(item['Số tiền']) || 0;
-            return acc;
-        }, {});
-    }
-     // Hàm mới để cập nhật bảng dữ liệu nhóm
-     function updateGroupDataTable(data) {
-        const groupedData = groupDataByEmployeeAndArea(data);
-        const tableBody = document.getElementById('groupDataTableBody');
-        tableBody.innerHTML = Object.values(groupedData).map(item => `
+            return data.reduce((acc, item) => {
+                const key = `${item['Đội kéo']}-${item['Khu vực']}`;
+                if (!acc[key]) {
+                    acc[key] = {
+                        'Đội kéo': item['Đội kéo'],
+                        'Khu vực': item['Khu vực'],
+                        'Số mét T/C (Đã duyệt)': 0,
+                        'Số mét T/C (Chưa duyệt)': 0,
+                        'Số tiền': 0
+                    };
+                }
+                if (item['Trạng thái'] === 'Đã duyệt') {
+                    acc[key]['Số mét T/C (Đã duyệt)'] += parseFloat(item['Số mét T/C']) || 0;
+                } else {
+                    acc[key]['Số mét T/C (Chưa duyệt)'] += parseFloat(item['Số mét T/C']) || 0;
+                }
+                acc[key]['Số tiền'] += parseFloat(item['Số tiền']) || 0;
+                return acc;
+            }, {});
+        }
+        // Hàm mới để cập nhật bảng dữ liệu nhóm
+        function updateGroupDataTable(data) {
+            const groupedData = groupDataByEmployeeAndArea(data);
+            const tableBody = document.getElementById('groupDataTableBody');
+            tableBody.innerHTML = Object.values(groupedData).map(item => `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-0">${item['Đội kéo']}</td>
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${item['Khu vực']}</td>
@@ -476,7 +517,7 @@
                 <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">${formatCurrency(item['Số tiền'])}</td>
             </tr>
         `).join('');
-    }
+        }
         // Group data
         function groupData(data) {
             return Object.values(data.reduce((acc, item) => {
@@ -497,7 +538,7 @@
                 return acc;
             }, {}));
         }
-
+        let filteredData = [];
         // Apply filters
         function applyFilters() {
             const khuVuc = khuVucFilter.value;
@@ -506,12 +547,12 @@
             const keHoanh = keHoanhFilter.value;
             const trangThai = trangthaiFilter.value;
             const nhanvien = nhanvienFilter.value;
-            const filteredData = sanpham.filter(item => {
+
+            filteredData = sanpham.filter(item => {
                 const itemDate = new Date(item['Thời gian']);
                 return (!khuVuc || item['Khu vực'] === khuVuc) &&
                     (!startDate || itemDate >= new Date(startDate)) &&
                     (!endDate || itemDate <= new Date(endDate)) &&
-
                     (!keHoanh || item['Mã kế hoạch'].includes(keHoanh)) &&
                     (!trangThai || item['Trạng thái'] === trangThai) &&
                     (!nhanvien || item['Đội kéo'] === nhanvien);
@@ -521,10 +562,7 @@
             updateStatistics(groupedData);
             populateDataTable(groupedData);
             updateChart(groupedData);
-            updateGroupDataTable(filteredData); 
-            filterDropdown.classList.remove('active');
         }
-
         // Reset filters
         function resetFilters() {
             [khuVucFilter, startDateInput, endDateInput, keHoanhFilter, trangthaiFilter, nhanvienFilter].forEach(el => el.value = '');
@@ -653,7 +691,7 @@
                     'Thời gian': formatDate(item['Thời gian'])
                 }));
                 const groupedData = groupData(sanpham);
-                updateGroupDataTable(sanpham);  
+                updateGroupDataTable(sanpham);
                 updateStatistics(groupedData);
                 populateDataTable(groupedData);
                 populateFilterDropdowns();

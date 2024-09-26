@@ -12,6 +12,7 @@
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -57,7 +58,7 @@
         </nav>
 
         <div class="py-10">
-           
+
             <main>
                 <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                     <div class="px-4 py-8 sm:px-0">
@@ -114,6 +115,10 @@
                                                 <button id="applyFilters"
                                                     class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                                     Áp dụng
+                                                </button>
+                                                <button id="exportExcel"
+                                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                    <i class="fas fa-file-excel mr-2"></i> Xuất Excel
                                                 </button>
                                                 <button id="resetFilters"
                                                     class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -187,7 +192,7 @@
                                                     <dl>
                                                         <dt
                                                             class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                                                        Mét chưa duyệt
+                                                            Mét chưa duyệt
                                                         </dt>
                                                         <dd>
                                                             <div id="averageDiscount"
@@ -386,9 +391,9 @@
                 return acc;
             }, { totalMeters: 0, totalMoney: 0, totalUnapproved: 0, totalAllowance: 0 });
 
-            document.getElementById('totalInvoices').textContent = stats.totalMeters.toFixed(2);
+            document.getElementById('totalInvoices').textContent = stats.totalMeters.toFixed(0);
             document.getElementById('totalRevenue').textContent = formatCurrency(stats.totalMoney);
-            document.getElementById('averageDiscount').textContent = stats.totalUnapproved.toFixed(2);
+            document.getElementById('averageDiscount').textContent = stats.totalUnapproved.toFixed(0);
             document.getElementById('averageVAT').textContent = formatCurrency(stats.totalAllowance);
 
             if (chart) {
@@ -412,7 +417,26 @@
                 `;
             }).join('');
         }
+        // Function to export data to Excel
+        function exportToExcel(groupedData, filteredData) {
+            // Create workbook and worksheets
+            const wb = XLSX.utils.book_new();
+            const wsGrouped = XLSX.utils.json_to_sheet(groupedData);
+            const wsFiltered = XLSX.utils.json_to_sheet(filteredData);
 
+            // Add worksheets to workbook
+            XLSX.utils.book_append_sheet(wb, wsGrouped, "Dữ liệu nhóm");
+            XLSX.utils.book_append_sheet(wb, wsFiltered, "Dữ liệu chi tiết");
+
+            // Save the workbook
+            XLSX.writeFile(wb, "Thong_ke_san_pham.xlsx");
+        }
+        let filteredData1 = [];
+        document.getElementById('exportExcel').addEventListener('click', () => {
+            const groupedData = groupData(filteredData1);
+            exportToExcel(groupedData, filteredData1);
+        });
+        
         // Group data
         function groupData(data) {
             return Object.values(data.reduce((acc, item) => {
@@ -449,7 +473,7 @@
                     (!keHoanh || item['Mã kế hoạch'].includes(keHoanh)) &&
                     (!trangThai || item['Trạng thái'] === trangThai);
             });
-
+            filteredData1 =filteredData;
             const groupedData = groupData(filteredData);
             updateStatistics(groupedData);
             populateDataTable(groupedData);
@@ -483,103 +507,103 @@
                 Array.from(dataSet).map(value => `<option value="${value}">${value}</option>`).join('');
         }
 
-   // Initialize chart
-   function initChart() {
-        chart = Highcharts.chart('statsChart', {
-            chart: {
-                type: 'column'
-            },
-            title: {
-                text: 'Thống kê sản phẩm'
-            },
-            xAxis: {
-                categories: [],
+        // Initialize chart
+        function initChart() {
+            chart = Highcharts.chart('statsChart', {
+                chart: {
+                    type: 'column'
+                },
                 title: {
-                    text: 'Loại sản phẩm'
-                }
-            },
-            yAxis: {
-                title: {
-                    text: 'Số mét T/C'
-                }
-            },
-            series: [{
-                name: 'Số mét T/C',
-                data: []
-            }],
-            credits: {
-                enabled: false
-            }
-        });
-    }
-
-   // Update chart
-   function updateChart(data) {
-        const chartData = data.map(item => ({
-            name: item['LSPCHECK'],
-            y: parseFloat(item['Số mét T/C']) || 0
-        }));
-
-        chart.xAxis[0].setCategories(chartData.map(item => item.name));
-        chart.series[0].setData(chartData);
-    }
-        // Update chart theme
-    function updateChartTheme() {
-        const isDark = htmlElement.classList.contains('dark');
-        const textColor = isDark ? '#e2e8f0' : '#4b5563';
-        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-
-        chart.update({
-            chart: {
-                backgroundColor: isDark ? '#1a202c' : '#ffffff'
-            },
-            title: {
-                style: {
-                    color: textColor
-                }
-            },
-            xAxis: {
-                labels: {
-                    style: {
-                        color: textColor
+                    text: 'Thống kê sản phẩm'
+                },
+                xAxis: {
+                    categories: [],
+                    title: {
+                        text: 'Loại sản phẩm'
                     }
                 },
-                gridLineColor: gridColor
-            },
-            yAxis: {
-                labels: {
-                    style: {
-                        color: textColor
+                yAxis: {
+                    title: {
+                        text: 'Số mét T/C'
                     }
                 },
-                gridLineColor: gridColor
-            },
-            legend: {
-                itemStyle: {
-                    color: textColor
+                series: [{
+                    name: 'Số mét T/C',
+                    data: []
+                }],
+                credits: {
+                    enabled: false
                 }
-            }
-        });
-    }
-  // Initialize app
-  async function init() {
-        try {
-            sanpham = await fetchSanphamData();
-            sanpham = sanpham.map(item => ({
-                ...item,
-                'Thời gian': formatDate(item['Thời gian'])
-            }));
-            const groupedData = groupData(sanpham);
-            initChart(); // Initialize Highcharts
-            updateStatistics(groupedData);
-            populateDataTable(groupedData);
-            populateFilterDropdowns();
-            updateChartTheme();
-        } catch (error) {
-            console.error("Error initializing app:", error);
-            alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            });
         }
-    }
+
+        // Update chart
+        function updateChart(data) {
+            const chartData = data.map(item => ({
+                name: item['LSPCHECK'],
+                y: parseFloat(item['Số mét T/C']) || 0
+            }));
+
+            chart.xAxis[0].setCategories(chartData.map(item => item.name));
+            chart.series[0].setData(chartData);
+        }
+        // Update chart theme
+        function updateChartTheme() {
+            const isDark = htmlElement.classList.contains('dark');
+            const textColor = isDark ? '#e2e8f0' : '#4b5563';
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+
+            chart.update({
+                chart: {
+                    backgroundColor: isDark ? '#1a202c' : '#ffffff'
+                },
+                title: {
+                    style: {
+                        color: textColor
+                    }
+                },
+                xAxis: {
+                    labels: {
+                        style: {
+                            color: textColor
+                        }
+                    },
+                    gridLineColor: gridColor
+                },
+                yAxis: {
+                    labels: {
+                        style: {
+                            color: textColor
+                        }
+                    },
+                    gridLineColor: gridColor
+                },
+                legend: {
+                    itemStyle: {
+                        color: textColor
+                    }
+                }
+            });
+        }
+        // Initialize app
+        async function init() {
+            try {
+                sanpham = await fetchSanphamData();
+                sanpham = sanpham.map(item => ({
+                    ...item,
+                    'Thời gian': formatDate(item['Thời gian'])
+                }));
+                const groupedData = groupData(sanpham);
+                initChart(); // Initialize Highcharts
+                updateStatistics(groupedData);
+                populateDataTable(groupedData);
+                populateFilterDropdowns();
+                updateChartTheme();
+            } catch (error) {
+                console.error("Error initializing app:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            }
+        }
 
         // Event listeners
         darkModeToggle.addEventListener('click', toggleDarkMode);
