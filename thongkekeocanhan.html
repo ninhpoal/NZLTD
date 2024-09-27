@@ -472,7 +472,7 @@
                 return (!khuVuc || item['Khu vực'] === khuVuc) &&
                     (!startDate || itemDate >= new Date(startDate)) &&
                     (!endDate || itemDate <= new Date(endDate)) &&
-                    (!keHoanh || item['Mã kế hoạch'].includes(keHoanh)) &&
+                    (!keHoanh || item['MKH'].includes(keHoanh)) &&
                     (!trangThai || item['Trạng thái'] === trangThai);
             });
             filteredData1 =filteredData;
@@ -494,7 +494,7 @@
         function populateFilterDropdowns() {
             const uniqueValues = sanpham.reduce((acc, item) => {
                 acc.khuVuc.add(item['Khu vực']);
-                acc.keHoanh.add(item['Mã kế hoạch']);
+                acc.keHoanh.add(item['MKH']);
                 acc.trangThai.add(item['Trạng thái']);
                 return acc;
             }, { khuVuc: new Set(), keHoanh: new Set(), trangThai: new Set() });
