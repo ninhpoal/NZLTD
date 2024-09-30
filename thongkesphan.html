@@ -81,7 +81,7 @@
             }
         }
     </style>
-     <script>
+    <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -118,11 +118,7 @@
                             <span class="sr-only">Open filters</span>
                             <i class="fas fa-filter"></i>
                         </button>
-                        <button id="exportExcel"
-                            class="mr-2 p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600">
-                            <span class="sr-only">Export to Excel</span>
-                            <i class="fas fa-file-excel"></i>
-                        </button>
+
                         <button id="darkModeToggle"
                             class="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
                             <span class="sr-only">Toggle dark mode</span>
@@ -197,6 +193,11 @@
                                         <button id="applyFilters"
                                             class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                             Áp dụng
+                                        </button>
+                                        <button id="exportExcel"
+                                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                            <span class="sr-only">Export to Excel</span>
+                                            <i class="fas fa-file-excel"></i>
                                         </button>
                                         <button id="resetFilters"
                                             class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -359,7 +360,7 @@
                                     <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                                         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                                             <table id="dataTable"
-                                            class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                                                class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
                                                 <thead>
                                                     <tr>
                                                         <th scope="col"
@@ -788,24 +789,50 @@
                 });
                 updateChartTheme();
             }
-
             function exportToExcel() {
                 const workbook = XLSX.utils.book_new();
 
-                // Export summary data
+                // Export filtered summary data
                 const summaryData = staffSummaryTable.data().toArray();
                 const summaryWS = XLSX.utils.json_to_sheet(summaryData);
                 XLSX.utils.book_append_sheet(workbook, summaryWS, "Tổng hợp theo nhân sự");
 
-                // Export detailed data
+                // Export filtered detailed product data
                 const detailedData = dataTable.data().toArray();
                 const detailedWS = XLSX.utils.json_to_sheet(detailedData);
                 XLSX.utils.book_append_sheet(workbook, detailedWS, "Chi tiết sản phẩm");
 
+                // Export filtered attendance data
+                const filteredCong = getFilteredCongData();
+                const attendanceData = filteredCong.map(item => ({
+                    "Mã chấm công" : item["Mã chấm công"],
+                    "Ngày": item["Ngày"],
+                    "Thứ" : item["Thứ"],
+                    "Mã nhân viên": item["Mã nhân viên"],
+                    "Trạng thái": item["Trạng thái"],
+                    "Đi tỉnh" : item["Đi tỉnh"],
+                    "Tăng ca đêm": item["Tăng ca đêm"],
+                    "Phụ cấp": item["Phụ cấp"]
+                }));
+                const attendanceWS = XLSX.utils.json_to_sheet(attendanceData);
+                XLSX.utils.book_append_sheet(workbook, attendanceWS, "Dữ liệu chấm công");
+
                 // Save the file
-                XLSX.writeFile(workbook, "Thong_ke_san_pham.xlsx");
+                XLSX.writeFile(workbook, "Thong_ke_san_pham_va_cham_cong.xlsx");
             }
 
+            function getFilteredCongData() {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                const nhanvien = document.getElementById('nhanvienFilter').value;
+
+                return cong.filter(item => {
+                    const itemDate = new Date(item["Ngày"]);
+                    return (!startDate || itemDate >= new Date(startDate)) &&
+                        (!endDate || itemDate <= new Date(endDate)) &&
+                        (!nhanvien || item["Mã nhân viên"] === nhanvien);
+                });
+            }
             // Event Listeners
             document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
             document.getElementById('applyFilters').addEventListener('click', applyFilters);
