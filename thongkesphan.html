@@ -567,7 +567,7 @@
 
                 const khuVucSet = new Set(sanpham.map(item => item["Khu vực"]));
                 const keHoanhSet = new Set(sanpham.map(item => item["Mã kế hoạch"]));
-                const nhanvienSet = new Set(sanpham.map(item => item["Nhân sự tham gia"]));
+                const nhanvienSet = new Set(sanpham.map(item => item["Chức vụ"]));
 
                 populateDropdown(khuVucFilter, khuVucSet);
                 populateDropdown(keHoanhFilter, keHoanhSet);
@@ -605,7 +605,7 @@
                         (!startDate || itemDate >= new Date(startDate)) &&
                         (!endDate || itemDate <= new Date(endDate)) &&
                         (!keHoanh || item["Mã kế hoạch"] === keHoanh) &&
-                        (!nhanvien || item["Nhân sự tham gia"] === nhanvien) &&
+                        (!nhanvien || item["Chức vụ"] === nhanvien) &&
                         (!trangThai || item["Trạng thái"] === trangThai);
                 });
 
@@ -812,7 +812,8 @@
                     "Trạng thái": item["Trạng thái"],
                     "Đi tỉnh" : item["Đi tỉnh"],
                     "Tăng ca đêm": item["Tăng ca đêm"],
-                    "Phụ cấp": item["Phụ cấp"]
+                    "Phụ cấp": item["Phụ cấp"],
+                    "Phụ cấp chủ nhật": item["Phụ cấp chủ nhật"]
                 }));
                 const attendanceWS = XLSX.utils.json_to_sheet(attendanceData);
                 XLSX.utils.book_append_sheet(workbook, attendanceWS, "Dữ liệu chấm công");
