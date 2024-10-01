@@ -552,7 +552,7 @@
                 const totalProducts = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số lượng"] || 0), 0);
                 const totalRevenue = filteredSanPham.reduce((sum, item) => sum + parseInt(item["Số tiền"] || 0), 0);
                 const totalWorkDays = filteredCong.length;
-                const totalAllowance = filteredCong.reduce((sum, item) => sum + parseInt(item["Phụ cấp"] || 0), 0);
+                const totalAllowance = filteredCong.reduce((sum, item) => sum + parseInt(item["Phụ cấp"] || 0) + parseInt(item["Phụ cấp chủ nhật"] || 0), 0);
 
                 document.getElementById('totalProducts').textContent = totalProducts;
                 document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
