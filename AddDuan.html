@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -255,7 +256,8 @@
 
                         }
                     }
-
+                    const urlParams = new URLSearchParams(window.location.search);
+                    manv = urlParams.get('manv');
                     const duAnData = {
                         "Ngày nhận": formatDate(document.getElementById('ngayNhan').value),
                         "Deadline KH": formatDate(document.getElementById('deadline').value),
@@ -269,7 +271,8 @@
                         "Giám sát": document.getElementById('giamSat').value || '',
                         "Tổng bộ chia": (document.getElementById('tongBoChua').value) || '',
                         "Tổng số Tủ/ODF/tập điểm": (document.getElementById('tongTuODFTapDiem').value) || '',
-                        "Dự toán Core": (document.getElementById('duToanCore').value) || ''
+                        "Dự toán Core": (document.getElementById('duToanCore').value) || '',
+                        "Lịch sử" : manv + " Đã nhận dự án vào ngày :"+ formatDate(document.getElementById('ngayNhan').value)
                     };
 
                     console.log(duAnData)
