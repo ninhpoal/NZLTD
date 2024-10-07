@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiếu Xuất Nhập Kho</title>
+
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fixed-bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .fixed-bottom-bar .choices {
+            margin-bottom: 10px;
+        }
+
+        .fixed-bottom-bar button {
+            width: 100%;
+        }
+
+        .mobile-table {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-table-row {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f8fafc;
+        }
+
+        .mobile-table-cell {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .mobile-table-cell label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+                padding-bottom: 120px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div id="loadingOverlay" class="overlay">
+        <div class="spinner"></div>
+    </div>
+    <div class="container mx-auto px-4 py-8 max-w-10xl">
+        <form id="xuatNhapForm" class="bg-white shadow-md rounded px-4 sm:px-8 pt-6 pb-8 mb-4">
+            <h2 class="text-2xl font-bold mb-6 text-center">Form nhập vật tư thừa</h2>
+            <div class="grid grid-cols-1 gap-4 mb-6 form-grid">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="maKeHoach">
+                        Mã kế hoạch:
+                    </label>
+                    <input type="text" id="makh"
+                        class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500"
+                        autocomplete="off" required disabled>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="maKeHoach">
+                        Nhân viên:
+                    </label>
+                    <input type="text" id="nhanvien"
+                        class="w-full px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:border-blue-500"
+                        autocomplete="off" required disabled>
+                </div>
+            </div>
+            <h2 class="text-2xl font-bold mb-6 text-center">Danh sách vật tư</h2>
+
+            <div id="mobileTableContainer" class="mobile-table"></div>
+        </form>
+    </div>
+    <br>
+
+    <br>
+    <div class="fixed-bottom-bar">
+        <select id="fixedVatTuSelect" placeholder="Chọn vật tư...">
+            <option value="">Chọn vật tư</option>
+        </select>
+        <button type="submit" form="xuatNhapForm"
+            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mt-2">
+            Tạo Phiếu
+        </button>
+    </div>
+    <script>
+        // Các hằng số và biến toàn cục
+        const APP_ID = '3519f9a9-390d-425c-b2af-4c76794ddd4a';
+        const API_KEY = 'V2-DxCTd-Nhf75-B243D-CQXD9-1ePO4-GCtq5-mHU1v-YHx0j';
+        const API_BASE_URL = 'https://www.appsheet.com/api/v2/apps';
+        let dataKHO = [];
+        let fixedVatTuSelect;
+        const APP_ID1 = '0ffda765-62b7-4260-b7ed-5bcbb530b113';
+        const API_KEY1 = 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF';
+        // Cấu hình toastr
+        toastr.options = {
+            closeButton: true,
+            progressBar: true,
+            positionClass: "toast-top-center",
+            timeOut: "3000"
+        };
+
+        // Hàm hiển thị/ẩn overlay loading
+        function toggleLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        // Hàm gọi API
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `${API_BASE_URL}/${APP_ID}/tables/${encodeURIComponent(tableName)}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': API_KEY,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                return await response.json();
+            } catch (error) {
+                console.error('API request error:', error);
+                throw error;
+            }
+        }
+        async function apiRequest1(tableName, action, data, Properties) {
+            const apiUrl = `${API_BASE_URL}/${APP_ID1}/tables/${encodeURIComponent(tableName)}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': API_KEY1,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+                if (!response.ok) throw new Error('Network response was not ok');
+                return await response.json();
+            } catch (error) {
+                console.error('API request error:', error);
+                throw error;
+            }
+        }
+
+        // Hàm tạo control số lượng
+        function createQuantityControl(initialValue = 1) {
+            const container = document.createElement('div');
+            container.className = 'quantity-control';
+
+            const createButton = (text, className) => {
+                const btn = document.createElement('button');
+                btn.textContent = text;
+                btn.className = `quantity-btn bg-gray-200 ${className}`;
+                btn.type = 'button';
+                return btn;
+            };
+
+            const decreaseBtn = createButton('-', 'rounded-l');
+            const increaseBtn = createButton('+', 'rounded-r');
+            const input = document.createElement('input');
+            Object.assign(input, {
+                type: 'number',
+                value: initialValue,
+                min: 1,
+                className: 'w-16 text-center border-t border-b border-gray-300'
+            });
+
+            const updateQuantity = (change) => {
+                const newValue = parseInt(input.value) + change;
+                if (newValue >= 1) input.value = newValue;
+            };
+
+            decreaseBtn.onclick = () => updateQuantity(-1);
+            increaseBtn.onclick = () => updateQuantity(1);
+
+            container.append(decreaseBtn, input, increaseBtn);
+            return container;
+        }
+
+        // Hàm tải dữ liệu kho
+        async function loadDataKho() {
+            try {
+                const result = await apiRequest('Kho FPT', 'Find', {}, {
+                    Properties: { Selector: "Filter(Kho FPT, true)" }
+                });
+                if (Array.isArray(result) && result.length > 0) {
+                    console.log('Dữ liệu kho đã tải:', result);
+                    return result;
+                } else {
+                    console.error('Không có dữ liệu kho hoặc dữ liệu không hợp lệ:', result);
+                    toastr.warning('Không có dữ liệu vật tư từ kho', 'Cảnh báo');
+                    return [];
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải dữ liệu kho:', error);
+                toastr.error('Không thể tải dữ liệu kho. Vui lòng thử lại sau.', 'Lỗi');
+                return [];
+            }
+        }
+
+        function isCable(loaiVatTu) {
+            return loaiVatTu.toLowerCase().includes('cáp');
+        }
+
+        function addCableRow(item) {
+            const mobileTableContainer = document.getElementById('mobileTableContainer');
+            const newRow = document.createElement('div');
+            newRow.className = 'mobile-table-row';
+            const isCableItem = isCable(item['Loại vật tư']);
+
+            newRow.innerHTML = `
+                <div class="mobile-table-cell">
+                    <label>Loại vật tư:</label>
+                    <span>${item['Loại vật tư'] || ''}</span>
+                </div>
+                <div class="mobile-table-cell">
+                    <label>Tên vật tư:</label>
+                    <span>${item['Tên vật tư']}</span>
+                </div>
+                <div class="mobile-table-cell">
+                    <label>Số lượng:</label>
+                    <div id="quantityControl"></div>
+                </div>
+                ${isCableItem ? `
+                    <div class="mobile-table-cell">
+                        <label>Số đầu:</label>
+                        <input type="number" class="w-full px-2 py-1 border rounded so-dau" placeholder="Số đầu">
+                    </div>
+                    <div class="mobile-table-cell">
+                        <label>Số cuối:</label>
+                        <input type="number" class="w-full px-2 py-1 border rounded so-cuoi" placeholder="Số cuối">
+                    </div>
+                    <div class="mobile-table-cell">
+                        <label>Mã cáp:</label>
+                        <input type="text" class="w-full px-2 py-1 border rounded ma-cap" placeholder="Mã cáp">
+                    </div>
+                ` : ''}
+                <div class="mobile-table-cell">
+                    <label>Ghi chú:</label>
+                    <input type="text" class="w-full px-2 py-1 border rounded" placeholder="Ghi chú">
+                </div>
+                <button type="button" class="remove-cable mt-2 text-red-600 hover:text-red-900">Xóa</button>
+            `;
+
+            newRow.dataset.maHang = item['Mã hàng'];
+            newRow.dataset.loaiVatTu = item['Loại vật tư'] || '';
+            newRow.dataset.tenVatTu = item['Tên vật tư'];
+
+            const quantityControl = createQuantityControl();
+            newRow.querySelector('#quantityControl').replaceWith(quantityControl);
+
+            if (isCableItem) {
+                const soDauInput = newRow.querySelector('.so-dau');
+                const soCuoiInput = newRow.querySelector('.so-cuoi');
+                const soLuongInput = quantityControl.querySelector('input[type="number"]');
+
+                soDauInput.addEventListener('input', updateCableQuantity);
+                soCuoiInput.addEventListener('input', updateCableQuantity);
+
+                function updateCableQuantity() {
+                    const soDau = parseInt(soDauInput.value) || 0;
+                    const soCuoi = parseInt(soCuoiInput.value) || 0;
+                    const soLuong = Math.abs(soCuoi - soDau);
+                    soLuongInput.value = soLuong;
+                    soLuongInput.disabled = true;
+                }
+            }
+
+            mobileTableContainer.appendChild(newRow);
+
+            newRow.querySelector('.remove-cable').addEventListener('click', function () {
+                mobileTableContainer.removeChild(newRow);
+            });
+        }
+
+        function getCableData() {
+            return Array.from(document.querySelectorAll('.mobile-table-row')).map(row => {
+                const maHang = row.dataset.maHang;
+                const loaiVatTu = row.dataset.loaiVatTu;
+                const tenVatTu = row.dataset.tenVatTu;
+                const isCableItem = isCable(loaiVatTu);
+
+                let soLuong, soDau, soCuoi, maCap;
+
+                if (isCableItem) {
+                    soDau = parseInt(row.querySelector('.so-dau').value) || 0;
+                    soCuoi = parseInt(row.querySelector('.so-cuoi').value) || 0;
+                    soLuong = Math.abs(soCuoi - soDau);
+                    maCap = row.querySelector('.ma-cap').value;
+                } else {
+                    soLuong = parseInt(row.querySelector('.quantity-control input[type="number"]').value, 10);
+                    soDau = soCuoi = '';
+                    maCap = '';
+                }
+
+                const ghiChu = row.querySelector('input[placeholder="Ghi chú"]').value;
+                return { maHang, loaiVatTu, tenVatTu, soLuong, soDau, soCuoi, maCap, ghiChu };
+            }).filter(({ maHang, soLuong }) => maHang && soLuong);
+        }
+
+        function updateAvailableItems() {
+            const defaultChoice = {
+                value: '',
+                label: 'Chọn vật tư...',
+                selected: true,
+                disabled: false
+            };
+            const choices = [
+                defaultChoice,
+                ...dataKHO.map(item => ({
+                    value: item['Mã hàng'],
+                    label: `${item['Tên vật tư']} (${item['Mã hàng']})`
+                }))
+            ];
+            fixedVatTuSelect.setChoices(choices, 'value', 'label', true);
+        }
+
+        async function submitForm(e) {
+            e.preventDefault();
+            toggleLoading(true);
+
+            try {
+                const cableData = getCableData();
+                const makh = document.getElementById('makh').value;
+                const nhanvien = document.getElementById('nhanvien').value;
+
+                if (cableData.length === 0) {
+                    throw new Error('Không có dữ liệu vật tư để thêm.');
+                }
+
+                const formData = cableData.map(row => ({
+                    
+                    "Mã hàng": row.maHang,
+                    "Loại vật tư": row.loaiVatTu,
+                    "Thiết bị và cấu hình": row.tenVatTu,
+                    "Số lượng": row.soLuong,
+                    "Số đầu": row.soDau,
+                    "Số cuối": row.soCuoi,
+                    "Mã cáp": row.maCap,
+                    "Ghi chú": row.ghiChu,
+                    "Mã kế hoạch": makh,
+                    "Nhân viên": nhanvien
+                }));
+
+                console.log('Form data submitted:', formData);
+
+                const response = await apiRequest1('Vật tư thừa', 'Add', { Rows: formData }, {
+                    Properties: {}
+                });
+                toastr.success('Đã gửi form thành công!', 'Thành công');
+            } catch (error) {
+                console.error('Lỗi khi gửi form:', error);
+                toastr.error('Đã xảy ra lỗi khi gửi form.', 'Lỗi');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+        async function initializeForm() {
+            toggleLoading(true);
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                document.getElementById('makh').value = urlParams.get('makh') || '';
+                document.getElementById('nhanvien').value = urlParams.get('nhanvien') || '';
+
+                dataKHO = await loadDataKho();
+
+                if (dataKHO.length === 0) {
+                    toastr.warning('Không có dữ liệu vật tư từ kho', 'Cảnh báo');
+                }
+
+                fixedVatTuSelect = new Choices('#fixedVatTuSelect', {
+                    searchEnabled: true,
+                    itemSelectText: '',
+                    noChoicesText: 'Không có vật tư nào khả dụng',
+                    noResultsText: 'Không tìm thấy vật tư',
+                    placeholder: true,
+                    placeholderValue: 'Chọn vật tư...',
+                });
+
+                updateAvailableItems();
+
+                fixedVatTuSelect.passedElement.element.addEventListener('change', function (event) {
+                    const selectedValue = event.detail.value;
+                    if (selectedValue) {
+                        const selectedItem = dataKHO.find(item => item['Mã hàng'] === selectedValue);
+                        if (selectedItem) {
+                            addCableRow(selectedItem);
+                            fixedVatTuSelect.setChoiceByValue('');
+                        } else {
+                            console.error('Không tìm thấy vật tư với mã:', selectedValue);
+                            toastr.error('Không tìm thấy thông tin vật tư', 'Lỗi');
+                        }
+                    }
+                });
+
+                document.getElementById('xuatNhapForm').addEventListener('submit', submitForm);
+
+                toastr.success('Đã khởi tạo form thành công.', 'Sẵn sàng');
+            } catch (error) {
+                console.error('Lỗi khi khởi tạo form:', error);
+                toastr.error('Có lỗi xảy ra khi khởi tạo form. Vui lòng tải lại trang.', 'Lỗi');
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeForm);
+    </script>
+</body>
+
+</html>
