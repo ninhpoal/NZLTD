@@ -433,9 +433,9 @@
 
         const updateTable = dataType => {
             const tables = {
-                chi: { data: filteredChi, headers: ['Ngày chi', 'Nội dung', 'Số tiền','Nhân viên', 'Trạng thái'], containerId: 'salaryTableContainer' },
-                ung: { data: filteredUng, headers: ['Thời gian','Nội dung', 'Số tiền', 'Nhân viên', 'Trạng thái'], containerId: 'productTableContainer' },
-                thu: { data: filteredThu, headers: ['Ngày thu', 'Nội dung', 'Số tiền','Nhân viên', 'Trạng thái'], containerId: 'productListContainer' }
+                chi: { data: filteredChi, headers: ['Ngày chi', 'Nội dung', 'Số tiền', 'Trạng thái'], containerId: 'salaryTableContainer' },
+                ung: { data: filteredUng, headers: ['Thời gian','Nội dung', 'Số tiền', 'Trạng thái'], containerId: 'productTableContainer' },
+                thu: { data: filteredThu, headers: ['Ngày thu', 'Nội dung', 'Số tiền', 'Trạng thái'], containerId: 'productListContainer' }
             };
             const { data, headers, containerId } = tables[dataType];
             renderTable(data, headers, containerId, dataType);
