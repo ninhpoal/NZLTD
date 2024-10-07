@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .filter-dropdown {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+
+        .responsive-table {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .responsive-table table {
+            min-width: 100%;
+        }
+
+        @media (max-width: 640px) {
+
+            .responsive-table th,
+            .responsive-table td {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .responsive-table {
+                font-size: 0.75rem;
+            }
+
+            .responsive-table th,
+            .responsive-table td {
+                padding: 0.5rem 0.25rem;
+            }
+        }
+
+        .sidebar {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateX(-100%);
+                opacity: 0;
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                z-index: 50;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @media (min-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                top: 64px;
+                left: 0;
+                bottom: 0;
+                width: 250px;
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            .main-content {
+                margin-left: 250px;
+            }
+        }
+
+        @media (max-width: 1023px) {
+            .sidebar {
+                transform: translateX(-100%);
+                opacity: 0;
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                z-index: 50;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+
+        .close-sidebar {
+            display: none;
+        }
+
+        @media (max-width: 1023px) {
+            .close-sidebar {
+                display: block;
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+    </div>
+    <div class="min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-30">
+            <div class="max-w-9xl mx-auto px-4 py-3 flex justify-between items-center">
+                <h1 class="text-lg font-bold text-gray-900 dark:text-white">NZ ERP PRO</h1>
+                <div class="flex items-center space-x-2">
+                    <button id="toggleFilters" class="lg:hidden p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <button id="toggleDarkMode" class="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                        <i class="fas fa-moon dark:hidden"></i>
+                        <i class="fas fa-sun hidden dark:inline"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="flex-grow flex mt-16">
+            <!-- Filters Sidebar -->
+            <aside id="filtersSidebar" class="sidebar bg-white dark:bg-gray-800 shadow-lg overflow-y-auto z-40">
+                <div class="p-4">
+                    <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Tìm kiếm</h2>
+                    <button id="closeSidebar"
+                        class="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Từ
+                                ngày</label>
+                            <input id="fromDate" type="date"
+                                class="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Đến
+                                ngày</label>
+                            <input id="toDate" type="date"
+                                class="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mã nhân
+                                viên</label>
+                            <select id="filterMaNhanVien"
+                                class="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 dark:text-white">
+                            </select>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="applyFilters" type="button"
+                                class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
+                                <i class="fas fa-filter mr-2"></i>Lọc
+                            </button>
+                            <button id="resetFilters" type="button"
+                                class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
+                                <i class="fas fa-undo mr-2"></i>Đặt lại
+                            </button>
+                            <button id="exportExcel" type="button"
+                                class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+                                <i class="fas fa-file-excel mr-2"></i>Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Dashboard Content -->
+            <main class="flex-grow p-4 overflow-x-hidden main-content">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
+                                <i class="fas fa-box-open text-white"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Tổng thu</dt>
+                                <dd id="totalProducts" class="text-lg font-medium text-gray-900 dark:text-white">0</dd>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
+                                <i class="fas fa-money-bill-wave text-white"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Tổng chi</dt>
+                                <dd id="totalRevenue" class="text-lg font-medium text-gray-900 dark:text-white">0 ₫</dd>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                <i class="fas fa-calendar-day text-white"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Tổng ứng</dt>
+                                <dd id="totalWorkDays" class="text-lg font-medium text-gray-900 dark:text-white">0</dd>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
+                                <i class="fas fa-calendar-day text-white"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Số dư</dt>
+                                <dd id="totalSundayWorkDays" class="text-lg font-medium text-gray-900 dark:text-white">0
+                                </dd>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Biểu đồ Thu Chi Ứng</h2>
+                    <div id="chartContainer" class="h-64 sm:h-96 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Danh sách Chi phí</h2>
+                        <div id="salaryTableContainer" class="responsive-table"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Danh sách ứng</h2>
+                        <div id="productTableContainer" class="responsive-table"></div>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Danh sách thu</h2>
+                        <div id="productListContainer" class="responsive-table"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile -->
+    <div id="overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden"></div>
+
+
+    <script>
+        // Global variables
+        const appId = '3429512c-79d0-44f0-8197-e6a77f2bb498';
+        const accessKey = 'V2-CmjiU-ViCzw-1xjZc-QAlWm-zNnZ4-eTiEz-lODjW-fqJmt';
+        const region = 'www';
+        let thu = [], chi = [], ung = [];
+        let filteredThu = [], filteredChi = [], filteredUng = [];
+        let currentPage = { chi: 1, ung: 1, thu: 1 };
+        const itemsPerPage = 5;
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                elements.filtersSidebar.classList.remove('open');
+                elements.overlay.classList.add('hidden');
+            }
+            updateChartSize();
+        };
+        window.addEventListener('resize', handleResize);
+        // DOM elements
+        const elements = {
+            loading: document.getElementById('loading'),
+            fromDate: document.getElementById('fromDate'),
+            toDate: document.getElementById('toDate'),
+            filterMaNhanVien: document.getElementById('filterMaNhanVien'),
+            applyFilters: document.getElementById('applyFilters'),
+            resetFilters: document.getElementById('resetFilters'),
+            totalProducts: document.getElementById('totalProducts'),
+            totalRevenue: document.getElementById('totalRevenue'),
+            totalWorkDays: document.getElementById('totalWorkDays'),
+            totalSundayWorkDays: document.getElementById('totalSundayWorkDays'),
+            salaryTableContainer: document.getElementById('salaryTableContainer'),
+            productTableContainer: document.getElementById('productTableContainer'),
+            productListContainer: document.getElementById('productListContainer'),
+            toggleFilters: document.getElementById('toggleFilters'),
+            toggleDarkMode: document.getElementById('toggleDarkMode'),
+            filtersSidebar: document.getElementById('filtersSidebar'),
+            closeSidebar: document.getElementById('closeSidebar'),
+            overlay: document.getElementById('overlay')
+        };
+
+        // Utility functions
+        const formatDate = date => {
+            date = new Date(date);
+            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        };
+
+        const formatCurrency = amount => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+
+        const sortByDate = (array, dateField) => array.sort((a, b) => new Date(b[dateField]) - new Date(a[dateField]));
+
+        const filterByCurrentMonth = (array, dateField) => {
+            const now = new Date();
+            return array.filter(item => {
+                const itemDate = new Date(item[dateField]);
+                return itemDate.getFullYear() === now.getFullYear() && itemDate.getMonth() === now.getMonth();
+            });
+        };
+
+        // API functions
+        const apiRequest = async (tableName, action, data, Properties) => {
+            elements.loading.classList.remove('hidden');
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ Action: action, ...Properties, ...data })
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            } finally {
+                elements.loading.classList.add('hidden');
+            }
+        };
+
+        const fetchData = async (tableName, dateField) => {
+            try {
+                const response = await apiRequest(tableName, 'Find', {}, {
+                    Properties: { Selector: `Filter(${tableName}, true)` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return sortByDate(response, dateField);
+            } catch (error) {
+                console.error(`Error fetching ${tableName} data:`, error);
+                throw error;
+            }
+        };
+
+        // Rendering functions
+        const renderTable = (data, headers, containerId, dataType) => {
+            const container = elements[containerId];
+            const table = document.createElement('table');
+            table.className = 'w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400';
+
+            const headerRow = document.createElement('tr');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                th.className = 'px-6 py-3';
+                headerRow.appendChild(th);
+            });
+            table.appendChild(headerRow);
+
+            const startIndex = (currentPage[dataType] - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            data.slice(startIndex, endIndex).forEach(item => {
+                const row = document.createElement('tr');
+                headers.forEach(header => {
+                    const td = document.createElement('td');
+                    td.textContent = header === 'Số tiền' ? formatCurrency(parseFloat(item[header] || 0)) : item[header] || '';
+                    td.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white';
+                    row.appendChild(td);
+                });
+                table.appendChild(row);
+            });
+
+            container.innerHTML = '';
+            container.appendChild(table);
+
+            renderPagination(data.length, currentPage[dataType], dataType, container);
+        };
+
+        const renderPagination = (totalItems, currentPageNum, dataType, container) => {
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const paginationContainer = document.createElement('div');
+            paginationContainer.className = 'flex justify-between items-center mt-4';
+
+            const pageInfo = document.createElement('span');
+            pageInfo.textContent = `Trang ${currentPageNum} / ${totalPages}`;
+            pageInfo.className = 'text-sm text-gray-700 dark:text-gray-300';
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'flex space-x-2';
+
+            const createButton = (text, onClick, isDisabled) => {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.className = `px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
+                button.onclick = onClick;
+                button.disabled = isDisabled;
+                return button;
+            };
+
+            buttonContainer.appendChild(createButton('Trước', () => {
+                if (currentPage[dataType] > 1) {
+                    currentPage[dataType]--;
+                    updateTable(dataType);
+                }
+            }, currentPageNum === 1));
+
+            buttonContainer.appendChild(createButton('Sau', () => {
+                if (currentPage[dataType] < totalPages) {
+                    currentPage[dataType]++;
+                    updateTable(dataType);
+                }
+            }, currentPageNum === totalPages));
+
+            paginationContainer.appendChild(pageInfo);
+            paginationContainer.appendChild(buttonContainer);
+            container.appendChild(paginationContainer);
+        };
+
+        const updateTable = dataType => {
+            const tables = {
+                chi: { data: filteredChi, headers: ['Ngày chi', 'Nội dung', 'Số tiền','Nhân viên', 'Trạng thái'], containerId: 'salaryTableContainer' },
+                ung: { data: filteredUng, headers: ['Thời gian','Nội dung', 'Số tiền', 'Nhân viên', 'Trạng thái'], containerId: 'productTableContainer' },
+                thu: { data: filteredThu, headers: ['Ngày thu', 'Nội dung', 'Số tiền','Nhân viên', 'Trạng thái'], containerId: 'productListContainer' }
+            };
+            const { data, headers, containerId } = tables[dataType];
+            renderTable(data, headers, containerId, dataType);
+        };
+
+        const updateDashboardStats = () => {
+            const calculateTotal = data => data.reduce((sum, item) => sum + parseFloat(item['Số tiền'] || 0), 0);
+            const totalThu = calculateTotal(filteredThu);
+            const totalChi = calculateTotal(filteredChi);
+            const totalUng = calculateTotal(filteredUng);
+            const balance = totalThu - totalChi;
+
+            elements.totalProducts.textContent = formatCurrency(totalThu);
+            elements.totalRevenue.textContent = formatCurrency(totalChi);
+            elements.totalWorkDays.textContent = formatCurrency(totalUng);
+            elements.totalSundayWorkDays.textContent = formatCurrency(balance);
+        };
+
+        const renderChart = () => {
+            const prepareChartData = () => {
+                const months = {};
+                [...filteredThu, ...filteredChi, ...filteredUng].forEach(item => {
+                    const date = new Date(item['Ngày thu'] || item['Ngày chi'] || item['Thời gian']);
+                    const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+                    if (!months[monthYear]) {
+                        months[monthYear] = { month: monthYear, thu: 0, chi: 0, ung: 0 };
+                    }
+                    if (item['Ngày thu']) months[monthYear].thu += parseFloat(item['Số tiền'] || 0);
+                    if (item['Ngày chi']) months[monthYear].chi += parseFloat(item['Số tiền'] || 0);
+                    if (item['Thời gian']) months[monthYear].ung += parseFloat(item['Số tiền'] || 0);
+                });
+                return Object.values(months).sort((a, b) => new Date(a.month) - new Date(b.month));
+            };
+
+            const chartData = prepareChartData();
+            Highcharts.chart('chartContainer', {
+                chart: { type: 'column' },
+                title: { text: 'Thu Chi Ứng theo tháng' },
+                xAxis: { categories: chartData.map(d => d.month), crosshair: true },
+                yAxis: { min: 0, title: { text: 'Số tiền (VNĐ)' } },
+                tooltip: {
+                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td><td style="padding:0"><b>{point.y:.1f} VNĐ</b></td></tr>',
+                    footerFormat: '</table>',
+                    shared: true,
+                    useHTML: true
+                },
+                plotOptions: { column: { pointPadding: 0.2, borderWidth: 0 } },
+                series: [
+                    { name: 'Thu', data: chartData.map(d => d.thu) },
+                    { name: 'Chi', data: chartData.map(d => d.chi) },
+                    { name: 'Ứng', data: chartData.map(d => d.ung) }
+                ]
+            });
+        };
+
+        // Filter functions
+        const setupFilters = () => {
+            const allEmployees = [...new Set([...chi, ...ung, ...thu].map(item => item['Nhân viên']))];
+            elements.filterMaNhanVien.innerHTML = '<option value="">Tất cả</option>' +
+                allEmployees.filter(Boolean).map(employee => `<option value="${employee}">${employee}</option>`).join('');
+
+            elements.applyFilters.addEventListener('click', applyFilters);
+            elements.resetFilters.addEventListener('click', resetFilters);
+        };
+
+        const applyFilters = () => {
+            const fromDate = elements.fromDate.value;
+            const toDate = elements.toDate.value;
+            const selectedEmployee = elements.filterMaNhanVien.value;
+
+            const filterItem = (item, dateField) => {
+                const itemDate = new Date(item[dateField]);
+                const fromDateObj = fromDate ? new Date(fromDate) : null;
+                const toDateObj = toDate ? new Date(toDate) : null;
+                return (!fromDateObj || itemDate >= fromDateObj) &&
+                    (!toDateObj || itemDate <= toDateObj) &&
+                    (!selectedEmployee || item['Nhân viên'] === selectedEmployee);
+            };
+
+            filteredChi = chi.filter(item => filterItem(item, 'Ngày chi'));
+            filteredUng = ung.filter(item => filterItem(item, 'Thời gian'));
+            filteredThu = thu.filter(item => filterItem(item, 'Ngày thu'));
+
+            currentPage = { chi: 1, ung: 1, thu: 1 };
+            updateDashboardStats();
+            updateTable('chi');
+            updateTable('ung');
+            updateTable('thu');
+            renderChart();
+        };
+
+        const resetFilters = () => {
+            const now = new Date();
+            elements.fromDate.valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            elements.toDate.valueAsDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            elements.filterMaNhanVien.value = '';
+            applyFilters();
+        };
+
+        // Initialization
+        const init = async () => {
+            try {
+                elements.loading.classList.remove('hidden');
+                [thu, chi, ung] = await Promise.all([
+                    fetchData('Thu', 'Ngày thu'),
+                    fetchData('Chi phí', 'Ngày chi'),
+                    fetchData('Ứng', 'Thời gian')
+                ]);
+
+                filteredThu = filterByCurrentMonth(thu, 'Ngày thu');
+                filteredChi = filterByCurrentMonth(chi, 'Ngày chi');
+                filteredUng = filterByCurrentMonth(ung, 'Thời gian');
+
+                updateDashboardStats();
+                updateTable('chi');
+                updateTable('ung');
+                updateTable('thu');
+                setupFilters();
+                renderChart();
+                updateChartSize();   handleResize();
+                const now = new Date();
+                elements.fromDate.valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                elements.toDate.valueAsDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            } catch (error) {
+                console.error("Error initializing app:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            } finally {
+                elements.loading.classList.add('hidden');
+            }
+        };
+        // Toggle dark mode
+        elements.toggleDarkMode.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+        });
+
+        elements.toggleFilters.addEventListener('click', () => {
+            elements.filtersSidebar.classList.toggle('open');
+            elements.overlay.classList.toggle('hidden');
+        });
+
+        elements.closeSidebar.addEventListener('click', () => {
+            elements.filtersSidebar.classList.remove('open');
+            elements.overlay.classList.add('hidden');
+        });
+
+        elements.overlay.addEventListener('click', () => {
+            elements.filtersSidebar.classList.remove('open');
+            elements.overlay.classList.add('hidden');
+        });
+
+        // Responsive chart
+        const updateChartSize = () => {
+            const chart = Highcharts.charts[0];
+            if (chart) {
+                chart.setSize(document.getElementById('chartContainer').offsetWidth);
+            }
+        };
+
+        window.addEventListener('resize', updateChartSize);
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+</body>
+
+</html>
