@@ -1,0 +1,424 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiếu Xuất Nhập Kho</title>
+    
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <!-- Taiwan CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .search-select {
+            position: relative;
+        }
+
+        .search-select .options {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            min-width: 100%;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .search-select .options div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .search-select .options div:hover {
+            background-color: #ecf0f1;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <form id="xuatNhapForm" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+            <div class="loading hidden" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p class="text-center text-gray-600 italic">Đang xử lý...</p>
+            </div>
+            <h2 class="text-2xl font-bold mb-6 text-center">Thông tin Xuất Nhập Cáp</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="maKeHoach">
+                        Mã kế hoạch:
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="maKeHoach"
+                            class="block w-full px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="Tìm kiếm mã kế hoạch..." autocomplete="off" disabled required>
+                       
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="muc">Mục:</label>
+                    <select
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id="muc" required>
+                        <option value="">Chọn mục</option>
+                        <option value="Xuất thi công">Xuất thi công</option>
+                        <option value="Nhập kho NZ">Nhập kho NZ</option>
+                        <option value="Nhập kho FPT">Nhập kho FPT</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="tu">Từ:</label>
+                    <select
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id="tu" required></select>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="den">Đến:</label>
+                    <select
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        id="den" required></select>
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-bold mb-6 text-center">Chi tiết XN CÁP</h2>
+            <div class="overflow-x-auto">
+                <table id="cableTable" class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3">Loại cáp</th>
+                            <th class="px-6 py-3">Số đầu</th>
+                            <th class="px-6 py-3">Số cuối</th>
+                            <th class="px-6 py-3">Số mét</th>
+                            <th class="px-6 py-3">Chủng loại</th>
+                            <th class="px-6 py-3">Mã cáp</th>
+                            <th class="px-6 py-3">Năm sản xuất</th>
+                            <th class="px-6 py-3">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cableList"></tbody>
+                </table>
+            </div>
+
+            <div class="flex items-center justify-between mt-6">
+                <button type="button" id="addCable"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Thêm
+                    Cáp</button>
+                <button type="submit"
+                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Tạo
+                    Phiếu</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const APP_ID = '3519f9a9-390d-425c-b2af-4c76794ddd4a';
+        const TABLE_NAME_XN_CAP = 'Xuất nhập cáp';
+        const TABLE_NAME_CHI_TIET = 'Chi tiết XN CÁP';
+        const TABLE_NAME_DU_AN = 'Dự án FPT';
+        const TABLE_NAME_NHAN_VIEN = 'Nhân viên';
+        const API_KEY = 'V2-DxCTd-Nhf75-B243D-CQXD9-1ePO4-GCtq5-mHU1v-YHx0j';
+        const API_BASE_URL = 'https://www.appsheet.com/api/v2/apps';
+
+        let cableCount = 0;
+        let maKeHoachList = [];
+        let nhanVienList = [];
+        const loaiCapList = ["08FO", "12FO", "16FO", "24FO", "48FO", "96FO", "144FO", "04DU", "12DU", "16DU", "24DU", "48DU", "96DU", "144DU"];
+
+        // Initialize toastr
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": false,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        }
+
+        function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `${API_BASE_URL}/${APP_ID}/tables/${encodeURIComponent(tableName)}/Action`;
+            return $.ajax({
+                url: apiUrl,
+                method: 'POST',
+                headers: {
+                    'ApplicationAccessKey': API_KEY,
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify({
+                    Action: action,
+                    ...Properties,
+                    ...data
+                })
+            });
+        }
+
+       
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const input = document.getElementById('maKeHoach');
+            const optionsContainer = document.getElementById('maKeHoachOptions');
+
+            input.addEventListener('input', function () {
+                const filter = this.value.toUpperCase();
+                const filteredOptions = maKeHoachList.filter(option =>
+                    option.toUpperCase().indexOf(filter) > -1
+                );
+
+                renderOptions(filteredOptions);
+            });
+
+            input.addEventListener('focus', function () {
+                if (maKeHoachList.length > 0) {
+                    renderOptions(maKeHoachList);
+                }
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!input.contains(e.target) && !optionsContainer.contains(e.target)) {
+                    optionsContainer.classList.add('hidden');
+                }
+            });
+
+            function renderOptions(options) {
+                optionsContainer.innerHTML = '';
+                if (options.length > 0) {
+                    options.forEach(option => {
+                        const div = document.createElement('div');
+                        div.textContent = option;
+                        div.className = 'px-4 py-2 cursor-pointer hover:bg-gray-100';
+                        div.addEventListener('click', function () {
+                            input.value = option;
+                            optionsContainer.classList.add('hidden');
+                        });
+                        optionsContainer.appendChild(div);
+                    });
+                    optionsContainer.classList.remove('hidden');
+                } else {
+                    optionsContainer.classList.add('hidden');
+                }
+            }
+        });
+
+        async function loadNhanVien() {
+            try {
+                const result = await apiRequest(TABLE_NAME_NHAN_VIEN, 'Find', {}, {
+                    Properties: { Selector: "Filter(Nhân viên, and([Phòng ban]='Đội thi công',[Trạng thái]='Còn làm') )" }
+
+                });
+
+
+
+                if (result && Array.isArray(result)) {
+                    nhanVienList = result.map(row => row['Mã nhân viên']).filter(Boolean);
+                } else {
+                    throw new Error('Không nhận được dữ liệu nhân viên hợp lệ từ API');
+                }
+            } catch (error) {
+                console.error('Lỗi khi tải nhân viên:', error);
+                $('#debug').append(`<p>Lỗi khi tải nhân viên: ${error.message}</p>`);
+                toastr.error('Không thể tải danh sách nhân viên. Vui lòng thử lại sau.', 'Lỗi');
+            }
+        }
+
+        function updateTuDenOptions() {
+            const muc = $('#muc').val();
+            const tuSelect = $('#tu');
+            const denSelect = $('#den');
+
+            tuSelect.empty();
+            denSelect.empty();
+
+            if (muc === 'Xuất thi công') {
+                tuSelect.append('<option value="Kho NZ">Kho NZ</option>');
+                nhanVienList.forEach(nv => {
+                    denSelect.append(`<option value="${nv}">${nv}</option>`);
+                });
+            } else if (muc === 'Nhập kho NZ') {
+                nhanVienList.forEach(nv => {
+                    tuSelect.append(`<option value="${nv}">${nv}</option>`);
+                });
+                tuSelect.append('<option value="Kho FPT">Kho FPT</option>');
+                denSelect.append('<option value="Kho NZ">Kho NZ</option>');
+            } else if (muc === 'Nhập kho FPT') {
+                tuSelect.append('<option value="Kho NZ">Kho NZ</option>');
+                denSelect.append('<option value="Kho FPT">Kho FPT</option>');
+            }
+        }
+
+        $('#muc').on('change', updateTuDenOptions);
+
+        function addCableForm() {
+            cableCount++;
+            const newRow = $('<tr>');
+            newRow.html(`
+        <td class="px-6 py-4">
+            <select id="loaiCap${cableCount}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required>
+                ${loaiCapList.map(cap => `<option value="${cap}">${cap}</option>`).join('')}
+                <option value="other">Khác</option>
+            </select>
+            <input type="text" id="loaiCapOther${cableCount}" class="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" style="display:none;" placeholder="Nhập loại cáp khác">
+        </td>
+        <td class="px-6 py-4"><input type="number" id="soDau${cableCount}" value="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required></td>
+        <td class="px-6 py-4"><input type="number" id="soCuoi${cableCount}" value="0" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required></td>
+        <td class="px-6 py-4"><span id="soMet${cableCount}" class="font-medium">0</span> mét</td>
+        <td class="px-6 py-4">
+            <select id="chungLoai${cableCount}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5">
+                <option value="">Chọn chủng loại</option>
+                <option value="FOCAL">FOCAL</option>
+                 <option value="FPT">FPT</option>
+                <option value="sacom">sacom</option>
+                <option value="Vina">Vina</option>
+                <option value="Không rõ" selected>Không rõ</option>
+            </select>
+        </td>
+        <td class="px-6 py-4"><input type="text" id="maCap${cableCount}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" required></td>
+        <td class="px-6 py-4"><input type="number" id="namSanXuat${cableCount}" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" value="2024"></td>
+        <td class="px-6 py-4"><button type="button" class="remove-cable text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">Xóa</button></td>
+    `);
+            $('#cableList').append(newRow);
+
+            newRow.find('.remove-cable').on('click', function () {
+                newRow.remove();
+            });
+
+            newRow.find(`#loaiCap${cableCount}`).on('change', function () {
+                const otherInput = newRow.find(`#loaiCapOther${cableCount}`);
+                if (this.value === 'other') {
+                    otherInput.show().prop('required', true);
+                } else {
+                    otherInput.hide().prop('required', false);
+                }
+            });
+
+            // Thêm sự kiện để tính số mét
+            const calculateMeter = () => {
+                const soDau = parseInt(newRow.find(`#soDau${cableCount}`).val()) || 0;
+                const soCuoi = parseInt(newRow.find(`#soCuoi${cableCount}`).val()) || 0;
+                const soMet = Math.abs(soCuoi - soDau);
+                newRow.find(`#soMet${cableCount}`).text(soMet);
+            };
+
+            newRow.find(`#soDau${cableCount}, #soCuoi${cableCount}`).on('input', calculateMeter);
+        }
+        $('#addCable').on('click', addCableForm);
+
+        $('#xuatNhapForm').on('submit', async function (e) {
+            e.preventDefault();
+
+            $('#loadingIndicator').show();
+
+            try {
+                const idXnCap = uuid.v4();
+
+                const xuatNhapCap = {
+                    ID_XN_CAP: idXnCap,
+                    "Mã kế hoạch": $('#maKeHoach').val(),
+                    "Mục": $('#muc').val(),
+                    "Từ": $('#tu').val(),
+                    "Đến": $('#den').val()
+                };
+                console.log(xuatNhapCap)
+                const chiTietXnCapList = [];
+                $('#cableList tr').each(function (index) {
+                    const loaiCapSelect = $(this).find(`#loaiCap${index + 1}`);
+                    const loaiCapOther = $(this).find(`#loaiCapOther${index + 1}`);
+                    const loaiCap = loaiCapSelect.val() === 'other' ? loaiCapOther.val() : loaiCapSelect.val();
+
+                    chiTietXnCapList.push({
+                        ID_D_CAP: uuid.v4(),
+                        ID_XN_CAP: idXnCap,
+                        "Loại cáp": loaiCap,
+                        "Số đầu": $(this).find(`#soDau${index + 1}`).val(),
+                        "Số cuối": $(this).find(`#soCuoi${index + 1}`).val(),
+                        "Chủng loại": $(this).find(`#chungLoai${index + 1}`).val(),
+                        "Mã cáp": $(this).find(`#maCap${index + 1}`).val(),
+                        "Năm sản xuất": String($(this).find(`#namSanXuat${index + 1}`).val())
+                    });
+                });
+
+                console.log('Sending Xuat nhap cap data:', xuatNhapCap);
+                let resultXnCap, resultChiTiet;
+
+                try {
+                    resultXnCap = await apiRequest(TABLE_NAME_XN_CAP, 'Add', { Rows: [xuatNhapCap] } ,{Properties: {} });
+                   
+                    toastr.success('Đã thêm thông tin Xuất nhập cáp thành công.', 'Thành công');
+                } catch (xnCapError) {
+                  
+                    toastr.error('Lỗi khi thêm thông tin Xuất nhập cáp.', 'Lỗi');
+                }
+
+                try {
+                    resultChiTiet = await apiRequest(TABLE_NAME_CHI_TIET, 'Add', { Rows: chiTietXnCapList },{Properties: {} });
+                 
+                    toastr.success('Đã thêm Chi tiết XN CÁP thành công.', 'Thành công');
+                } catch (chiTietError) {
+                    toastr.error('Lỗi khi thêm Chi tiết XN CÁP.', 'Lỗi');
+                }
+
+              
+            } catch (error) {
+              
+            } finally {
+                $('#loadingIndicator').hide();
+            }
+        });
+
+        async function initializeForm() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const mada = urlParams.get('mada');
+                document.getElementById('maKeHoach').value = mada;
+                await loadNhanVien();
+                addCableForm();
+                updateTuDenOptions();
+                toastr.success('Đã khởi tạo form thành công.', 'Sẵn sàng');
+            } catch (error) {
+                console.error('Lỗi khi khởi tạo form:', error);
+
+                toastr.error('Có lỗi xảy ra khi khởi tạo form. Vui lòng tải lại trang.', 'Lỗi');
+            }
+        }
+
+        $(document).ready(function () {
+            initializeForm();
+        });
+    </script>
+</body>
+
+</html>
