@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-gray-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form ứng tuyển</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .custom-file-input::-webkit-file-upload-button {
+            visibility: hidden;
+        }
+
+        .custom-file-input::before {
+            content: 'Chọn file';
+            display: inline-block;
+            background: linear-gradient(top, #f9f9f9, #e3e3e3);
+            border: 1px solid #999;
+            border-radius: 3px;
+            padding: 5px 8px;
+            outline: none;
+            white-space: nowrap;
+            cursor: pointer;
+            text-shadow: 1px 1px #fff;
+            font-weight: 700;
+            font-size: 10pt;
+        }
+
+        .custom-file-input:hover::before {
+            border-color: black;
+        }
+
+        .custom-file-input:active::before {
+            background: -webkit-linear-gradient(top, #e3e3e3, #f9f9f9);
+        }
+    </style>
+</head>
+
+<body class="h-full bg-gray-50">
+    <div class="min-h-full">
+        <div class="bg-indigo-600 pb-32">
+            <header class="py-10">
+                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <h1 class="text-3xl font-bold tracking-tight text-white">Form ứng tuyển</h1>
+                </div>
+            </header>
+        </div>
+
+        <main class="-mt-32">
+            <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+                <div class="rounded-lg bg-white px-5 py-6 shadow sm:px-6">
+                    <form id="recruitmentForm" class="space-y-8 divide-y divide-gray-200">
+                        <div class="space-y-8 divide-y divide-gray-200 sm:space-y-5">
+                            <div class="space-y-6 sm:space-y-5">
+                                <div class="space-y-6 sm:space-y-5">
+                                    <!-- Thời gian -->
+                                    <div>
+                                        <label for="thoiGian"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Thời
+                                            gian</label>
+                                        <div class="relative mb-6">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm3.982 13.982a1 1 0 0 1-1.414 0l-3.274-3.274A1.012 1.012 0 0 1 9 10V6a1 1 0 0 1 2 0v3.586l2.982 2.982a1 1 0 0 1 0 1.414z" />
+                                                </svg>
+                                            </div>
+                                            <input type="datetime-local" id="thoiGian" name="thoiGian"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Nguồn ứng viên -->
+                                    <div>
+                                        <label for="nguonUngVien"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nguồn
+                                            ứng viên</label>
+                                        <div class="flex">
+                                            <select id="nguonUngVien" name="nguonUngVien"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-s-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                                <option value="">Chọn nguồn ứng viên</option>
+                                            </select>
+                                            <button type="button" id="addNguonUngVien">
+                                                Thêm mới
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Họ và tên -->
+                                    <div>
+                                        <label for="hoVaTen"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Họ và
+                                            tên</label>
+                                        <div class="relative mb-6">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z" />
+                                                </svg>
+                                            </div>
+                                            <input type="text" id="hoVaTen" name="hoVaTen"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="Nguyễn Văn A" required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Ngày sinh -->
+                                    <div>
+                                        <label for="ngaySinh"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Ngày
+                                            sinh</label>
+                                        <div class="relative mb-6">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
+                                                </svg>
+                                            </div>
+                                            <input type="date" id="ngaySinh" name="ngaySinh"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Số điện thoại -->
+                                    <div>
+                                        <label for="soDienThoai"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Số điện
+                                            thoại</label>
+                                        <div class="relative mb-6">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 19 18">
+                                                    <path
+                                                        d="M18 13.446a3.02 3.02 0 0 0-.946-1.985l-1.4-1.4a3.054 3.054 0 0 0-4.218 0l-.7.7a.983.983 0 0 1-1.39 0l-2.1-2.1a.983.983 0 0 1 0-1.389l.7-.7a2.98 2.98 0 0 0 0-4.217l-1.4-1.4a2.824 2.824 0 0 0-4.218 0c-3.619 3.619-3 8.229 1.752 12.979C6.785 16.639 9.45 18 11.912 18a7.175 7.175 0 0 0 5.139-2.325A2.9 2.9 0 0 0 18 13.446Z" />
+                                                </svg>
+                                            </div>
+                                            <input type="tel" id="soDienThoai" name="soDienThoai"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="123-456-7890" required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Email -->
+                                    <div>
+                                        <label for="email"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                                        <div class="relative mb-6">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 16">
+                                                    <path
+                                                        d="m10.036 8.278 9.258-7.79A1.979 1.979 0 0 0 18 0H2A1.987 1.987 0 0 0 .641.541l9.395 7.737Z" />
+                                                    <path
+                                                        d="M11.241 9.817c-.36.275-.801.425-1.255.427-.428 0-.845-.138-1.187-.395L0 2.6V14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V2.5l-8.759 7.317Z" />
+                                                </svg>
+                                            </div>
+                                            <input type="email" id="email" name="email"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="name@company.com" required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Khu vực ứng tuyển -->
+                                    <div>
+                                        <label for="khuVucUngTuyen"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Khu vực
+                                            ứng tuyển</label>
+                                        <div class="flex">
+                                            <select id="khuVucUngTuyen" name="khuVucUngTuyen"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-s-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+                                                <option value="">Chọn khu vực ứng tuyển</option>
+                                            </select>
+                                            <button type="button" id="addKhuVucUngTuyen">
+                                                Thêm mới
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Địa chỉ -->
+                                    <div>
+                                        <label for="diaChi"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Địa
+                                            chỉ</label>
+                                        <div class="relative mb-6">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z" />
+                                                </svg>
+                                            </div>
+                                            <textarea id="diaChi" name="diaChi" rows="3"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="Nhập địa chỉ" required></textarea>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vị trí ứng tuyển -->
+                                    <div>
+                                        <label for="viTriUngTuyen"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Vị trí
+                                            ứng tuyển</label>
+                                        <select id="viTriUngTuyen" name="viTriUngTuyen"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            required>
+                                            <option value="">Chọn vị trí ứng tuyển</option>
+                                            <option value="Kế toán">Nhân viên kỹ thuật</option>
+                                            <option value="Dự án">Cộng tác viên</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Trình độ -->
+                                    <div>
+                                        <label for="trinhDo"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Trình
+                                            độ</label>
+                                        <div class="relative mb-6">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 0a10 10 0 1 0 10 10A10.011 10.011 0 0 0 10 0Zm0 5a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 13a8.949 8.949 0 0 1-4.951-1.488A3.987 3.987 0 0 1 9 13h2a3.987 3.987 0 0 1 3.951 3.512A8.949 8.949 0 0 1 10 18Z" />
+                                                </svg>
+                                            </div>
+                                            <input type="text" id="trinhDo" name="trinhDo"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="Nhập trình độ" required>
+                                        </div>
+                                    </div>
+
+                                    <!-- Kinh nghiệm -->
+                                    <div>
+                                        <label for="kinhNghiem"
+                                            class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Kinh
+                                            nghiệm</label>
+                                        <select id="kinhNghiem" name="kinhNghiem"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            required>
+                                            <option value="">Chọn kinh nghiệm</option>
+                                            <option value="Dưới 1 năm">Dưới 1 năm</option>
+                                            <option value="1-3 năm">1-3 năm</option>
+                                            <option value="3-5 năm">3-5 năm</option>
+                                            <option value="Trên 5 năm">Trên 5 năm</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- File CV -->
+                                    <div>
+                                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+                                            for="fileCV">File CV</label>
+                                        <input
+                                            class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                                            id="fileCV" type="file">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-5">
+                            <div class="flex justify-end">
+                                <button type="submit"
+                                    class="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                                    Gửi
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const appId = 'c99c8a08-b6cf-4a71-89e7-2b913c7f45be';
+        const accessKey = 'V2-tKXHx-Qri8Z-oevxi-062rn-BGIWj-7eYMM-Uo9nY-USAAM';
+        const region = 'www';
+
+        // Biến chứa thông tin
+        let nguonUngVienOptions = ['LinkedIn', 'JobStreet', 'Người quen giới thiệu', 'Trang web công ty'];
+        let khuVucUngTuyenOptions = ['Hà Nội', 'Hồ Chí Minh', 'Đà Nẵng', 'Cần Thơ'];
+
+        // Đối tượng để lưu trữ các instance của Choices
+        let choicesInstances = {};
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initializePage();
+        });
+
+        function initializePage() {
+            setCurrentDateTime();
+            setupEventListeners();
+            fetchInitialOptions();
+            initializeChoices();
+        }
+        function setCurrentDateTime() {
+            const input = document.getElementById('thoiGian');
+            if (typeof luxon !== 'undefined' && luxon.DateTime) {
+                const now = luxon.DateTime.now().setZone('Asia/Ho_Chi_Minh');
+                input.value = now.toFormat("yyyy-MM-dd'T'HH:mm");
+            } else {
+                // Fallback nếu Luxon không có sẵn
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('addNguonUngVien').addEventListener('click', () => addNewOption('NGUỒN ỨNG VIÊN', 'nguonUngVien'));
+            document.getElementById('addKhuVucUngTuyen').addEventListener('click', () => addNewOption('KHU VỰC ỨNG TUYỂN', 'khuVucUngTuyen'));
+            document.getElementById('recruitmentForm').addEventListener('submit', handleFormSubmit);
+        }
+
+        function fetchInitialOptions() {
+            fetchOptions('NGUỒN ỨNG VIÊN', populateSelect);
+            fetchOptions('KHU VỰC ỨNG TUYỂN', populateSelect);
+        }
+
+        function initializeChoices() {
+            const selectElements = ['nguonUngVien', 'khuVucUngTuyen', 'viTriUngTuyen', 'kinhNghiem'];
+            selectElements.forEach(id => {
+                choicesInstances[id] = new Choices(`#${id}`, {
+                    searchEnabled: true,
+                    itemSelectText: '',
+                    shouldSort: false,
+                    placeholder: true,
+                    placeholderValue: `Chọn ${id.replace(/([A-Z])/g, ' $1').toLowerCase()}`
+                });
+            });
+        }
+
+        async function fetchOptions(fieldName, populateFunction) {
+            try {
+                const response = await apiRequest('HCNS_HSUV', 'Find', {
+                    Selector: { Filter: `[${fieldName}] != ''` },
+                    Fields: [fieldName]
+                });
+
+                if (response && response.Rows) {
+                    const uniqueOptions = [...new Set(response.Rows.map(row => row[fieldName]))];
+                    if (fieldName === 'NGUỒN ỨNG VIÊN') {
+                        nguonUngVienOptions = uniqueOptions;
+                    } else {
+                        khuVucUngTuyenOptions = uniqueOptions;
+                    }
+                    populateFunction(fieldName, uniqueOptions);
+                }
+            } catch (error) {
+                console.error(`Error fetching options for ${fieldName}:`, error);
+                showToast(`Không thể tải dữ liệu ${fieldName.toLowerCase()}. Vui lòng thử lại sau.`, "error");
+            }
+        }
+
+        function populateSelect(fieldName, options) {
+            const selectId = fieldName === 'NGUỒN ỨNG VIÊN' ? 'nguonUngVien' : 'khuVucUngTuyen';
+            const choicesInstance = choicesInstances[selectId];
+            if (choicesInstance) {
+                choicesInstance.clearChoices();
+                choicesInstance.setChoices([
+                    { value: '', label: `Chọn ${fieldName.toLowerCase()}`, disabled: true },
+                    ...options.map(option => ({ value: option, label: option }))
+                ], 'value', 'label', true);
+            }
+        }
+
+        function addNewOption(fieldName, selectId) {
+            const newValue = prompt(`Nhập ${fieldName.toLowerCase()} mới:`);
+            if (newValue && newValue.trim()) {
+                const options = fieldName === 'NGUỒN ỨNG VIÊN' ? nguonUngVienOptions : khuVucUngTuyenOptions;
+                if (!options.includes(newValue)) {
+                    options.push(newValue);
+                    const choicesInstance = choicesInstances[selectId];
+                    if (choicesInstance) {
+                        choicesInstance.setChoices([{ value: newValue, label: newValue }], 'value', 'label', true);
+                        choicesInstance.setChoiceByValue(newValue);
+                    }
+                    showToast("Đã thêm mới thành công!", "success");
+                } else {
+                    showToast("Giá trị này đã tồn tại!", "warning");
+                }
+            }
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            if (!validateForm()) return;
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            const fileInput = document.getElementById('fileCV');
+            const filebase64 = fileInput.files.length > 0 ? await readFile(fileInput.files[0]) : "";
+
+            const ungVienData = {
+                "THỜI GIAN": data.thoiGian,
+                "NGUỒN ỨNG VIÊN": data.nguonUngVien,
+                "HỌ VÀ TÊN": data.hoVaTen,
+                "NGÀY SINH": data.ngaySinh,
+                "SỐ ĐIỆN THOẠI": data.soDienThoai,
+                "EMAIL": data.email,
+                "KHU VỰC ỨNG TUYỂN": data.khuVucUngTuyen,
+                "ĐỊA CHỈ": data.diaChi,
+                "VỊ TRÍ ỨNG TUYỂN": data.viTriUngTuyen,
+                "TRÌNH ĐỘ": data.trinhDo,
+                "KINH NGHIỆM": data.kinhNghiem,
+                "FILE CV": filebase64
+            };
+
+            disableForm();
+            showLoadingOverlay();
+
+            try {
+                // Uncomment the following line when ready to send data to the server
+                // await apiRequest('HCNS_HSUV', 'Add', { Rows: [ungVienData] });
+                console.log(ungVienData);
+                showToast("Form đã được gửi thành công!", "success");
+                resetForm();
+            } catch (error) {
+                console.error('Lỗi khi gửi form:', error);
+                showToast("Có lỗi xảy ra khi gửi form. Vui lòng thử lại sau.", "error");
+            } finally {
+                enableForm();
+                hideLoadingOverlay();
+            }
+        }
+
+        function validateForm() {
+            const requiredFields = ['thoiGian', 'nguonUngVien', 'hoVaTen', 'ngaySinh', 'soDienThoai', 'email', 'khuVucUngTuyen', 'diaChi', 'viTriUngTuyen', 'trinhDo', 'kinhNghiem', 'fileCV'];
+            const missingFields = requiredFields.filter(field => !document.getElementById(field).value.trim());
+
+            if (missingFields.length > 0) {
+                const missingFieldNames = missingFields.map(field => document.querySelector(`label[for="${field}"]`).textContent.trim());
+                showToast(`Vui lòng nhập đầy đủ thông tin: ${missingFieldNames.join(', ')}`, "error");
+                return false;
+            }
+            return true;
+        }
+
+        function resetForm() {
+            document.getElementById('recruitmentForm').reset();
+            setCurrentDateTime();
+            Object.values(choicesInstances).forEach(instance => {
+                instance.setChoiceByValue('');
+            });
+        }
+
+        function apiRequest(tableName, action, data) {
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            return fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'ApplicationAccessKey': accessKey,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    Action: action,
+                    Properties: {
+                        Locale: 'vi-VN',
+                        Timezone: 'Asia/Ho_Chi_Minh'
+                    },
+                    ...data
+                })
+            }).then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            });
+        }
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function disableForm() {
+            Array.from(document.getElementById('recruitmentForm').elements).forEach(element => element.disabled = true);
+        }
+
+        function enableForm() {
+            Array.from(document.getElementById('recruitmentForm').elements).forEach(element => element.disabled = false);
+        }
+
+        function showLoadingOverlay() {
+            const overlay = document.createElement('div');
+            overlay.id = 'loadingOverlay';
+            overlay.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50';
+            overlay.innerHTML = '<div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-indigo-500"></div>';
+            document.body.appendChild(overlay);
+        }
+
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay')?.remove();
+        }
+
+        function showToast(message, type) {
+            Toastify({
+                text: message,
+                duration: 3000,
+                close: true,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: type === "success" ? "linear-gradient(to right, #00b09b, #96c93d)" :
+                        type === "error" ? "linear-gradient(to right, #ff5f6d, #ffc371)" :
+                            "linear-gradient(to right, #f7b733, #fc4a1a)",
+                }
+            }).showToast();
+        }
+    </script>
+</body>
+
+</html>
