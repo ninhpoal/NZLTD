@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Dự án</title>
+    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Mulish', sans-serif;
+        }
+
+        .excel-like {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .excel-like th,
+        .excel-like td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .excel-like th {
+            background-color: #f8fafc;
+            font-weight: bold;
+        }
+
+        .excel-like tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        .excel-like tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .excel-like input,
+        .excel-like textarea {
+            width: 100%;
+            border: none;
+            background: transparent;
+            outline: none;
+        }
+
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3b82f6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .input-multiline {
+            min-height: 38px;
+            height: auto;
+            resize: vertical;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+    <div class="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white flex items-center justify-between">
+                <span>KẾ HOẠCH TRIỂN KHAI NZ NGÀY</span>
+                <div class="flex items-center">
+                    <span id="currentDate" class="ml-2 text-2xl"></span>
+                    <input type="date" id="dateInput" class="ml-2 p-1 border rounded hidden">
+                    <button id="editDateBtn"
+                        class="ml-2 p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </h1>
+        </header>
+
+        <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 mb-8">
+            <div class="flex-grow">
+                <select id="projectSelect"
+                    class="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="">Tìm kiếm dự án...</option>
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button id="addToTableBtn"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+                    <i class="fas fa-plus mr-2"></i> Thêm vào bảng
+                </button>
+                <button id="exportExcelBtn"
+                    class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+                    <i class="fas fa-file-excel mr-2"></i> Xuất Excel
+                </button>
+                <button id="saveToSystemBtn"
+                    class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+                    <i class="fas fa-save mr-2"></i> Lưu lên hệ thống
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto relative shadow-md sm:rounded-lg mb-8">
+            <table id="planTable" class="excel-like w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th class="px-6 py-3"><input type="checkbox" id="selectAllCheckbox"
+                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                        </th>
+                        <th class="px-6 py-3">STT</th>
+                        <th class="px-6 py-3">MDA</th>
+                        <th class="px-6 py-3">Tên công trình</th>
+                        <th class="px-6 py-3">Ngày nhận</th>
+                        <th class="px-6 py-3">Deadline KH</th>
+                        <th class="px-6 py-3">Kế hoạch</th>
+                        <th class="px-6 py-3">Dự toán cáp</th>
+                        <th class="px-6 py-3">Số mét đã thi công</th>
+                        <th class="px-6 py-3">Tổng số Tủ/ODF/tập điểm</th>
+                        <th class="px-6 py-3">Dự toán Core</th>
+                        <th class="px-6 py-3">Khối lượng port</th>
+                        <th class="px-6 py-3">Tỷ lệ hoàn thành kéo</th>
+                        <th class="px-6 py-3">Tỷ lệ hàn</th>
+                        <th class="px-6 py-3">Ghi chú công trình</th>
+                        <th class="px-6 py-3">Ghi chú thêm</th>
+                    </tr>
+                </thead>
+                <tbody id="planTableBody">
+                    <!-- Data will be added here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 flex justify-end">
+            <button id="deleteSelectedBtn"
+                class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-colors duration-300">
+                <i class="fas fa-trash mr-2"></i> Xóa dự án đã chọn
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const appId = '0ffda765-62b7-4260-b7ed-5bcbb530b113';
+        const accessKey = 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF';
+        const region = 'www';
+
+        let allData = [];
+        let choicesInstance;
+        let selectedProjects = new Set();
+
+        const apiRequest = async (tableName, action, data) => {
+            showLoading();
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        Properties: {},
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                hideLoading();
+                return result;
+            } catch (error) {
+                console.error("API Error:", error);
+                hideLoading();
+                throw error;
+            }
+        };
+
+        const fetchDataFromAppSheet = async () => {
+            try {
+                const response = await apiRequest('DUAN', 'Find', {
+                    Selector: "Filter(DUAN, true)"
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return response;
+            } catch (error) {
+                console.error("Error fetching data from AppSheet:", error);
+                throw error;
+            }
+        };
+
+        const populateProjectSelect = () => {
+            const select = document.getElementById('projectSelect');
+            select.innerHTML = '<option value="">Tìm kiếm dự án...</option>';
+            allData.forEach(item => {
+                select.add(new Option(item['MDA'], item['MDA']));
+            });
+
+            if (choicesInstance) choicesInstance.destroy();
+            choicesInstance = new Choices(select, {
+                searchEnabled: true,
+                searchPlaceholderValue: "Tìm kiếm mã dự án...",
+                itemSelectText: '',
+                noResultsText: 'Không tìm thấy kết quả',
+                noChoicesText: 'Không có lựa chọn để chọn',
+                placeholder: true,
+                placeholderValue: 'Tìm kiếm dự án...',
+            });
+        };
+
+        const createDateInput = (value, field) => {
+            return `<input type="date" value="${formatDateForInput(value)}" data-field="${field}">`;
+        };
+
+        const createTextInput = (value, field) => {
+            return `<input type="text" value="${value || ''}" data-field="${field}">`;
+        };
+
+        const createNumberInput = (value, field) => {
+            return `<input type="number" value="${value || ''}" data-field="${field}">`;
+        };
+
+        const createTextArea = (value, field) => {
+            return `<textarea class="input-multiline w-full p-2 border rounded" data-field="${field}">${value || ''}</textarea>`;
+        };
+
+        const formatDateForInput = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+        };
+
+        const addProjectToTable = (projectCode) => {
+            if (selectedProjects.has(projectCode)) return;
+
+            const project = allData.find(item => item['MDA'] === projectCode);
+            if (!project) return;
+
+            selectedProjects.add(projectCode);
+            const tableBody = document.getElementById('planTableBody');
+            const row = tableBody.insertRow();
+            const stt = tableBody.rows.length;
+
+            // Thêm ô checkbox
+            const checkboxCell = row.insertCell();
+            checkboxCell.innerHTML = '<input type="checkbox" class="project-checkbox">';
+
+            const cellData = [
+                stt,
+                project['MDA'] || '',
+                project['Tên công trình'] || '',
+                createDateInput(project['Ngày nhận'], 'ngayNhan'),
+                createDateInput(project['Deadline KH'], 'deadlineKH'),
+                createTextArea(project['Kế hoạch'], 'keHoach'),
+                createNumberInput(project['Dự toán cáp'], 'duToanCap'),
+                createNumberInput(project['Số mét đã thi công'], 'soMetDaThiCong'),
+                createNumberInput(project['Tổng số Tủ/ODF/tập điểm'], 'tongSoTu'),
+                createNumberInput(project['Dự toán Core'], 'duToanCore'),
+                createNumberInput(project['Khối lượng port'], 'khoiLuongPort'),
+                calculateCompletionRate(project['Số mét đã thi công'], project['Dự toán cáp']),
+                createTextInput(project['Tỷ lệ hàn'], 'tyLeHan'),
+                createTextArea(project['Ghi chú công trình'], 'ghiChuCongTrinh'),
+                createTextArea(project['Ghi chú thêm'], 'ghiChuThem')
+            ];
+
+            cellData.forEach(data => {
+                const cell = row.insertCell();
+                cell.innerHTML = data;
+            });
+
+            // Thêm event listener cho các input số để cập nhật tỷ lệ hoàn thành
+            row.querySelector('[data-field="soMetDaThiCong"]').addEventListener('input', updateCompletionRate);
+            row.querySelector('[data-field="duToanCap"]').addEventListener('input', updateCompletionRate);
+
+            // Thêm sự kiện để tự động điều chỉnh chiều cao của textarea
+            row.querySelectorAll('.input-multiline').forEach(textarea => {
+                textarea.addEventListener('input', function () {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+            });
+        };
+
+        const calculateCompletionRate = (completed, total) => {
+            if (!completed || !total) return '0%';
+            const rate = (parseFloat(completed) / parseFloat(total)) * 100;
+            return rate.toFixed(2) + '%';
+        };
+
+        const updateCompletionRate = (event) => {
+            const row = event.target.closest('tr');
+            const soMetDaThiCong = row.querySelector('[data-field="soMetDaThiCong"]').value;
+            const duToanCap = row.querySelector('[data-field="duToanCap"]').value;
+            const tyLeCell = row.cells[12]; // Cột tỷ lệ hoàn thành kéo
+            tyLeCell.textContent = calculateCompletionRate(soMetDaThiCong, duToanCap);
+        };
+
+        const formatDate = (dateString) => {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+        };
+        const exportToExcel = () => {
+            // Lấy bảng từ DOM
+            const table = document.getElementById('planTable');
+
+            // Tạo một mảng để lưu trữ dữ liệu
+            const data = [];
+
+            // Lấy tiêu đề cột, bỏ qua cột đầu tiên (cột checkbox)
+            const headers = Array.from(table.querySelectorAll('th')).slice(1).map(th => th.textContent.trim());
+
+            // Thêm tiêu đề với ngày hiện tại
+            const currentDate = formatDate(new Date());
+            data.push([`KẾ HOẠCH TRIỂN KHAI DỰ ÁN NGÀY ${currentDate}`]);
+            data.push([]); // Thêm một dòng trống
+            data.push(headers);
+
+            // Lấy dữ liệu từ các hàng, bỏ qua cột đầu tiên
+            Array.from(table.querySelectorAll('tbody tr')).forEach(row => {
+                const rowData = Array.from(row.cells).slice(1).map(cell => {
+                    const input = cell.querySelector('input, textarea');
+                    return input ? input.value : cell.textContent.trim();
+                });
+                data.push(rowData);
+            });
+
+            // Tạo một workbook mới và thêm worksheet
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+
+            // Hợp nhất các ô cho tiêu đề
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            const mergeCell = { s: { r: 0, c: 0 }, e: { r: 0, c: range.e.c } };
+            if (!ws['!merges']) ws['!merges'] = [];
+            ws['!merges'].push(mergeCell);
+
+            // Căn giữa và in đậm cho tiêu đề
+            ws['A1'].s = {
+                alignment: { horizontal: 'center', vertical: 'center' },
+                font: { bold: true, sz: 14 }
+            };
+
+            // Thêm worksheet vào workbook
+            XLSX.utils.book_append_sheet(wb, ws, "Kế hoạch triển khai NZ");
+
+            // Tự động điều chỉnh độ rộng cột
+            const colWidths = [];
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                let maxWidth = 10; // Độ rộng tối thiểu
+                for (let R = range.s.r; R <= range.e.r; ++R) {
+                    const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                    if (cell && cell.v) {
+                        const width = (cell.v.toString().length + 2) * 1.2; // Ước tính độ rộng
+                        if (width > maxWidth) maxWidth = width;
+                    }
+                }
+                colWidths[C] = maxWidth;
+            }
+            ws['!cols'] = colWidths.map(w => ({ wch: w }));
+
+            // Xuất file Excel
+            XLSX.writeFile(wb, "Ke_hoach_trien_khai_NZ.xlsx");
+        };
+        const saveToSystem = async () => {
+            showLoading();
+           var ngay =   document.getElementById('dateInput').value; 
+            const tableData = Array.from(document.querySelectorAll('#planTableBody tr')).map(row => ({
+                "ngay" : ngay,
+                "MDA": row.cells[2].textContent,
+                "Tên công trình": row.cells[3].textContent,
+                "Ngày nhận": row.querySelector('[data-field="ngayNhan"]').value,
+                "Deadline KH": row.querySelector('[data-field="deadlineKH"]').value,
+                "Kế hoạch": row.querySelector('[data-field="keHoach"]').value,
+                "Dự toán cáp": row.querySelector('[data-field="duToanCap"]').value,
+                "Số mét đã thi công": row.querySelector('[data-field="soMetDaThiCong"]').value,
+                "Tổng số Tủ/ODF/tập điểm": row.querySelector('[data-field="tongSoTu"]').value,
+                "Dự toán Core": row.querySelector('[data-field="duToanCore"]').value,
+                "Khối lượng port": row.querySelector('[data-field="khoiLuongPort"]').value,
+                "Tỷ lệ hoàn thành kéo": row.cells[12].textContent,
+                "Tỷ lệ hàn": row.querySelector('[data-field="tyLeHan"]').value,
+                "Ghi chú công trình": row.querySelector('[data-field="ghiChuCongTrinh"]').value,
+                "Ghi chú thêm": row.querySelector('[data-field="ghiChuThem"]').value
+            }));
+
+            if (tableData.length > 0) {
+                try {
+
+                    //await apiRequest('DUAN', 'Update', { Rows: tableData });
+                    console.log(tableData);
+
+                    alert('Dữ liệu đã được lưu thành công!');
+                } catch (error) {
+                    console.error("Error saving data:", error);
+                    alert('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.');
+                }
+            } else {
+                alert('Không có dữ liệu để lưu. Vui lòng thêm dự án vào bảng trước.');
+            }
+            hideLoading();
+        };
+
+        const showLoading = () => {
+            document.querySelector('.loading').style.display = 'flex';
+        };
+
+        const hideLoading = () => {
+            document.querySelector('.loading').style.display = 'none';
+        };
+
+        const updateRowNumbers = () => {
+            const rows = document.querySelectorAll('#planTableBody tr');
+            rows.forEach((row, index) => {
+                row.cells[1].textContent = index + 1; // Cột thứ hai là STT
+            });
+        };
+
+        const init = async () => {
+            try {
+                allData = await fetchDataFromAppSheet();
+                populateProjectSelect();
+
+                document.getElementById('addToTableBtn').addEventListener('click', () => {
+                    const selectedProject = choicesInstance.getValue(true);
+                    if (selectedProject) {
+                        addProjectToTable(selectedProject);
+                        choicesInstance.setChoiceByValue('');
+                    } else {
+                        alert('Vui lòng chọn một dự án');
+                    }
+                });
+
+                document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+                document.getElementById('saveToSystemBtn').addEventListener('click', saveToSystem);
+                document.getElementById('deleteSelectedBtn').addEventListener('click', () => {
+                    const checkboxes = document.querySelectorAll('.project-checkbox:checked');
+                    if (checkboxes.length === 0) {
+                        alert('Vui lòng chọn ít nhất một dự án để xóa.');
+                        return;
+                    }
+
+                    if (confirm(`Bạn có chắc chắn muốn xóa ${checkboxes.length} dự án đã chọn không?`)) {
+                        checkboxes.forEach(checkbox => {
+                            const row = checkbox.closest('tr');
+                            const mdaCell = row.cells[2]; // Cột thứ ba chứa MDA
+                            const mda = mdaCell.textContent.trim();
+                            selectedProjects.delete(mda); // Xóa khỏi Set selectedProjects
+                            row.remove();
+                        });
+
+                        updateRowNumbers();
+                    }
+                });
+
+                document.getElementById('selectAllCheckbox').addEventListener('change', function () {
+                    const checkboxes = document.querySelectorAll('.project-checkbox');
+                    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+                });
+
+                // Xử lý sự kiện cho nút chỉnh sửa ngày
+                const currentDateSpan = document.getElementById('currentDate');
+                const dateInput = document.getElementById('dateInput');
+                const editDateBtn = document.getElementById('editDateBtn');
+
+                const updateDateDisplay = () => {
+                    const today = new Date();
+                    currentDateSpan.textContent = formatDate(today);
+                    dateInput.value = today.toISOString().split('T')[0];
+                };
+
+                updateDateDisplay();
+
+                editDateBtn.addEventListener('click', () => {
+                    if (dateInput.classList.contains('hidden')) {
+                        dateInput.classList.remove('hidden');
+                        currentDateSpan.classList.add('hidden');
+                        editDateBtn.innerHTML = '<i class="fas fa-check"></i>';
+                    } else {
+                        dateInput.classList.add('hidden');
+                        currentDateSpan.classList.remove('hidden');
+                        currentDateSpan.textContent = formatDate(dateInput.value);
+                        editDateBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    }
+                });
+
+                dateInput.addEventListener('change', () => {
+                    currentDateSpan.textContent = formatDate(dateInput.value);
+                });
+
+            } catch (error) {
+                console.error("Error initializing application:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
