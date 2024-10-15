@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Giám Sát Thi Công Hạ Tầng</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        .excel-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .excel-table th, .excel-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .excel-table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 h-full">
+    <div class="min-h-full">
+        <div class="py-10">
+            <main>
+                <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    <div class="px-4 py-8 sm:px-0">
+                        <button id="exportBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Xuất Excel
+                        </button>
+                        <h1 class="text-2xl font-bold mb-4">BÁO CÁO GIÁM SÁT THI CÔNG HẠ TẦNG</h1>
+                        <h2 class="text-xl mb-4">Hạng Mục: Thi Công</h2>
+
+                        <div class="mb-4">
+                            <p><strong>Giám sát thi công:</strong> <span id="giamSatThiCong"></span></p>
+                            <p><strong>Ngày thi công:</strong> <span id="ngayThiCong"></span></p>
+                            <p><strong>Đơn vị thi công:</strong> Công Ty TNHH Thương Mại và Dịch Vụ NZ</p>
+                            <p><strong>Mã Kế Hoạch:</strong> <span id="maKeHoach"></span></p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table id="dataTable" class="excel-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tuyến cáp</th>
+                                        <th>Dự toán</th>
+                                        <th>Tuyến</th>
+                                        <th>Loại cáp</th>
+                                        <th>Số mét</th>
+                                        <th>TDN Số đầu</th>
+                                        <th>TDN Số cuối</th>
+                                        <th>SDN Số đầu</th>
+                                        <th>SDN Số cuối</th>
+                                        <th>Mã cáp</th>
+                                        <th>Đội kéo</th>
+                                        <th>Ghi chú keo</th>
+                                        <th>Đội hàn</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const API_CONFIG = {
+            appId: '0ffda765-62b7-4260-b7ed-5bcbb530b113',
+            accessKey: 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF',
+            region: 'www'
+        };
+
+        const formatDate = dateString => moment(dateString).format('YYYY-MM-DD');
+
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://${API_CONFIG.region}.appsheet.com/api/v2/apps/${API_CONFIG.appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': API_CONFIG.accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ Action: action, ...Properties, ...data })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        async function fetchSanphamData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mada = urlParams.get('mada');
+            if (!mada) throw new Error('Missing mada parameter');
+
+            const response = await apiRequest('BCGS', 'Find', {}, {
+                Properties: { Selector: `Filter(BCGS, [MKH] = "${mada}")` }
+            });
+            if (!Array.isArray(response) || response.length === 0) {
+                throw new Error("Invalid data received from API");
+            }
+            return response;
+        }
+
+        function populateTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = data.map(row => `
+                <tr>
+                    <td>${row['Tuyến cáp'] || ''}</td>
+                    <td>${row['Dự toán'] || ''}</td>
+                    <td>${row['Điểm đầu'] || ''}=>${row['Điểm cuối'] || ''}</td>
+                    <td>${row['Loại cáp'] || ''}</td>
+                    <td>${row['Số mét T/C'] || ''}</td>
+                    <td>${row['TDN Số đầu'] || ''}</td>
+                    <td>${row['TDN Số cuối'] || ''}</td>
+                    <td>${row['SDN Số đầu'] || ''}</td>
+                    <td>${row['SDN Số cuối'] || ''}</td>
+                    <td>${row['Mã cáp'] || ''}</td>
+                    <td>${row['Đội kéo'] || ''}</td>
+                    <td>${row['Ghi chú keo'] || ''}</td>
+                    <td>${row['Đội hàn'] || ''}</td>
+                </tr>
+            `).join('');
+        }
+
+        function createExcelWorkbook(data) {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['BÁO CÁO GIÁM SÁT THI CÔNG HẠ TẦNG'],
+                ['Giám sát thi công:', data[0]['Giám sát thi công'] || '', 'Ngày thi công:', formatDate(data[0]['Thời gian']) || ''],
+                ['Đơn vị thi công:', 'Công Ty TNHH Thương Mại và Dịch Vụ NZ'],
+                ['Mã Kế Hoạch:', data[0]['MKH'] || ''],
+                []
+            ]);
+
+            ws['!merges'] = [
+                { s: { r: 0, c: 0 }, e: { r: 0, c: 12 } },
+                { s: { r: 2, c: 1 }, e: { r: 2, c: 12 } }
+            ];
+
+            const range = XLSX.utils.decode_range(ws['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cell_address = { c: C, r: R };
+                    const cell_ref = XLSX.utils.encode_cell(cell_address);
+                    if (!ws[cell_ref]) continue;
+                    ws[cell_ref].s = {
+                        font: { bold: true },
+                        alignment: { vertical: 'center', horizontal: 'center' },
+                        border: {
+                            top: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            left: { style: 'thin' },
+                            right: { style: 'thin' }
+                        }
+                    };
+                    if (R === 0) ws[cell_ref].s.font.sz = 16;
+                }
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, "Báo cáo giám sát");
+            return wb;
+        }
+
+        function exportToExcel(data) {
+            const wb = createExcelWorkbook(data);
+            const ws = wb.Sheets["Báo cáo giám sát"];
+
+            const headers = ['Tuyến cáp', 'Dự toán', 'Tuyến', 'Loại cáp', 'Số mét', 'TDN Số đầu', 'TDN Số cuối', 'SDN Số đầu', 'SDN Số cuối', 'Mã cáp', 'Đội kéo', 'Ghi chú keo', 'Đội hàn'];
+            const tableData = [headers, ...data.map(row => [
+                row['Tuyến cáp'] || '',
+                row['Dự toán'] || '',
+                `${row['Điểm đầu'] || ''}=>${row['Điểm cuối'] || ''}`,
+                row['Loại cáp'] || '',
+                row['Số mét T/C'] || '',
+                row['TDN Số đầu'] || '',
+                row['TDN Số cuối'] || '',
+                row['SDN Số đầu'] || '',
+                row['SDN Số cuối'] || '',
+                row['Mã cáp'] || '',
+                row['Đội kéo'] || '',
+                row['Ghi chú keo'] || '',
+                row['Đội hàn'] || ''
+            ])];
+
+            XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A6' });
+
+            const headerRange = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+                const address = XLSX.utils.encode_cell({ r: 5, c: C });
+                if (!ws[address]) continue;
+                ws[address].s = {
+                    font: { bold: true },
+                    fill: { fgColor: { rgb: "FFFFAA00" } },
+                    alignment: { horizontal: "center", vertical: "center" }
+                };
+            }
+
+            XLSX.writeFile(wb, 'bao_cao_giam_sat_thi_cong.xlsx');
+        }
+
+        function updateHeaderInfo(data) {
+            if (data.length > 0) {
+                document.getElementById('giamSatThiCong').textContent = data[0]['Giám sát thi công'] || 'N/A';
+                document.getElementById('ngayThiCong').textContent = formatDate(data[0]['Thời gian']) || 'N/A';
+                document.getElementById('maKeHoach').textContent = data[0]['MKH'] || 'N/A';
+            }
+        }
+
+        async function init() {
+            try {
+                const sanpham = await fetchSanphamData();
+                if (sanpham.length === 0) {
+                    alert('Không có dữ liệu cho mã dự án này. Vui lòng kiểm tra lại mã dự án.');
+                    return;
+                }
+                updateHeaderInfo(sanpham);
+                populateTable(sanpham);
+                document.getElementById('exportBtn').addEventListener('click', () => exportToExcel(sanpham));
+            } catch (error) {
+                console.error("Error initializing app:", error);
+                alert(`Có lỗi xảy ra khi tải dữ liệu: ${error.message}. Vui lòng kiểm tra kết nối mạng và thử lại sau.`);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
