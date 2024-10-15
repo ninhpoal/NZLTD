@@ -26,6 +26,7 @@
 
         .excel-like th,
         .excel-like td {
+            max-width: 200px;
             border: 1px solid #e2e8f0;
             padding: 12px;
             text-align: left;
@@ -44,12 +45,41 @@
             background-color: #f1f5f9;
         }
 
-        .excel-like input,
-        .excel-like textarea {
+        .excel-like input {
             width: 100%;
             border: none;
             background: transparent;
             outline: none;
+        }
+
+        .excel-like textarea {
+            width: 100%;
+            resize: horizontal;
+            overflow: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-width: 100px;
+            max-width: 500px;
+        }
+
+        /* Thêm class mới cho các ô có thể mở rộng */
+        .expandable-cell {
+            position: relative;
+        }
+
+        .expandable-cell:hover {
+            overflow: visible;
+            z-index: 1;
+        }
+
+        .expandable-cell textarea:focus {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: auto;
+            min-width: 100%;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .loading {
@@ -404,39 +434,30 @@
         };
         const saveToSystem = async () => {
             showLoading();
-           var ngay =   document.getElementById('dateInput').value; 
-            const tableData = Array.from(document.querySelectorAll('#planTableBody tr')).map(row => ({
-                "ngay" : ngay,
-                "MDA": row.cells[2].textContent,
-                "Tên công trình": row.cells[3].textContent,
-                "Ngày nhận": row.querySelector('[data-field="ngayNhan"]').value,
-                "Deadline KH": row.querySelector('[data-field="deadlineKH"]').value,
-                "Kế hoạch": row.querySelector('[data-field="keHoach"]').value,
-                "Dự toán cáp": row.querySelector('[data-field="duToanCap"]').value,
-                "Số mét đã thi công": row.querySelector('[data-field="soMetDaThiCong"]').value,
-                "Tổng số Tủ/ODF/tập điểm": row.querySelector('[data-field="tongSoTu"]').value,
-                "Dự toán Core": row.querySelector('[data-field="duToanCore"]').value,
-                "Khối lượng port": row.querySelector('[data-field="khoiLuongPort"]').value,
-                "Tỷ lệ hoàn thành kéo": row.cells[12].textContent,
-                "Tỷ lệ hàn": row.querySelector('[data-field="tyLeHan"]').value,
-                "Ghi chú công trình": row.querySelector('[data-field="ghiChuCongTrinh"]').value,
-                "Ghi chú thêm": row.querySelector('[data-field="ghiChuThem"]').value
-            }));
+            var ngay = document.getElementById('dateInput').value;
+            let tableData = [];
+            document.querySelectorAll('#planTableBody tr').forEach(row => {
+                let rowData = {
+                    "NGÀY": ngay,
+                    "MDA": row.cells[2].textContent,
+                    "Tên công trình": row.cells[3].textContent,
+                    "Ngày nhận": row.querySelector('[data-field="ngayNhan"]').value,
+                    "Deadline KH": row.querySelector('[data-field="deadlineKH"]').value,
+                    "Kế hoạch": row.querySelector('[data-field="keHoach"]').value,
+                    "Dự toán cáp": row.querySelector('[data-field="duToanCap"]').value,
+                    "Số mét đã thi công": row.querySelector('[data-field="soMetDaThiCong"]').value,
+                    "Tổng số Tủ/ODF/tập điểm": row.querySelector('[data-field="tongSoTu"]').value,
+                    "Dự toán Core": row.querySelector('[data-field="duToanCore"]').value,
+                    "Khối lượng port": row.querySelector('[data-field="khoiLuongPort"]').value,
+                    "Tỷ lệ hoàn thành kéo": row.cells[12].textContent,
+                    "Tỷ lệ hàn": row.querySelector('[data-field="tyLeHan"]').value,
+                    "Ghi chú công trình": row.querySelector('[data-field="ghiChuCongTrinh"]').value,
+                    "Ghi chú thêm": row.querySelector('[data-field="ghiChuThem"]').value
+                };
+                tableData.push(rowData);
+            });
+            await apiRequest('Nhật ký', 'Add', { Rows: tableData });
 
-            if (tableData.length > 0) {
-                try {
-
-                    //await apiRequest('DUAN', 'Update', { Rows: tableData });
-                    console.log(tableData);
-
-                    alert('Dữ liệu đã được lưu thành công!');
-                } catch (error) {
-                    console.error("Error saving data:", error);
-                    alert('Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.');
-                }
-            } else {
-                alert('Không có dữ liệu để lưu. Vui lòng thêm dự án vào bảng trước.');
-            }
             hideLoading();
         };
 
