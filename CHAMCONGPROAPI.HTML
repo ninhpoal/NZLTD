@@ -282,32 +282,36 @@
                 throw error;
             }
         };
-
-        // Geolocation functions
-        const getLocation = () => new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(
-                position => resolve(`${position.coords.latitude},${position.coords.longitude}`),
-                error => {
-                    console.error('Error getting location:', error);
-                    reject('Không xác định được vị trí');
-                },
-                { timeout: 10000, maximumAge: 0 }
-            );
-        });
-
-        const getAddressFromCoordinates = async (lat, lon) => {
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=vi`);
-                const data = await response.json();
-                return data.display_name || 'Không thể lấy địa chỉ chính xác';
-            } catch (error) {
-                console.error('Error getting address:', error);
-                return 'Không thể lấy địa chỉ';
+        const getLocation = async () => {
+            const hasLocationPermission = await checkPermission('geolocation');
+            if (!hasLocationPermission) {
+                throw new Error('Không có quyền truy cập vị trí. Vui lòng cấp quyền và thử lại.');
             }
+
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(
+                    position => resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    }),
+                    error => {
+                        console.error('Error getting location:', error);
+                        reject('Không xác định được vị trí');
+                    },
+                    { timeout: 10000, maximumAge: 0 }
+                );
+            });
         };
+
 
         // Camera functions
         const startCamera = async () => {
+            const hasCameraPermission = await checkPermission('camera');
+            if (!hasCameraPermission) {
+                showToast("Không có quyền truy cập camera. Vui lòng cấp quyền và thử lại.", 'error');
+                return false;
+            }
+
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
@@ -321,9 +325,11 @@
                 };
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 elements.camera.srcObject = stream;
+                return true;
             } catch (err) {
                 console.error("Không thể truy cập camera:", err);
-                showToast("Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập.", 'error');
+                showToast("Không thể truy cập camera. Vui lòng kiểm tra quyền truy cập và thử lại.", 'error');
+                return false;
             }
         };
         const switchCamera = async () => {
@@ -339,20 +345,17 @@
             ctx.drawImage(elements.camera, 0, 0);
 
             const location = await getLocation();
-            const [latitude, longitude] = location.split(',');
             const currentTime = moment().tz("Asia/Ho_Chi_Minh");
             const date = currentTime.format('YYYY-MM-DD');
             const timeStr = currentTime.format('HH:mm:ss');
-            const address = await getAddressFromCoordinates(latitude, longitude);
 
             const overlayInfo = `
-        Vị trí: ${latitude}, ${longitude}
-        Địa chỉ: ${address}
+        Vị trí: ${location.latitude}, ${location.longitude}
         Thời gian: ${date} ${timeStr}
     `;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-            ctx.fillRect(10, 10, canvas.width - 20, 100);
+            ctx.fillRect(10, 10, canvas.width - 20, 80);
             ctx.fillStyle = 'white';
             ctx.font = '14px Arial';
 
@@ -368,6 +371,7 @@
                 }, 'image/jpeg', 0.8);
             });
         };
+
 
         // Authentication functions
         const login = async () => {
@@ -453,7 +457,7 @@
                         }
                         newData["IN"] = timeStr;
                         newData["HÌNH ẢNH IN"] = imageWithLocation;
-                        newData["ĐỊA CHỈ IN"] = location;
+                        newData["ĐỊA CHỈ IN"] = `${location.latitude},${location.longitude}`;;
                     } else if (type === 'out') {
                         if (existingRecord && existingRecord[0] && existingRecord[0].OUT) {
                             newData["LỊCH SỬ OUT"] = `${existingRecord[0]["LỊCH SỬ OUT"] || ""}\n${fullName} Đã check out lại vào: (${date} lúc: ${timeStr})`;
@@ -462,7 +466,7 @@
                         }
                         newData["OUT"] = timeStr;
                         newData["HÌNH ẢNH OUT"] = imageWithLocation;
-                        newData["ĐỊA CHỈ OUT"] = location;
+                        newData["ĐỊA CHỈ OUT"] = `${location.latitude},${location.longitude}`;;
                     }
 
                     const action = existingRecord && existingRecord[0] ? 'Edit' : 'Add';
@@ -515,6 +519,15 @@
                 currentUser = { 'Mã nhân viên': savedEmployeeCode };
                 document.getElementById('employeeCode').textContent = `Mã NV: ${savedEmployeeCode}`;
                 showToast(`Xin chào, ${savedEmployeeCode}!`);
+            }
+        };
+        const checkPermission = async (permissionName) => {
+            try {
+                const result = await navigator.permissions.query({ name: permissionName });
+                return result.state === 'granted';
+            } catch (error) {
+                console.error(`Error checking ${permissionName} permission:`, error);
+                return false;
             }
         };
 
