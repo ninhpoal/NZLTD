@@ -90,19 +90,25 @@
         .excel-table tr:nth-child(even) {
             background-color: #f8f8f8;
         }
-        .excel-table input[type="text"], 
-        .excel-table input[type="number"], 
-        .excel-table input[type="date"], 
+           .excel-table input[type="text"],
+        .excel-table input[type="number"],
+        .excel-table input[type="date"],
         .excel-table textarea {
+            font-family: 'Mulish', sans-serif;
             width: 100%;
             padding: 5px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
+            border: none;
+            /* Loại bỏ khung input */
             box-sizing: border-box;
+            font-size: 16px;
+            /* Tăng cỡ chữ, bạn có thể điều chỉnh giá trị này */
         }
+
         .excel-table textarea {
-            resize: vertical;
-        }
+    resize: both; /* Cho phép co dãn cả chiều ngang và chiều dọc */
+    overflow: auto; /* Thêm thanh cuộn khi cần thiết */
+}
+
         .column-resizer {
             position: absolute;
             top: 0;
