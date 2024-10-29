@@ -1,4 +1,4 @@
-
+<!-- 
 <!DOCTYPE html>
 <html lang="en" class="light">
 
@@ -814,6 +814,829 @@
                 'Ngày': formatDate(item['Ngày'])
             }));
         }
+    </script>
+
+</body>
+
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZ ERP PRO Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+   
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .card-stats {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .card-stats:hover {
+            transform: translateY(-5px);
+        }
+
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+
+
+        .btn-primary {
+            @apply bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors duration-200;
+        }
+
+        .btn-secondary {
+            @apply bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200;
+        }
+
+        .btn-success {
+            @apply bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200;
+        }
+
+
+      
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div id="loading" class="loading hidden">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-lg fixed top-0 left-0 right-0 z-30">
+        <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <button id="toggleFilters" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <i class="fas fa-bars text-gray-600 dark:text-gray-300"></i>
+                    </button>
+                    <div class="flex items-center space-x-3">
+                        <img src="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png" alt="Logo" class="h-8 w-8">
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">NZ ERP PRO</h1>
+                    </div>
+                </div>
+              
+            </div>
+        </div>
+    </header>
+
+    <div class="flex min-h-screen pt-16">
+        <!-- Sidebar -->
+        <aside id="filtersSidebar" class="fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out overflow-y-auto z-20">
+            <div class="p-6 space-y-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Bộ lọc</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="filter-group">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Khu vực</label>
+                        <select id="filterKhuVuc" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Từ ngày</label>
+                        <input type="date" id="fromDate" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Đến ngày</label>
+                        <input type="date" id="toDate" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chức vụ</label>
+                        <select id="filterChucVu" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mã nhân viên</label>
+                        <select id="filterMaNhanVien" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Loại sản phẩm</label>
+                        <select id="filterLoaiSanPham" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </select>
+                    </div>
+
+                    <div class="filter-group" hidden>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trạng thái</label>
+                        <select id="filterTrangThai" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </select>
+                    </div>
+
+                    <div class="pt-4 space-y-3">
+                        <button id="applyFilters" class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
+                            <i class="fas fa-filter btn-icon"></i>
+                            <span class="font-medium">Áp dụng</span>
+                        </button>
+                        
+                        <!-- Reset Button -->
+                        <button id="resetFilters" class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-white hover:bg-gray-50 text-gray-700 rounded-lg shadow-lg hover:shadow-xl border border-gray-200 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
+                            <i class="fas fa-undo btn-icon"></i>
+                            <span class="font-medium">Đặt lại</span>
+                        </button>
+                        
+                        <!-- Export Excel Button -->
+                        <button id="exportExcel" class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
+                            <i class="fas fa-file-excel btn-icon"></i>
+                            <span class="font-medium">Xuất Excel</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 lg:ml-64 p-6">
+            <div class="max-w-9xl mx-auto">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                    <div class="card-stats bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-indigo-100 dark:bg-indigo-900">
+                                <i class="fas fa-box-open text-indigo-600 dark:text-indigo-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tổng số sản phẩm</p>
+                                <p id="totalProducts" class="text-xl font-semibold text-gray-900 dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-stats bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 dark:bg-green-900">
+                                <i class="fas fa-money-bill-wave text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tổng lương sản phẩm</p>
+                                <p id="totalRevenue" class="text-xl font-semibold text-gray-900 dark:text-white">0 ₫</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-stats bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900">
+                                <i class="fas fa-calendar-day text-yellow-600 dark:text-yellow-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tổng số ngày công</p>
+                                <p id="totalWorkDays" class="text-xl font-semibold text-gray-900 dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-stats bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900">
+                                <i class="fas fa-calendar-week text-purple-600 dark:text-purple-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Số ngày CN</p>
+                                <p id="totalSundayWorkDays" class="text-xl font-semibold text-gray-900 dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-stats bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-red-100 dark:bg-red-900">
+                                <i class="fas fa-hand-holding-usd text-red-600 dark:text-red-400"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tổng phụ cấp</p>
+                                <p id="totalAllowance" class="text-xl font-semibold text-gray-900 dark:text-white">0 ₫</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table will be inserted here by JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-10 hidden lg:hidden"></div>
+
+    <script>
+
+
+        const appId = '4631b2c5-e441-4160-9b16-d1ee76706f3b';
+        const accessKey = 'V2-F4iVe-G112C-5U3Is-MhvwZ-Z5RyS-0tNpz-Jjdcb-E0739';
+        const region = 'www';
+        let danhsachnv = [];
+        let sanpham = [];
+        let cong = [];
+        async function apiRequest(tableName, action, data, Properties) {
+
+            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Action: action,
+                        ...Properties,
+                        ...data
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        // gồm các cột 
+        async function fetchSanPhamData() {
+            try {
+                const response = await apiRequest('BCHN_DETAIL', 'Find', {}, {
+                    Properties: { Selector: `Filter(BCHN_DETAIL, true)` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return response;
+            } catch (error) {
+                console.error("Error fetching data from AppSheet:", error);
+                throw error;
+            }
+        }
+
+        async function fetchCongData() {
+            try {
+                const response = await apiRequest('Chấm công', 'Find', {}, {
+                    Properties: { Selector: `Filter(Chấm công, true)` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return response;
+            } catch (error) {
+                console.error("Error fetching data from AppSheet:", error);
+                throw error;
+            }
+        }
+
+        async function fetchNhanSu() {
+            try {
+                const response = await apiRequest('NHÂN VIÊN', 'Find', {}, {
+                    Properties: { Selector: `Filter(NHÂN VIÊN, [Phòng ban]="Đội thi công")` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return response;
+            } catch (error) {
+                console.error("Error fetching data from AppSheet:", error);
+                throw error;
+            }
+        }
+
+
+
+        async function init() {
+
+
+            danhsachnv = await fetchNhanSu();
+            sanpham = await fetchSanPhamData();
+            cong = await fetchCongData();
+            console.log(danhsachnv);
+            console.log(sanpham);
+            console.log(cong);
+
+
+        }
+        // Khởi tạo trang
+        // Utility function to format currency
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        };
+        const formatNumber = (number) => {
+            return new Intl.NumberFormat('vi-VN', { style: 'decimal' }).format(number);
+        };
+        // Function to get unique values from array
+        const getUniqueValues = (array, key) => {
+            return [...new Set(array.map(item => item[key]))].filter(Boolean);
+        };
+        function setDefaultDateRange() {
+            const today = new Date();
+            let fromDate, toDate;
+
+            fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 26);
+            toDate = new Date(today.getFullYear(), today.getMonth(), 25);
+
+            // Format dates to YYYY-MM-DD string
+            const formatDate = (date) => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            // Set values to input fields
+            document.getElementById('fromDate').value = formatDate(fromDate);
+            document.getElementById('toDate').value = formatDate(toDate);
+        }
+        // Initialize filter dropdowns
+        function initializeFilters() {
+            // Get unique values for each filter
+            const khuVuc = getUniqueValues(danhsachnv, 'Khu vực');
+            const chucVu = getUniqueValues(danhsachnv, 'Chức vụ');
+            const maNhanVien = getUniqueValues(danhsachnv, 'Mã nhân viên');
+            const loaiSanPham = getUniqueValues(sanpham, 'Loại sản phẩm');
+            const trangThai = getUniqueValues(sanpham, 'Trạng thái');
+
+            // Populate dropdowns
+            populateDropdown('filterKhuVuc', khuVuc);
+            populateDropdown('filterChucVu', chucVu);
+            populateDropdown('filterMaNhanVien', maNhanVien);
+            populateDropdown('filterLoaiSanPham', loaiSanPham);
+            populateDropdown('filterTrangThai', trangThai);
+
+            // Set default dates (current month)
+            setDefaultDateRange();
+
+        }
+
+        // Populate dropdown with options
+        function populateDropdown(elementId, values) {
+            const dropdown = document.getElementById(elementId);
+            dropdown.innerHTML = '<option value="">Tất cả</option>';
+            values.forEach(value => {
+                const option = document.createElement('option');
+                option.value = value;
+                option.textContent = value;
+                dropdown.appendChild(option);
+            });
+        }
+        function filterDataByDateRange(data, fromDate, toDate, dateField) {
+            // Tạo đối tượng Date cho ngày bắt đầu (đặt về 00:00:00)
+            const startDate = new Date(fromDate);
+            startDate.setHours(0, 0, 0, 0);
+
+            // Tạo đối tượng Date cho ngày kết thúc (đặt về 23:59:59)
+            const endDate = new Date(toDate);
+            endDate.setHours(23, 59, 59, 999);
+
+            return data.filter(item => {
+                const itemDate = new Date(item[dateField]);
+                itemDate.setHours(0, 0, 0, 0);
+                return itemDate >= startDate && itemDate <= endDate;
+            });
+        }
+        // Apply filters and update dashboard
+        function applyFilters() {
+            const filters = {
+                khuVuc: document.getElementById('filterKhuVuc').value,
+                chucVu: document.getElementById('filterChucVu').value,
+                maNhanVien: document.getElementById('filterMaNhanVien').value,
+                loaiSanPham: document.getElementById('filterLoaiSanPham').value,
+                trangThai: document.getElementById('filterTrangThai').value,
+                fromDate: document.getElementById('fromDate').value,
+                toDate: document.getElementById('toDate').value
+            };
+
+            // Lọc dữ liệu sản phẩm
+            const filteredSanPham = sanpham.filter(item => {
+                const matchesDateRange = filterDataByDateRange([item], filters.fromDate, filters.toDate, 'Thời gian').length > 0;
+                return matchesDateRange &&
+                    (!filters.khuVuc || item['Khu vực'] === filters.khuVuc) &&
+                    (!filters.chucVu || item['Chức vụ'] === filters.chucVu) &&
+                    (!filters.loaiSanPham || item['Loại sản phẩm'] === filters.loaiSanPham) &&
+                    (!filters.trangThai || item['Trạng thái'] === filters.trangThai) &&
+                    (!filters.maNhanVien || item['Nhân sự tham gia'].includes(filters.maNhanVien));
+            });
+
+            // Lọc dữ liệu chấm công
+            const filteredCong = cong.filter(item => {
+                const matchesDateRange = filterDataByDateRange([item], filters.fromDate, filters.toDate, 'Ngày').length > 0;
+                return matchesDateRange &&
+                    (!filters.maNhanVien || item['Mã nhân viên'] === filters.maNhanVien);
+            });
+
+            updateDashboard(filteredSanPham, filteredCong);
+        }
+
+
+        function updateDashboard(filteredSanPham, filteredCong) {
+            // Calculate metrics (previous calculations remain the same)
+            const totalProducts = filteredSanPham.length;
+            const totalRevenue = filteredSanPham.reduce((sum, item) => sum + (Number(item['Số tiền']) || 0), 0);
+            const totalWorkDays = filteredCong.filter(item => item['Trạng thái'] === 'Có mặt').length;
+            const totalSundayWorkDays = filteredCong.filter(item =>
+                item['Trạng thái'] === 'Có mặt' &&
+                new Date(item['Ngày']).getDay() === 0
+            ).length;
+            const totalAllowance = filteredCong.reduce((sum, item) =>
+                sum + (Number(item['Phụ cấp']) || 0) + (Number(item['Phụ cấp chủ nhật']) || 0), 0);
+
+            // Update UI metrics
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+            document.getElementById('totalWorkDays').textContent = totalWorkDays;
+            document.getElementById('totalSundayWorkDays').textContent = totalSundayWorkDays;
+            document.getElementById('totalAllowance').textContent = formatCurrency(totalAllowance);
+
+            // Update summary table
+            updateSummaryTable(filteredSanPham, filteredCong);
+        }
+
+        function updateSummaryTable(filteredSanPham, filteredCong) {
+            // Create summary data structure
+            const summaryData = new Map();
+
+            // Process employee list first to ensure we have all employees
+            danhsachnv.forEach(employee => {
+                summaryData.set(employee['Mã nhân viên'], {
+                    maNhanVien: employee['Mã nhân viên'],
+                    chucVu: employee['Chức vụ'],
+                    soSanPham: 0,
+                    soTien: 0,
+                    soNgayCong: 0,
+                    soNgayChuNhat: 0,
+                    phuCap: 0,
+                    tongThuNhap: 0
+                });
+            });
+
+            // Process products data
+            filteredSanPham.forEach(product => {
+                const nhanVien = product['Nhân sự tham gia'];
+                if (summaryData.has(nhanVien)) {
+                    const data = summaryData.get(nhanVien);
+                    data.bacluong = product['Bậc lương'];
+                    data.soSanPham += Number(product['Số lượng']) || 0;
+                    data.soTien += Number(product['Số tiền']) || 0;
+                    data.tongThuNhap += Number(product['Số tiền']) || 0;
+                }
+            });
+
+            // Process attendance data
+            filteredCong.forEach(attendance => {
+                const nhanVien = attendance['Mã nhân viên'];
+                if (summaryData.has(nhanVien)) {
+                    const data = summaryData.get(nhanVien);
+                    if (attendance['Trạng thái'] === 'Có mặt') {
+                        data.soNgayCong++;
+                        const isWeekend = new Date(attendance['Ngày']).getDay() === 0;
+                        if (isWeekend) {
+                            data.soNgayChuNhat++;
+                        }
+                    }
+                    const phuCap = (Number(attendance['Phụ cấp']) || 0) + (Number(attendance['Phụ cấp chủ nhật']) || 0);
+                    data.phuCap += phuCap;
+                    data.tongThuNhap += phuCap;
+                }
+            });
+
+            // Filter out employees with zero income
+            const filteredSummaryData = new Map(
+                Array.from(summaryData.entries()).filter(([_, data]) => data.tongThuNhap > 0)
+            );
+
+            // Generate HTML table
+            const tableHTML = `
+        <div class="mt-8">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
+                <div class="responsive-table">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700" >
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Mã nhân viên</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Chức vụ</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Bậc lương</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Số sản phẩm</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Số tiền</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Số ngày công (CN)</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Phụ cấp</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Tổng thu nhập</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            ${Array.from(filteredSummaryData.values())
+                    .sort((a, b) => b.tongThuNhap - a.tongThuNhap) // Sort by total income in descending order
+                    .map(row => `
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">${row.maNhanVien}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${row.chucVu}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${row.bacluong}</td>
+
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatNumber(row.soSanPham)}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(row.soTien)}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-500 dark:text-gray-300">${row.soNgayCong} (${row.soNgayChuNhat})</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500 dark:text-gray-300">${formatCurrency(row.phuCap)}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900 dark:text-white">${formatCurrency(row.tongThuNhap)}</td>
+                                    </tr>
+                                `).join('')}
+                            <tr class="bg-gray-50 dark:bg-gray-700 font-bold">
+                                <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">Tổng cộng</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white font-medium">
+                                    ${formatNumber(Array.from(filteredSummaryData.values()).reduce((sum, row) => sum + row.soSanPham, 0))}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white font-medium">
+                                    ${formatCurrency(Array.from(filteredSummaryData.values()).reduce((sum, row) => sum + row.soTien, 0))}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900 dark:text-white font-medium">
+                                    ${Array.from(filteredSummaryData.values()).reduce((sum, row) => sum + row.soNgayCong, 0)}
+                                    (${Array.from(filteredSummaryData.values()).reduce((sum, row) => sum + row.soNgayChuNhat, 0)})
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white font-medium">
+                                    ${formatCurrency(Array.from(filteredSummaryData.values()).reduce((sum, row) => sum + row.phuCap, 0))}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 dark:text-white font-medium">
+                                    ${formatCurrency(Array.from(filteredSummaryData.values()).reduce((sum, row) => sum + row.tongThuNhap, 0))}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+            // Add table to the main content
+            const mainContent = document.querySelector('main');
+            const existingTable = mainContent.querySelector('.mt-8');
+            if (existingTable) {
+                existingTable.remove();
+            }
+            mainContent.insertAdjacentHTML('beforeend', tableHTML);
+        }
+        // Update the exportToExcel function to also filter zero income employees
+        function exportToExcel() {
+            const filters = {
+                khuVuc: document.getElementById('filterKhuVuc').value,
+                chucVu: document.getElementById('filterChucVu').value,
+                maNhanVien: document.getElementById('filterMaNhanVien').value,
+                loaiSanPham: document.getElementById('filterLoaiSanPham').value,
+                trangThai: document.getElementById('filterTrangThai').value,
+                fromDate: document.getElementById('fromDate').value,
+                toDate: document.getElementById('toDate').value
+            };
+            // Sheet 1: Tổng hợp
+            const summaryData = new Map();
+            danhsachnv.forEach(employee => {
+                summaryData.set(employee['Mã nhân viên'], {
+                    'Mã nhân viên': employee['Mã nhân viên'],
+                    'Chức vụ': employee['Chức vụ'],
+                    'Bậc lương' : employee['Bậc lương'],
+                    'Số sản phẩm': 0,
+                    'Số tiền': 0,
+                    'Số ngày công': 0,
+                    'Số ngày chủ nhật': 0,
+                    'Phụ cấp': 0,
+                    'Tổng thu nhập': 0
+                });
+            });
+
+            // Lọc và xử lý dữ liệu sản phẩm
+            const filteredSanPham = sanpham.filter(item => {
+                const matchesDateRange = filterDataByDateRange([item], filters.fromDate, filters.toDate, 'Thời gian').length > 0;
+                return matchesDateRange &&
+                    (!filters.khuVuc || item['Khu vực'] === filters.khuVuc) &&
+                    (!filters.chucVu || item['Chức vụ'] === filters.chucVu) &&
+                    (!filters.loaiSanPham || item['Loại sản phẩm'] === filters.loaiSanPham) &&
+                    (!filters.trangThai || item['Trạng thái'] === filters.trangThai) &&
+                    (!filters.maNhanVien || item['Nhân sự tham gia'].includes(filters.maNhanVien));
+            });
+
+            const filteredCong = cong.filter(item => {
+                const matchesDateRange = filterDataByDateRange([item], filters.fromDate, filters.toDate, 'Ngày').length > 0;
+                return matchesDateRange &&
+                    (!filters.maNhanVien || item['Mã nhân viên'] === filters.maNhanVien);
+            });
+
+            // Cập nhật dữ liệu tổng hợp
+            filteredSanPham.forEach(product => {
+                const nhanVien = product['Nhân sự tham gia'];
+                if (summaryData.has(nhanVien)) {
+                    const data = summaryData.get(nhanVien);
+                    data['Số sản phẩm'] += Number(product['Số lượng']) || 0;
+                    data['Số tiền'] += Number(product['Số tiền']) || 0;
+                    data['Tổng thu nhập'] += Number(product['Số tiền']) || 0;
+                }
+            });
+
+            filteredCong.forEach(attendance => {
+                const nhanVien = attendance['Mã nhân viên'];
+                if (summaryData.has(nhanVien)) {
+                    const data = summaryData.get(nhanVien);
+                    if (attendance['Trạng thái'] === 'Có mặt') {
+                        data['Số ngày công']++;
+                        if (new Date(attendance['Ngày']).getDay() === 0) {
+                            data['Số ngày chủ nhật']++;
+                        }
+                    }
+                    const phuCap = (Number(attendance['Phụ cấp']) || 0) + (Number(attendance['Phụ cấp chủ nhật']) || 0);
+                    data['Phụ cấp'] += phuCap;
+                    data['Tổng thu nhập'] += phuCap;
+                }
+            });
+
+            // Lọc bỏ nhân viên không có thu nhập
+            const filteredSummaryData = Array.from(summaryData.values())
+                .filter(row => row['Tổng thu nhập'] > 0)
+                .sort((a, b) => b['Tổng thu nhập'] - a['Tổng thu nhập']);
+
+            // Tạo dữ liệu cho Sheet 1: Tổng hợp
+            const summarySheet = [
+                ['Mã nhân viên', 'Chức vụ','Bậc lương', 'Số sản phẩm', 'Số tiền', 'Số ngày công', 'Số ngày chủ nhật', 'Phụ cấp', 'Tổng thu nhập']
+            ].concat(
+                filteredSummaryData.map(row => [
+                    row['Mã nhân viên'],
+                    row['Chức vụ'],
+                    row['Bậc lương'],
+                    row['Số sản phẩm'],
+                    row['Số tiền'],
+                    row['Số ngày công'],
+                    row['Số ngày chủ nhật'],
+                    row['Phụ cấp'],
+                    row['Tổng thu nhập']
+                ])
+            );
+
+            // Thêm dòng tổng cộng
+            const totals = filteredSummaryData.reduce((acc, row) => ({
+                'Mã nhân viên': 'Tổng cộng',
+                'Chức vụ': '',
+                'Bậc lương': '',
+                'Số sản phẩm': acc['Số sản phẩm'] + row['Số sản phẩm'],
+                'Số tiền': acc['Số tiền'] + row['Số tiền'],
+                'Số ngày công': acc['Số ngày công'] + row['Số ngày công'],
+                'Số ngày chủ nhật': acc['Số ngày chủ nhật'] + row['Số ngày chủ nhật'],
+                'Phụ cấp': acc['Phụ cấp'] + row['Phụ cấp'],
+                'Tổng thu nhập': acc['Tổng thu nhập'] + row['Tổng thu nhập']
+            }), {
+                'Mã nhân viên': 'Tổng cộng',
+                'Chức vụ': '',
+                'Bậc lương': '',
+                'Số sản phẩm': 0,
+                'Số tiền': 0,
+                'Số ngày công': 0,
+                'Số ngày chủ nhật': 0,
+                'Phụ cấp': 0,
+                'Tổng thu nhập': 0
+            });
+            summarySheet.push(Object.values(totals));
+
+            // Tạo dữ liệu cho Sheet 2: Chi tiết sản phẩm
+            const productSheet = [
+                ['Mã kế hoạch', 'POP', 'Khu vực', 'Vị trí', 'Số lượng', 'Loại sản phẩm', 'Ghi chú', 'Nhân sự tham gia', 'Thời gian', 'Số tiền', 'Trạng thái', 'Đơn giá', 'Chức vụ', 'ID', 'Bậc lương']
+            ].concat(
+                filteredSanPham.map(item => [
+                    item['Mã kế hoạch'],
+                    item['POP'],
+                    item['Khu vực'],
+                    item['Vị trí'],
+                    item['Số lượng'],
+                    item['Loại sản phẩm'],
+                    item['Ghi chú'],
+                    item['Nhân sự tham gia'],
+                    item['Thời gian'],
+                    item['Số tiền'],
+                    item['Trạng thái'],
+                    item['Đơn giá'],
+                    item['Chức vụ'],
+                    item['ID'],
+                    item['Bậc lương']
+
+                ])
+            );
+
+            // Tạo dữ liệu cho Sheet 3: Chi tiết chấm công
+            const attendanceSheet = [
+                ['Mã chấm công', 'Ngày', 'Thứ', 'Mã nhân viên', 'Trạng thái', 'Đi tỉnh', 'Tăng ca đêm', 'Phụ cấp', 'Phụ cấp chủ nhật']
+            ].concat(
+                filteredCong.map(item => [
+                    item['Mã chấm công'],
+                    item['Ngày'],
+                    item['Thứ'],
+                    item['Mã nhân viên'],
+                    item['Trạng thái'],
+                    item['Đi tỉnh'],
+                    item['Tăng ca đêm'],
+                    item['Phụ cấp'],
+                    item['Phụ cấp chủ nhật']
+                ])
+            );
+
+            // Tạo workbook và thêm các sheet
+            const wb = XLSX.utils.book_new();
+
+            // Thêm Sheet 1: Tổng hợp
+            const ws1 = XLSX.utils.aoa_to_sheet(summarySheet);
+            XLSX.utils.book_append_sheet(wb, ws1, "Tổng hợp");
+
+            // Thêm Sheet 2: Chi tiết sản phẩm
+            const ws2 = XLSX.utils.aoa_to_sheet(productSheet);
+            XLSX.utils.book_append_sheet(wb, ws2, "Chi tiết sản phẩm");
+
+            // Thêm Sheet 3: Chi tiết chấm công
+            const ws3 = XLSX.utils.aoa_to_sheet(attendanceSheet);
+            XLSX.utils.book_append_sheet(wb, ws3, "Chi tiết chấm công");
+
+            // Định dạng các sheet
+            [ws1, ws2, ws3].forEach(ws => {
+                // Đặt độ rộng cột
+                const maxWidth = 20;
+                const colWidth = {};
+                for (let i = 0; i < 10; i++) {
+                    colWidth[i] = { wch: maxWidth };
+                }
+                ws['!cols'] = colWidth;
+            });
+
+            // Xuất file
+            const fileName = `Báo_cáo_tổng_hợp_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', async function () {
+            try {
+                document.getElementById('loading').classList.remove('hidden');
+
+                await init();
+                initializeFilters();
+                applyFilters();
+
+                // Add event listeners
+                document.getElementById('applyFilters').addEventListener('click', applyFilters);
+                document.getElementById('resetFilters').addEventListener('click', () => {
+                    // Reset all filters
+                    document.querySelectorAll('select').forEach(select => select.value = '');
+                    applyFilters();
+                });
+                document.getElementById('exportExcel').addEventListener('click', exportToExcel);
+                document.getElementById('toggleFilters').addEventListener('click', () => {
+                    document.getElementById('filtersSidebar').classList.toggle('open');
+                    document.getElementById('overlay').classList.toggle('hidden');
+                });
+                document.getElementById('overlay').addEventListener('click', () => {
+                    document.getElementById('filtersSidebar').classList.remove('open');
+                    document.getElementById('overlay').classList.add('hidden');
+                });
+                
+            } catch (error) {
+                console.error('Error initializing dashboard:', error);
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+            }
+        });
+
     </script>
 
 </body>
