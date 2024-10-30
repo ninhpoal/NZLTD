@@ -618,7 +618,32 @@
             }
             mainContent.insertAdjacentHTML('beforeend', tableHTML);
         }
+
+        // Thêm hàm kiểm tra và hiển thị nút chi tiết
+        function updateDetailButton() {
+            const maNhanVien = document.getElementById('filterMaNhanVien').value;
+            const existingButton = document.querySelector('#detailButton');
+
+            if (existingButton) {
+                existingButton.remove();
+            }
+
+            if (maNhanVien) {
+                const buttonHTML = `
+            <button id="detailButton" 
+                onclick="window.open('https://ninhpoal.github.io/NZLTD/ThongkeHan.html?manv=${maNhanVien}', '_blank')"
+                class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 mt-3">
+                <i class="fas fa-external-link-alt btn-icon"></i>
+                <span class="font-medium">Xem chi tiết</span>
+            </button>`;
+
+                // Thêm nút vào sau nút xuất Excel
+                document.getElementById('exportExcel').insertAdjacentHTML('afterend', buttonHTML);
+            }
+        }
         // Update the exportToExcel function to also filter zero income employees
+
+
         function exportToExcel() {
             const filters = {
                 khuVuc: document.getElementById('filterKhuVuc').value,
@@ -629,6 +654,7 @@
                 fromDate: document.getElementById('fromDate').value,
                 toDate: document.getElementById('toDate').value
             };
+
             // Sheet 1: Tổng hợp
             const summaryData = new Map();
             danhsachnv.forEach(employee => {
@@ -645,7 +671,7 @@
                 });
             });
 
-            // Lọc và xử lý dữ liệu sản phẩm
+            // Lọc và xử lý dữ liệu
             const filteredSanPham = sanpham.filter(item => {
                 const matchesDateRange = filterDataByDateRange([item], filters.fromDate, filters.toDate, 'Thời gian').length > 0;
                 return matchesDateRange &&
@@ -662,14 +688,13 @@
                     (!filters.maNhanVien || item['Mã nhân viên'] === filters.maNhanVien);
             });
 
-            // Cập nhật dữ liệu tổng hợp
+            // Xử lý dữ liệu tổng hợp
             filteredSanPham.forEach(product => {
                 const nhanVien = product['Nhân sự tham gia'];
                 if (summaryData.has(nhanVien)) {
                     const data = summaryData.get(nhanVien);
                     data['Số sản phẩm'] += Number(product['Số lượng']) || 0;
                     data['Số tiền'] += Number(product['Số tiền']) || 0;
-                    // Không cộng vào tổng thu nhập ở đây
                 }
             });
 
@@ -688,34 +713,16 @@
                 }
             });
 
-
-            // Tính tổng thu nhập cuối cùng
             summaryData.forEach(data => {
                 data['Tổng thu nhập'] = data['Số tiền'] + data['Phụ cấp'];
             });
-            // Lọc bỏ nhân viên không có thu nhập
+
+            // Lọc và sắp xếp dữ liệu
             const filteredSummaryData = Array.from(summaryData.values())
                 .filter(row => row['Tổng thu nhập'] > 0)
                 .sort((a, b) => b['Tổng thu nhập'] - a['Tổng thu nhập']);
 
-            // Tạo dữ liệu cho Sheet 1: Tổng hợp
-            const summarySheet = [
-                ['Mã nhân viên', 'Chức vụ', 'Bậc lương', 'Số sản phẩm', 'Số tiền', 'Số ngày công', 'Số ngày chủ nhật', 'Phụ cấp', 'Tổng thu nhập']
-            ].concat(
-                filteredSummaryData.map(row => [
-                    row['Mã nhân viên'],
-                    row['Chức vụ'],
-                    row['Bậc lương'],
-                    row['Số sản phẩm'],
-                    row['Số tiền'],
-                    row['Số ngày công'],
-                    row['Số ngày chủ nhật'],
-                    row['Phụ cấp'],
-                    row['Tổng thu nhập']
-                ])
-            );
-
-            // Thêm dòng tổng cộng
+            // Tính tổng
             const totals = filteredSummaryData.reduce((acc, row) => ({
                 'Mã nhân viên': 'Tổng cộng',
                 'Chức vụ': '',
@@ -737,70 +744,70 @@
                 'Phụ cấp': 0,
                 'Tổng thu nhập': 0
             });
-            summarySheet.push(Object.values(totals));
 
-            // Tạo dữ liệu cho Sheet 2: Chi tiết sản phẩm
-            const productSheet = [
-                ['Mã kế hoạch', 'POP', 'Khu vực', 'Vị trí', 'Số lượng', 'Loại sản phẩm', 'Ghi chú', 'Nhân sự tham gia', 'Thời gian', 'Số tiền', 'Trạng thái', 'Đơn giá', 'Chức vụ', 'ID', 'Bậc lương']
-            ].concat(
-                filteredSanPham.map(item => [
-                    item['Mã kế hoạch'],
-                    item['POP'],
-                    item['Khu vực'],
-                    item['Vị trí'],
-                    item['Số lượng'],
-                    item['Loại sản phẩm'],
-                    item['Ghi chú'],
-                    item['Nhân sự tham gia'],
-                    item['Thời gian'],
-                    item['Số tiền'],
-                    item['Trạng thái'],
-                    item['Đơn giá'],
-                    item['Chức vụ'],
-                    item['ID'],
-                    item['Bậc lương']
-
-                ])
-            );
-
-            // Tạo dữ liệu cho Sheet 3: Chi tiết chấm công
-            const attendanceSheet = [
-                ['Mã chấm công', 'Ngày', 'Thứ', 'Mã nhân viên', 'Trạng thái', 'Đi tỉnh', 'Tăng ca đêm', 'Phụ cấp', 'Phụ cấp chủ nhật']
-            ].concat(
-                filteredCong.map(item => [
-                    item['Mã chấm công'],
-                    item['Ngày'],
-                    item['Thứ'],
-                    item['Mã nhân viên'],
-                    item['Trạng thái'],
-                    item['Đi tỉnh'],
-                    item['Tăng ca đêm'],
-                    item['Phụ cấp'],
-                    item['Phụ cấp chủ nhật']
-                ])
-            );
-
-            // Tạo workbook và thêm các sheet
+            // Tạo workbook
             const wb = XLSX.utils.book_new();
 
-            // Thêm Sheet 1: Tổng hợp
-            const ws1 = XLSX.utils.aoa_to_sheet(summarySheet);
+            // Sheet 1: Tổng hợp
+            const summaryHeaders = ['Mã nhân viên', 'Chức vụ', 'Bậc lương', 'Số sản phẩm', 'Số tiền', 'Số ngày công', 'Số ngày chủ nhật', 'Phụ cấp', 'Tổng thu nhập'];
+            const ws1 = XLSX.utils.json_to_sheet([...filteredSummaryData, totals], {
+                header: summaryHeaders
+            });
+
+            // Định dạng kiểu dữ liệu cho các cột số trong sheet tổng hợp
+            const numericColumns = ['Số sản phẩm', 'Số tiền', 'Số ngày công', 'Số ngày chủ nhật', 'Phụ cấp', 'Tổng thu nhập'];
+            for (let i = 1; i <= filteredSummaryData.length + 1; i++) {
+                numericColumns.forEach(col => {
+                    const cellRef = XLSX.utils.encode_cell({ r: i, c: summaryHeaders.indexOf(col) });
+                    ws1[cellRef].t = 'n'; // Set cell type to number
+                });
+            }
+
+            // Sheet 2: Chi tiết sản phẩm
+            const productData = filteredSanPham.map(item => ({
+                'Mã kế hoạch': item['Mã kế hoạch'],
+                'POP': item['POP'],
+                'Khu vực': item['Khu vực'],
+                'Vị trí': item['Vị trí'],
+                'Số lượng': Number(item['Số lượng']) || 0,
+                'Loại sản phẩm': item['Loại sản phẩm'],
+                'Ghi chú': item['Ghi chú'],
+                'Nhân sự tham gia': item['Nhân sự tham gia'],
+                'Thời gian': item['Thời gian'],
+                'Số tiền': Number(item['Số tiền']) || 0,
+                'Trạng thái': item['Trạng thái'],
+                'Đơn giá': Number(item['Đơn giá']) || 0,
+                'Chức vụ': item['Chức vụ'],
+                'ID': item['ID'],
+                'Bậc lương': item['Bậc lương']
+            }));
+            const ws2 = XLSX.utils.json_to_sheet(productData);
+
+            // Sheet 3: Chi tiết chấm công
+            const attendanceData = filteredCong.map(item => ({
+                'Mã chấm công': item['Mã chấm công'],
+                'Ngày': item['Ngày'],
+                'Thứ': item['Thứ'],
+                'Mã nhân viên': item['Mã nhân viên'],
+                'Trạng thái': item['Trạng thái'],
+                'Đi tỉnh': item['Đi tỉnh'],
+                'Tăng ca đêm': item['Tăng ca đêm'],
+                'Phụ cấp': Number(item['Phụ cấp']) || 0,
+                'Phụ cấp chủ nhật': Number(item['Phụ cấp chủ nhật']) || 0
+            }));
+            const ws3 = XLSX.utils.json_to_sheet(attendanceData);
+
+            // Thêm các sheet vào workbook
             XLSX.utils.book_append_sheet(wb, ws1, "Tổng hợp");
-
-            // Thêm Sheet 2: Chi tiết sản phẩm
-            const ws2 = XLSX.utils.aoa_to_sheet(productSheet);
             XLSX.utils.book_append_sheet(wb, ws2, "Chi tiết sản phẩm");
-
-            // Thêm Sheet 3: Chi tiết chấm công
-            const ws3 = XLSX.utils.aoa_to_sheet(attendanceSheet);
             XLSX.utils.book_append_sheet(wb, ws3, "Chi tiết chấm công");
 
-            // Định dạng các sheet
+            // Định dạng độ rộng cột cho tất cả các sheet
             [ws1, ws2, ws3].forEach(ws => {
-                // Đặt độ rộng cột
                 const maxWidth = 20;
                 const colWidth = {};
-                for (let i = 0; i < 10; i++) {
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                for (let i = 0; i <= range.e.c; i++) {
                     colWidth[i] = { wch: maxWidth };
                 }
                 ws['!cols'] = colWidth;
@@ -810,7 +817,9 @@
             const fileName = `Báo_cáo_tổng_hợp_${new Date().toISOString().split('T')[0]}.xlsx`;
             XLSX.writeFile(wb, fileName);
         }
+
         // Event listeners
+        // Cập nhật các event listeners
         document.addEventListener('DOMContentLoaded', async function () {
             try {
                 document.getElementById('loading').classList.remove('hidden');
@@ -824,6 +833,7 @@
                 document.getElementById('resetFilters').addEventListener('click', () => {
                     // Reset all filters
                     document.querySelectorAll('select').forEach(select => select.value = '');
+                    updateDetailButton(); // Cập nhật nút chi tiết khi reset
                     applyFilters();
                 });
                 document.getElementById('exportExcel').addEventListener('click', exportToExcel);
@@ -835,6 +845,9 @@
                     document.getElementById('filtersSidebar').classList.remove('open');
                     document.getElementById('overlay').classList.add('hidden');
                 });
+
+                // Thêm event listener cho select mã nhân viên
+                document.getElementById('filterMaNhanVien').addEventListener('change', updateDetailButton);
 
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
