@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -343,60 +344,72 @@
             });
         };
 
-        const markAttendance = async (employeeId, status) => {
-            const date = document.getElementById("date").value;
-            if (!date) {
-                FuiToast.info("Vui lòng chọn ngày trước khi chấm công!");
-                return;
-            }
+       // Sửa lại hàm markAttendance để xử lý phụ cấp mới
+const markAttendance = async (employeeId, status) => {
+    const date = document.getElementById("date").value;
+    if (!date) {
+        FuiToast.info("Vui lòng chọn ngày trước khi chấm công!");
+        return;
+    }
 
-            const attendanceId = `${dayjs(date).format("DDMMYYYY")}${employeeId}`;
+    const attendanceId = `${dayjs(date).format("DDMMYYYY")}${employeeId}`;
 
-            if (attendanceData.some(a => a['Mã chấm công'] === attendanceId)) {
-                FuiToast.info("Đã chấm công cho nhân viên này vào ngày này!");
-                return;
-            }
+    if (attendanceData.some(a => a['Mã chấm công'] === attendanceId)) {
+        FuiToast.info("Đã chấm công cho nhân viên này vào ngày này!");
+        return;
+    }
 
-            const businessTrip = document.querySelector(`input[name="businessTrip_${employeeId}"]:checked`).value === "1";
-            const nightShift = document.querySelector(`input[name="nightShift_${employeeId}"]:checked`).value === "1";
+    const businessTrip = document.querySelector(`input[name="businessTrip_${employeeId}"]:checked`).value === "1";
+    const nightShift = document.querySelector(`input[name="nightShift_${employeeId}"]:checked`).value === "1";
 
-            let allowance = calculateAllowance(status, date, businessTrip, nightShift);
+    const allowances = calculateAllowance(status, date, businessTrip, nightShift);
 
-            const newRecord = {
-                'Mã chấm công': attendanceId,
-                'Ngày': date,
-                'Thứ': getDayOfWeek(dayjs(date).day()),
-                'Mã nhân viên': employeeId,
-                'Trạng thái': status,
-                'Đi tỉnh': businessTrip ? 'Có' : 'Không',
-                'Tăng ca đêm': nightShift ? 'Có' : 'Không',
-                'Phụ cấp': allowance
-            };
+    const newRecord = {
+        'Mã chấm công': attendanceId,
+        'Ngày': date,
+        'Thứ': getDayOfWeek(dayjs(date).day()),
+        'Mã nhân viên': employeeId,
+        'Trạng thái': status,
+        'Đi tỉnh': businessTrip ? 'Có' : 'Không',
+        'Tăng ca đêm': nightShift ? 'Có' : 'Không',
+        'Phụ cấp': allowances.regularAllowance,
+        'Phụ cấp chủ nhật': allowances.sundayAllowance
+    };
 
-            try {
-                await createAttendanceRecord(newRecord);
+    try {
+        await createAttendanceRecord(newRecord);
+        updateAttendanceTable();
+    } catch (error) {
+        console.error("Error in markAttendance:", error);
+    }
+};
+// Sửa lại hàm calculateAllowance để trả về object chứa cả phụ cấp thường và phụ cấp chủ nhật
+const calculateAllowance = (status, date, businessTrip, nightShift) => {
+    let regularAllowance = 0;
+    let sundayAllowance = 0;
 
-                updateAttendanceTable();
-            } catch (error) {
-            }
-        };
+    if (status === 'Có mặt') {
+        const dayOfWeek = dayjs(date).day();
+        
+        // Phụ cấp đi tỉnh và tăng ca đêm tính vào phụ cấp thường
+        if (businessTrip) {
+            regularAllowance += 40000;
+        }
+        if (nightShift) {
+            regularAllowance += 200000;
+        }
+        
+        // Phụ cấp chủ nhật tính riêng
+        if (dayOfWeek === 0) {
+            sundayAllowance = 300000;
+        }
+    }
 
-        const calculateAllowance = (status, date, businessTrip, nightShift) => {
-            let allowance = 0;
-            if (status === 'Có mặt') {
-                const dayOfWeek = dayjs(date).day();
-                if (dayOfWeek === 0) { // Sunday
-                    allowance += 300000;
-                }
-                if (businessTrip) {
-                    allowance += 40000;
-                }
-                if (nightShift) {
-                    allowance += 200000;
-                }
-            }
-            return allowance;
-        };
+    return {
+        regularAllowance,
+        sundayAllowance
+    };
+};
 
         const updateAttendanceTable = () => {
             if (dataTable) {
