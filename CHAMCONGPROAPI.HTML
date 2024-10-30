@@ -149,8 +149,8 @@
         // Get employee code from URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const employeeCode = urlParams.get('manv');
+        const manv = urlParams.get('manv');
 
-      
 
         // DOM Elements
         const elements = {
@@ -188,7 +188,7 @@
         // Utility functions
         const showLoading = () => elements.loadingBox.classList.remove('hidden');
         const hideLoading = () => elements.loadingBox.classList.add('hidden');
-        
+
         // Initialize the page
         const initializePage = () => {
             if (!employeeCode) {
@@ -401,16 +401,14 @@
                     const user = result[0];
                     if (user.password === password) {
                         currentUser = user;
-                        const employeeCode = user['Mã nhân viên'];
+                        const employeeCode = manv;
                         if (rememberLogin) {
-                            localStorage.setItem('username', username);
-                            localStorage.setItem('employeeCode', employeeCode);
-                            localStorage.setItem('loginToken', 'someTokenValue');
+                            localStorage.setItem('employeeCode', manv);
                         }
                         elements.loginForm.classList.add('hidden');
                         elements.checkInOutChoice.classList.remove('hidden');
-                        showToast(`Đăng nhập thành công! Xin chào, ${employeeCode}`);
-                        updateEmployeeCodeDisplay(employeeCode);
+                        showToast(`Đăng nhập thành công! Xin chào, ${manv}`);
+                        updateEmployeeCodeDisplay(manv);
                     } else {
                         showToast('Tên đăng nhập hoặc mật khẩu không đúng!', 'error');
                     }
@@ -425,17 +423,7 @@
             }
         };
 
-        const logout = () => {
-            localStorage.removeItem('username');
-            localStorage.removeItem('employeeCode');
-            localStorage.removeItem('loginToken');
-            elements.checkInOutChoice.classList.add('hidden');
-            elements.cameraContainer.classList.add('hidden');
-            elements.loginForm.classList.remove('hidden');
-            elements.usernameInput.value = '';
-            elements.passwordInput.value = '';
-            currentUser = null;
-        };
+
 
         // Check-in/out functions
         const handleCheckInOut = async (type) => {
@@ -445,7 +433,7 @@
             }
 
             showLoading();
-            const fullName = currentUser['Mã nhân viên'];
+            const fullName =manv;
             const currentTime = moment().tz("Asia/Ho_Chi_Minh");
             const date = currentTime.format('DD/MM/YYYY');
             const timeStr = currentTime.format('HH:mm:ss');
@@ -527,7 +515,7 @@
             }
         };
 
-       
+
 
         const checkLoginStatus = () => {
             const savedUsername = localStorage.getItem('username');
