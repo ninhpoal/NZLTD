@@ -1,7 +1,6 @@
-
-
 <!DOCTYPE html>
 <html lang="en" class="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,10 +9,10 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
-   
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
+
         * {
             font-family: 'Inter', sans-serif;
         }
@@ -41,8 +40,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .card-stats {
@@ -69,11 +73,9 @@
         .btn-success {
             @apply bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200;
         }
-
-
-      
     </style>
 </head>
+
 <body class="bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
     <div id="loading" class="loading hidden">
         <div class="loading-spinner"></div>
@@ -84,22 +86,25 @@
         <div class="max-w-9xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-3">
-                    <button id="toggleFilters" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <button id="toggleFilters"
+                        class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
                         <i class="fas fa-bars text-gray-600 dark:text-gray-300"></i>
                     </button>
                     <div class="flex items-center space-x-3">
-                        <img src="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png" alt="Logo" class="h-8 w-8">
+                        <img src="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png" alt="Logo"
+                            class="h-8 w-8">
                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">NZ ERP PRO</h1>
                     </div>
                 </div>
-              
+
             </div>
         </div>
     </header>
 
     <div class="flex min-h-screen pt-16">
         <!-- Sidebar -->
-        <aside id="filtersSidebar" class="fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out overflow-y-auto z-20">
+        <aside id="filtersSidebar"
+            class="fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out overflow-y-auto z-20">
             <div class="p-6 space-y-6">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Bộ lọc</h2>
@@ -108,58 +113,71 @@
                 <div class="space-y-4">
                     <div class="filter-group">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Khu vực</label>
-                        <select id="filterKhuVuc" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <select id="filterKhuVuc"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </select>
                     </div>
 
                     <div class="filter-group">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Từ ngày</label>
-                        <input type="date" id="fromDate" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="date" id="fromDate"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
 
                     <div class="filter-group">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Đến ngày</label>
-                        <input type="date" id="toDate" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="date" id="toDate"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
 
                     <div class="filter-group">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Chức vụ</label>
-                        <select id="filterChucVu" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <select id="filterChucVu"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </select>
                     </div>
 
                     <div class="filter-group">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mã nhân viên</label>
-                        <select id="filterMaNhanVien" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mã nhân
+                            viên</label>
+                        <select id="filterMaNhanVien"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </select>
                     </div>
 
                     <div class="filter-group">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Loại sản phẩm</label>
-                        <select id="filterLoaiSanPham" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Loại sản
+                            phẩm</label>
+                        <select id="filterLoaiSanPham"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </select>
                     </div>
 
                     <div class="filter-group" hidden>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trạng thái</label>
-                        <select id="filterTrangThai" class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Trạng
+                            thái</label>
+                        <select id="filterTrangThai"
+                            class="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg py-2 px-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </select>
                     </div>
 
                     <div class="pt-4 space-y-3">
-                        <button id="applyFilters" class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
+                        <button id="applyFilters"
+                            class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
                             <i class="fas fa-filter btn-icon"></i>
                             <span class="font-medium">Áp dụng</span>
                         </button>
-                        
+
                         <!-- Reset Button -->
-                        <button id="resetFilters" class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-white hover:bg-gray-50 text-gray-700 rounded-lg shadow-lg hover:shadow-xl border border-gray-200 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
+                        <button id="resetFilters"
+                            class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-white hover:bg-gray-50 text-gray-700 rounded-lg shadow-lg hover:shadow-xl border border-gray-200 transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
                             <i class="fas fa-undo btn-icon"></i>
                             <span class="font-medium">Đặt lại</span>
                         </button>
-                        
+
                         <!-- Export Excel Button -->
-                        <button id="exportExcel" class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
+                        <button id="exportExcel"
+                            class="w-full flex items-center justify-center px-4 py-3 space-x-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out transform hover:-translate-y-0.5">
                             <i class="fas fa-file-excel btn-icon"></i>
                             <span class="font-medium">Xuất Excel</span>
                         </button>
@@ -216,7 +234,8 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Số ngày CN</p>
-                                <p id="totalSundayWorkDays" class="text-xl font-semibold text-gray-900 dark:text-white">0</p>
+                                <p id="totalSundayWorkDays" class="text-xl font-semibold text-gray-900 dark:text-white">
+                                    0</p>
                             </div>
                         </div>
                     </div>
@@ -228,7 +247,8 @@
                             </div>
                             <div class="ml-4">
                                 <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tổng phụ cấp</p>
-                                <p id="totalAllowance" class="text-xl font-semibold text-gray-900 dark:text-white">0 ₫</p>
+                                <p id="totalAllowance" class="text-xl font-semibold text-gray-900 dark:text-white">0 ₫
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -500,9 +520,10 @@
                     data.bacluong = product['Bậc lương'];
                     data.soSanPham += Number(product['Số lượng']) || 0;
                     data.soTien += Number(product['Số tiền']) || 0;
-                    data.tongThuNhap += Number(product['Số tiền']) || 0;
+                    // Không cộng vào tổng thu nhập ở đây nữa
                 }
             });
+
 
             // Process attendance data
             filteredCong.forEach(attendance => {
@@ -518,10 +539,12 @@
                     }
                     const phuCap = (Number(attendance['Phụ cấp']) || 0) + (Number(attendance['Phụ cấp chủ nhật']) || 0);
                     data.phuCap += phuCap;
-                    data.tongThuNhap += phuCap;
                 }
             });
 
+            summaryData.forEach(data => {
+                data.tongThuNhap = data.soTien + data.phuCap; // Calculate total income only once
+            });
             // Filter out employees with zero income
             const filteredSummaryData = new Map(
                 Array.from(summaryData.entries()).filter(([_, data]) => data.tongThuNhap > 0)
@@ -612,7 +635,7 @@
                 summaryData.set(employee['Mã nhân viên'], {
                     'Mã nhân viên': employee['Mã nhân viên'],
                     'Chức vụ': employee['Chức vụ'],
-                    'Bậc lương' : employee['Bậc lương'],
+                    'Bậc lương': employee['Bậc lương'],
                     'Số sản phẩm': 0,
                     'Số tiền': 0,
                     'Số ngày công': 0,
@@ -646,7 +669,7 @@
                     const data = summaryData.get(nhanVien);
                     data['Số sản phẩm'] += Number(product['Số lượng']) || 0;
                     data['Số tiền'] += Number(product['Số tiền']) || 0;
-                    data['Tổng thu nhập'] += Number(product['Số tiền']) || 0;
+                    // Không cộng vào tổng thu nhập ở đây
                 }
             });
 
@@ -662,10 +685,14 @@
                     }
                     const phuCap = (Number(attendance['Phụ cấp']) || 0) + (Number(attendance['Phụ cấp chủ nhật']) || 0);
                     data['Phụ cấp'] += phuCap;
-                    data['Tổng thu nhập'] += phuCap;
                 }
             });
 
+
+            // Tính tổng thu nhập cuối cùng
+            summaryData.forEach(data => {
+                data['Tổng thu nhập'] = data['Số tiền'] + data['Phụ cấp'];
+            });
             // Lọc bỏ nhân viên không có thu nhập
             const filteredSummaryData = Array.from(summaryData.values())
                 .filter(row => row['Tổng thu nhập'] > 0)
@@ -673,7 +700,7 @@
 
             // Tạo dữ liệu cho Sheet 1: Tổng hợp
             const summarySheet = [
-                ['Mã nhân viên', 'Chức vụ','Bậc lương', 'Số sản phẩm', 'Số tiền', 'Số ngày công', 'Số ngày chủ nhật', 'Phụ cấp', 'Tổng thu nhập']
+                ['Mã nhân viên', 'Chức vụ', 'Bậc lương', 'Số sản phẩm', 'Số tiền', 'Số ngày công', 'Số ngày chủ nhật', 'Phụ cấp', 'Tổng thu nhập']
             ].concat(
                 filteredSummaryData.map(row => [
                     row['Mã nhân viên'],
@@ -808,7 +835,7 @@
                     document.getElementById('filtersSidebar').classList.remove('open');
                     document.getElementById('overlay').classList.add('hidden');
                 });
-                
+
             } catch (error) {
                 console.error('Error initializing dashboard:', error);
             } finally {
