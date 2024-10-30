@@ -387,6 +387,13 @@
                     </div>
                 </div>
             </div>
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6 overflow-hidden">
+                <div class="p-4">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Năng suất lao động
+                    </h2>
+                    <div id="dailyStatsChart" style="min-height: 300px;"></div>
+                </div>
+            </div>
 
             <!-- Product Summary Table -->
             <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6 overflow-hidden">
@@ -420,7 +427,125 @@
         let cong = [];
         let currentPage = 1;
         const itemsPerPage = 10;
+        function createDailyStatsChart(sanphamData) {
+            // Nhóm dữ liệu theo ngày
+            const dailyData = {};
 
+            sanphamData.forEach(item => {
+                const date = new Date(item['Thời gian']).toLocaleDateString('vi-VN');
+                if (!dailyData[date]) {
+                    dailyData[date] = 0;
+                }
+                dailyData[date] += parseFloat(item['Số tiền']) || 0;
+            });
+
+            // Chuyển đổi dữ liệu cho biểu đồ
+            const dates = Object.keys(dailyData);
+            const revenue = dates.map(date => dailyData[date]);
+
+            // Tạo biểu đồ
+            Highcharts.chart('dailyStatsChart', {
+                chart: {
+                    type: 'column',
+                    style: {
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                    },
+                    backgroundColor: document.documentElement.classList.contains('dark') ? '#1f2937' : '#ffffff',
+                    spacing: [10, 10, 15, 10] // Tối ưu spacing cho mobile
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    categories: dates,
+                    labels: {
+                        rotation: -45, // Xoay nhãn để tránh chồng chéo
+                        style: {
+                            fontSize: '10px', // Font size nhỏ hơn cho mobile
+                            color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151'
+                        }
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: '',
+                        style: {
+                            fontSize: '12px', // Font size nhỏ hơn cho mobile
+                            color: '#059669'
+                        }
+                    },
+                    labels: {
+                        formatter: function () {
+                            return Highcharts.numberFormat(this.value, 0, ',', '.') + ' ₫';
+                        },
+                        style: {
+                            fontSize: '10px', // Font size nhỏ hơn cho mobile
+                            color: '#059669'
+                        }
+                    }
+                },
+                tooltip: {
+                    formatter: function () {
+                        return '<b>' + this.x + '</b><br/>' +
+                            'Doanhu thu: <b>' + this.y.toLocaleString('vi-VN') + ' ₫</b>';
+                    }
+                },
+                plotOptions: {
+                    column: {
+                        pointPadding: 0.2,
+                        borderWidth: 0,
+                        borderRadius: 5, // Bo góc cột
+                        colorByPoint: true, // Màu khác nhau cho mỗi cột
+                        colors: ['#059669', '#047857', '#065f46', '#064e3b'] // Các màu xanh lá khác nhau
+                    }
+                },
+                legend: {
+                    enabled: false // Ẩn legend vì chỉ có 1 series
+                },
+                credits: {
+                    enabled: false
+                },
+                series: [{
+                    name: 'Doanh thu',
+                    data:  revenue
+                }],
+                responsive: {
+                    rules: [{
+                        condition: {
+                            maxWidth: 500
+                        },
+                        chartOptions: {
+                            chart: {
+                                height: 300 // Chiều cao cố định cho mobile
+                            },
+                            xAxis: {
+                                labels: {
+                                    rotation: -45,
+                                    style: {
+                                        fontSize: '10px'
+                                    }
+                                }
+                            },
+                            yAxis: {
+                                labels: {
+                                    style: {
+                                        fontSize: '10px'
+                                    }
+                                }
+                            }
+                        }
+                    }]
+                }
+            });
+        }
+        const originalApplyFilters = applyFilters;
+        applyFilters = function () {
+            originalApplyFilters();
+            const filteredSanPham = getFilteredSanPham();
+            createDailyStatsChart(filteredSanPham);
+        }
+
+        const originalToggleDarkMode = document.getElementById('toggleDarkMode').onclick;
         function setDefaultDateRange() {
             const today = new Date();
             const currentYear = today.getFullYear();
@@ -532,62 +657,62 @@
             document.getElementById('loading').classList.add('hidden');
         }
         function createSalaryTable(sanphamData, congData) {
-    const salaryData = {};
+            const salaryData = {};
 
-    // Process product data
-    sanphamData.forEach(item => {
-        const nhanVien = item['Nhân sự tham gia'];
-        if (!salaryData[nhanVien]) {
-            salaryData[nhanVien] = {
-                soSanPham: 0,
-                luongSanPham: 0,
-                phuCap: 0,
-                soNgayCong: 0,
-                soNgayChuNhat: 0,
-                tongThuNhap: 0
-            };
-        }
-        salaryData[nhanVien].soSanPham += parseFloat(item['Số lượng']) || 0;
-        salaryData[nhanVien].luongSanPham += parseFloat(item['Số tiền']) || 0;
-    });
+            // Process product data
+            sanphamData.forEach(item => {
+                const nhanVien = item['Nhân sự tham gia'];
+                if (!salaryData[nhanVien]) {
+                    salaryData[nhanVien] = {
+                        soSanPham: 0,
+                        luongSanPham: 0,
+                        phuCap: 0,
+                        soNgayCong: 0,
+                        soNgayChuNhat: 0,
+                        tongThuNhap: 0
+                    };
+                }
+                salaryData[nhanVien].soSanPham += parseFloat(item['Số lượng']) || 0;
+                salaryData[nhanVien].luongSanPham += parseFloat(item['Số tiền']) || 0;
+            });
 
-    // Process attendance data
-    congData.forEach(item => {
-        const nhanVien = item['Mã nhân viên'];
-        if (!salaryData[nhanVien]) {
-            salaryData[nhanVien] = {
-                soSanPham: 0,
-                luongSanPham: 0,
-                phuCap: 0,
-                soNgayCong: 0,
-                soNgayChuNhat: 0,
-                tongThuNhap: 0
-            };
-        }
+            // Process attendance data
+            congData.forEach(item => {
+                const nhanVien = item['Mã nhân viên'];
+                if (!salaryData[nhanVien]) {
+                    salaryData[nhanVien] = {
+                        soSanPham: 0,
+                        luongSanPham: 0,
+                        phuCap: 0,
+                        soNgayCong: 0,
+                        soNgayChuNhat: 0,
+                        tongThuNhap: 0
+                    };
+                }
 
-        // Calculate allowances
-        const phuCap = parseFloat(item['Phụ cấp']) || 0;
-        const phuCapCN = parseFloat(item['Phụ cấp chủ nhật']) || 0;
-        salaryData[nhanVien].phuCap += phuCap + phuCapCN;
+                // Calculate allowances
+                const phuCap = parseFloat(item['Phụ cấp']) || 0;
+                const phuCapCN = parseFloat(item['Phụ cấp chủ nhật']) || 0;
+                salaryData[nhanVien].phuCap += phuCap + phuCapCN;
 
-        // Count workdays and Sundays
-        if (item['Trạng thái'] === 'Có mặt') {
-            salaryData[nhanVien].soNgayCong++;
-            if (item['Thứ'].toLowerCase().includes('chủ nhật')) {
-                salaryData[nhanVien].soNgayChuNhat++;
+                // Count workdays and Sundays
+                if (item['Trạng thái'] === 'Có mặt') {
+                    salaryData[nhanVien].soNgayCong++;
+                    if (item['Thứ'].toLowerCase().includes('chủ nhật')) {
+                        salaryData[nhanVien].soNgayChuNhat++;
+                    }
+                }
+            });
+
+            // Calculate total income for each employee
+            for (const nhanVien in salaryData) {
+                salaryData[nhanVien].tongThuNhap =
+                    salaryData[nhanVien].luongSanPham +
+                    salaryData[nhanVien].phuCap;
             }
-        }
-    });
 
-    // Calculate total income for each employee
-    for (const nhanVien in salaryData) {
-        salaryData[nhanVien].tongThuNhap =
-            salaryData[nhanVien].luongSanPham +
-            salaryData[nhanVien].phuCap;
-    }
-
-    // Create table HTML with responsive design
-    let tableHTML = `
+            // Create table HTML with responsive design
+            let tableHTML = `
         <!-- Desktop View -->
         <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -605,9 +730,9 @@
                 <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-900 dark:divide-gray-700">
     `;
 
-    // Add rows for desktop view
-    for (const [nhanVien, data] of Object.entries(salaryData)) {
-        tableHTML += `
+            // Add rows for desktop view
+            for (const [nhanVien, data] of Object.entries(salaryData)) {
+                tableHTML += `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-800">
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${nhanVien}</td>
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${data.soSanPham.toFixed(2)}</td>
@@ -618,9 +743,9 @@
                 <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">${data.tongThuNhap.toLocaleString('vi-VN')} ₫</td>
             </tr>
         `;
-    }
+            }
 
-    tableHTML += `
+            tableHTML += `
                 </tbody>
             </table>
         </div>
@@ -629,9 +754,9 @@
         <div class="md:hidden space-y-4">
     `;
 
-    // Add cards for mobile view
-    for (const [nhanVien, data] of Object.entries(salaryData)) {
-        tableHTML += `
+            // Add cards for mobile view
+            for (const [nhanVien, data] of Object.entries(salaryData)) {
+                tableHTML += `
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
                 <div class="flex justify-between items-center mb-2">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-white">${nhanVien}</h3>
@@ -658,27 +783,27 @@
                 </div>
             </div>
         `;
-    }
+            }
 
-    // Add totals row
-    const totals = Object.values(salaryData).reduce((acc, curr) => ({
-        soSanPham: acc.soSanPham + curr.soSanPham,
-        luongSanPham: acc.luongSanPham + curr.luongSanPham,
-        phuCap: acc.phuCap + curr.phuCap,
-        soNgayCong: acc.soNgayCong + curr.soNgayCong,
-        soNgayChuNhat: acc.soNgayChuNhat + curr.soNgayChuNhat,
-        tongThuNhap: acc.tongThuNhap + curr.tongThuNhap
-    }), {
-        soSanPham: 0,
-        luongSanPham: 0,
-        phuCap: 0,
-        soNgayCong: 0,
-        soNgayChuNhat: 0,
-        tongThuNhap: 0
-    });
+            // Add totals row
+            const totals = Object.values(salaryData).reduce((acc, curr) => ({
+                soSanPham: acc.soSanPham + curr.soSanPham,
+                luongSanPham: acc.luongSanPham + curr.luongSanPham,
+                phuCap: acc.phuCap + curr.phuCap,
+                soNgayCong: acc.soNgayCong + curr.soNgayCong,
+                soNgayChuNhat: acc.soNgayChuNhat + curr.soNgayChuNhat,
+                tongThuNhap: acc.tongThuNhap + curr.tongThuNhap
+            }), {
+                soSanPham: 0,
+                luongSanPham: 0,
+                phuCap: 0,
+                soNgayCong: 0,
+                soNgayChuNhat: 0,
+                tongThuNhap: 0
+            });
 
-    // Add total card for mobile
-    tableHTML += `
+            // Add total card for mobile
+            tableHTML += `
             <div class="md:hidden mt-4">
                 <div class="bg-indigo-50 dark:bg-gray-700 rounded-lg p-4">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tổng cộng</h3>
@@ -705,8 +830,8 @@
         </div>
     `;
 
-    return tableHTML;
-}
+            return tableHTML;
+        }
         function generateSalaryTableHTML(salaryData) {
             let tableHTML = `
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -1079,9 +1204,11 @@
                 applyFilters();
 
                 // Setup event listeners
-                document.getElementById('toggleDarkMode').addEventListener('click', () => {
-                    document.documentElement.classList.toggle('dark');
-                });
+                document.getElementById('toggleDarkMode').onclick = function () {
+                    if (originalToggleDarkMode) originalToggleDarkMode();
+                    const filteredSanPham = getFilteredSanPham();
+                    createDailyStatsChart(filteredSanPham);
+                }
 
                 document.getElementById('openFilters').addEventListener('click', () => {
                     document.getElementById('filtersSidebar').classList.add('open');
