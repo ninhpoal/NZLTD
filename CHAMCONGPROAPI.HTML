@@ -567,7 +567,8 @@
         1
         // Event listeners
         elements.switchCameraBtn.addEventListener('click', switchCamera);
-      
+        elements.captureBtn.addEventListener('click', () => handleCheckInOut('in'));
+        elements.captureOutBtn.addEventListener('click', () => handleCheckInOut('out'));
         elements.backBtn.addEventListener('click', () => {
             elements.cameraContainer.classList.add('hidden');
             elements.checkInOutChoice.classList.remove('hidden');
@@ -583,7 +584,6 @@
             elements.cameraContainer.classList.remove('hidden');
             updateButtonVisibility('out');
         });
-
         elements.modalCloseButtons.forEach(button => {
             button.addEventListener('click', closeModal);
         });
