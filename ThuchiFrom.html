@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiếu Chi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastify-js/1.12.0/toastify.js"></script>
+
+    <style>
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        input,
+        textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        .readonly-field {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .loading-progress {
+            background: #f3f3f3;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            height: 8px;
+            margin: 1rem 0;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s ease;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3 class="text-lg font-semibold text-gray-900" id="loadingText">Đang xử lý...</h3>
+            <div class="loading-progress">
+                <div id="loadingProgressBar" class="loading-progress-bar" style="width: 0%"></div>
+            </div>
+            <p class="text-sm text-gray-600" id="loadingStatus"></p>
+        </div>
+    </div>
+    <div class="max-w-4xl w-full bg-white rounded-xl shadow-lg p-8">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Tạo Phiếu Chi Mới</h2>
+            <p class="text-gray-600">Điền thông tin và tải lên hình ảnh chứng từ (nếu có)</p>
+        </div>
+
+        <form id="uploadForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Các trường input cơ bản -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Mã chuyển khoản</label>
+                    <input type="text" id="maChuyenKhoan"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">IDPHIEU <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="idPhieu"
+                        class="readonly-field w-full px-4 py-3 border border-gray-300 rounded-lg" readonly>
+                </div>
+
+                <!-- Dropdowns -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">KHU VỰC <span
+                            class="text-red-500">*</span></label>
+                    <select id="khuVuc" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn khu vực</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Dự án <span
+                            class="text-red-500">*</span></label>
+                    <select id="duAn" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn dự án</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Mã CHI <span
+                            class="text-red-500">*</span></label>
+                    <select id="maChi" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Chọn mã chi</option>
+                    </select>
+                </div>
+
+                <!-- Các trường còn lại -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Thời gian <span
+                            class="text-red-500">*</span></label>
+                    <input type="datetime-local" id="thoiGian" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">MDA</label>
+                    <input type="text" id="mda"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">SỐ TIỀN <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="soTien" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div class="space-y-2 md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700">NỘI DUNG <span
+                            class="text-red-500">*</span></label>
+                    <textarea id="noiDung" required rows="3"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">NHÂN VIÊN THỰC HIỆN <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="nhanVien" required
+                        class="readonly-field w-full px-4 py-3 border border-gray-300 rounded-lg" readonly>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">TRẠNG THÁI</label>
+                    <select id="trangThai"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Phiếu mới">Phiếu mới</option>
+                        <option value="Đang xử lý">Đang xử lý</option>
+                        <option value="Hoàn thành">Hoàn thành</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Công nợ</label>
+                    <select id="congNo"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="Không">Không</option>
+                        <option value="Có">Có</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Image upload section -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Hình ảnh chứng từ</label>
+                <div class="relative">
+                    <div id="mainImagePreview" class="hidden mb-4">
+                        <img src="" alt="Preview" class="w-full h-48 object-cover rounded-lg">
+                        <button type="button" id="removeMainImage"
+                            class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="mainImageDropzone"
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                        <input type="file" id="mainImageInput" accept="image/*" class="hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-600">Kéo thả hoặc click để chọn ảnh chứng từ</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" id="submitBtn"
+                class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center justify-center space-x-2">
+                <span>Tạo phiếu chi</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        let globalLCHIPHIData = null;
+        const loadingUtils = {
+            show: (text = 'Đang xử lý...') => {
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.getElementById('loadingText').textContent = text;
+                document.getElementById('loadingStatus').textContent = '';
+                document.getElementById('loadingProgressBar').style.width = '0%';
+            },
+
+            hide: () => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            },
+
+            updateProgress: (progress, status = '') => {
+                document.getElementById('loadingProgressBar').style.width = `${progress}%`;
+                if (status) {
+                    document.getElementById('loadingStatus').textContent = status;
+                }
+            },
+
+            updateText: (text) => {
+                document.getElementById('loadingText').textContent = text;
+            }
+        };
+
+        // Configuration
+        const config = {
+            appId: '1a8d9270-a4ff-46b8-94fc-db1e4632f273',
+            accessKey: 'V2-IEkJl-GKXgi-aBjtl-fN3Ur-QQSYX-Ggn6e-m9pkA-GtxEU',
+            region: 'www',
+            apiKey: '93bfdf6d5910909c985faf82ee7220cc'
+        };
+
+        // Store DOM elements
+        const elements = {
+            form: document.getElementById('uploadForm'),
+            maChuyenKhoan: document.getElementById('maChuyenKhoan'),
+            idPhieu: document.getElementById('idPhieu'),
+            khuVuc: document.getElementById('khuVuc'),
+            duAn: document.getElementById('duAn'),
+            maChi: document.getElementById('maChi'),
+            thoiGian: document.getElementById('thoiGian'),
+            mda: document.getElementById('mda'),
+            soTien: document.getElementById('soTien'),
+            noiDung: document.getElementById('noiDung'),
+            nhanVien: document.getElementById('nhanVien'),
+            trangThai: document.getElementById('trangThai'),
+            congNo: document.getElementById('congNo'),
+            mainImageInput: document.getElementById('mainImageInput'),
+            mainImagePreview: document.getElementById('mainImagePreview'),
+            mainImageDropzone: document.getElementById('mainImageDropzone'),
+            removeMainImage: document.getElementById('removeMainImage'),
+            submitBtn: document.getElementById('submitBtn')
+        };
+
+        // Utility functions
+        const utils = {
+            formatCurrency: (number) => {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'decimal',
+                    maximumFractionDigits: 0
+                }).format(number);
+            },
+
+            showToast: (message, type = 'success') => {
+                Toastify({
+                    text: message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: type === 'success' ? "#4CAF50" : "#F44336"
+                }).showToast();
+            },
+
+            generateIdPhieu: () => {
+                const date = new Date();
+                const dateStr = date.toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: '2-digit'
+                }).replace(/\//g, '');
+                const timeStr = date.toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                }).replace(/:/g, '');
+                return `PC${dateStr}${timeStr}`;
+            }
+        };
+
+        // API functions
+        const api = {
+            uploadImage: async (file) => {
+                if (!file) return '';
+                const formData = new FormData();
+                formData.append('image', file);
+                try {
+                    const response = await axios.post(
+                        `https://api.imgbb.com/1/upload?key=${config.apiKey}`,
+                        formData
+                    );
+                    return response.data.data.url;
+                } catch (error) {
+                    throw new Error('Failed to upload image');
+                }
+            },
+
+            sendRequest: async (tableName, action, data) => {
+                const apiUrl = `https://${config.region}.appsheet.com/api/v2/apps/${config.appId}/tables/${tableName}/Action`;
+                return $.ajax({
+                    url: apiUrl,
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': config.accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({
+                        Action: action,
+                        Properties: {
+                            Locale: 'vi-VN',
+                            Timezone: 'Asia/Ho_Chi_Minh'
+                        },
+                        ...data
+                    })
+                });
+            },
+
+            async fetchLCHIPHIData() {
+                // Kiểm tra nếu đã có data thì return luôn
+                if (globalLCHIPHIData) {
+                    return globalLCHIPHIData;
+                }
+
+                try {
+                    loadingUtils.show('Đang tải dữ liệu...');
+                    const response = await this.sendRequest('LCHIPHI', 'Find', {
+                        Properties: {
+                            Locale: 'vi-VN',
+                            Timezone: 'Asia/Ho_Chi_Minh',
+                            Selector: "Filter(LCHIPHI, true)"
+                        },
+                        Rows: []
+                    });
+
+                    // Cấu trúc và lưu data vào biến global
+                    globalLCHIPHIData = this.structureLCHIPHIData(response);
+
+                    loadingUtils.updateProgress(100, 'Đã tải xong dữ liệu!');
+                    setTimeout(() => loadingUtils.hide(), 500);
+
+                    return globalLCHIPHIData;
+                } catch (error) {
+                    console.error('Error fetching LCHIPHI data:', error);
+                    loadingUtils.updateText('Đã xảy ra lỗi!');
+                    loadingUtils.updateProgress(100, 'Không thể tải dữ liệu');
+                    setTimeout(() => {
+                        loadingUtils.hide();
+                        utils.showToast('Không thể tải dữ liệu', 'error');
+                    }, 1000);
+                    throw error;
+                }
+            }, resetLCHIPHIData() {
+                globalLCHIPHIData = null;
+            },
+
+
+
+            structureLCHIPHIData(data) {
+                const structured = {};
+                data.forEach(item => {
+                    const khuVuc = item['Khu vực'];
+                    const duAn = item['Dự án'];
+                    const maChi = item['Mã CHI'];
+                    const tenLoaiChi = item['Tên loại chi'];
+
+                    if (!structured[khuVuc]) {
+                        structured[khuVuc] = {};
+                    }
+                    if (!structured[khuVuc][duAn]) {
+                        structured[khuVuc][duAn] = [];
+                    }
+                    structured[khuVuc][duAn].push({
+                        maChi,
+                        tenLoaiChi
+                    });
+                });
+                return structured;
+            }
+        };
+
+        // Form handlers
+        const formHandlers = {
+            async initForm() {
+                try {
+                    // Fetch initial data
+                    const data = await api.fetchLCHIPHIData();
+
+                    // Init dropdowns với data đã có
+                    this.updateKhuVucDropdown(data);
+                    // Set current time
+                    elements.thoiGian.value = new Date().toISOString().slice(0, 16);
+
+                    // Get employee info from URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const maNV = urlParams.get('manv');
+                    if (maNV) {
+                        elements.nhanVien.value = maNV;
+                    }
+
+                    // Generate ID
+                    elements.idPhieu.value = utils.generateIdPhieu();
+
+                    // Set default values
+                    elements.trangThai.value = 'Phiếu mới';
+                    elements.congNo.value = 'Không';
+
+                    // Init event listeners
+                    this.initEventListeners();
+
+                } catch (error) {
+                    console.error('Error initializing form:', error);
+                    utils.showToast('Không thể khởi tạo form', 'error');
+                }
+            },
+
+            updateKhuVucDropdown(data) {
+                const khuVucList = Object.keys(data);
+                elements.khuVuc.innerHTML = `
+                    <option value="">Chọn khu vực</option>
+                    ${khuVucList.map(kv => `<option value="${kv}">${kv}</option>`).join('')}
+                `;
+            },
+
+            updateDuAnDropdown(data, khuVuc) {
+                const duAnList = Object.keys(data[khuVuc] || {});
+                elements.duAn.innerHTML = `
+                    <option value="">Chọn dự án</option>
+                    ${duAnList.map(da => `<option value="${da}">${da}</option>`).join('')}
+                `;
+            },
+
+            updateMaChiDropdown(data, khuVuc, duAn) {
+                const maChiList = data[khuVuc]?.[duAn] || [];
+                elements.maChi.innerHTML = `
+                    <option value="">Chọn mã chi</option>
+                    ${maChiList.map(item =>
+                    `<option value="${item.maChi}" data-tenloai="${item.tenLoaiChi}">
+                            ${item.tenLoaiChi} (${item.maChi})
+                        </option>`
+                ).join('')}
+                `;
+            },
+
+            initEventListeners() {
+
+                elements.khuVuc.addEventListener('change', () => {
+                    const khuVuc = elements.khuVuc.value;
+                    if (globalLCHIPHIData && khuVuc) {
+                        this.updateDuAnDropdown(globalLCHIPHIData, khuVuc);
+                    } else {
+                        this.resetDependentDropdowns();
+                    }
+                });
+
+                elements.maChi.addEventListener('change', () => {
+                    const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
+                    if (selectedOption && selectedOption.value) {
+                        const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
+                        if (tenLoaiChi) {
+                            // Tự động điền tên loại chi vào nội dung
+                            elements.noiDung.value = `${tenLoaiChi}: `;
+
+                            // Focus vào vị trí cuối của nội dung
+                            elements.noiDung.focus();
+                            elements.noiDung.setSelectionRange(
+                                elements.noiDung.value.length,
+                                elements.noiDung.value.length
+                            );
+
+                            // Thêm placeholder để hướng dẫn nhân viên
+                            elements.noiDung.placeholder = `${tenLoaiChi}: [Nhập thông tin chi tiết tại đây]`;
+                        }
+                    } else {
+                        // Reset nội dung nếu không chọn mã chi
+                        elements.noiDung.value = '';
+                        elements.noiDung.placeholder = 'Nhập nội dung chi';
+                    }
+                }); // Thêm sự kiện cho nội dung để đảm bảo giữ prefix
+                elements.noiDung.addEventListener('input', () => {
+                    const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
+                    if (selectedOption && selectedOption.value) {
+                        const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
+                        if (tenLoaiChi) {
+                            const prefix = `${tenLoaiChi}: `;
+
+                            // Kiểm tra nếu người dùng cố xóa prefix
+                            if (!elements.noiDung.value.startsWith(prefix)) {
+                                // Khôi phục prefix
+                                elements.noiDung.value = prefix + elements.noiDung.value;
+                            }
+                        }
+                    }
+                });
+                elements.noiDung.addEventListener('focus', () => {
+                    const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
+                    if (selectedOption && selectedOption.value) {
+                        const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
+                        if (tenLoaiChi) {
+                            const prefix = `${tenLoaiChi}: `;
+
+                            // Di chuyển con trỏ về sau prefix
+                            const cursorPosition = Math.max(prefix.length, elements.noiDung.selectionStart);
+                            elements.noiDung.setSelectionRange(cursorPosition, cursorPosition);
+                        }
+                    }
+                });
+                elements.duAn.addEventListener('change', () => {
+                    const khuVuc = elements.khuVuc.value;
+                    const duAn = elements.duAn.value;
+                    if (globalLCHIPHIData && khuVuc && duAn) {
+                        this.updateMaChiDropdown(globalLCHIPHIData, khuVuc, duAn);
+                    } else {
+                        elements.maChi.innerHTML = '<option value="">Chọn mã chi</option>';
+                        elements.noiDung.value = '';
+                    }
+                });
+
+                // Currency format
+                elements.soTien.addEventListener('input', function () {
+                    let value = this.value.replace(/\D/g, '');
+                    if (value) {
+                        this.value = utils.formatCurrency(value);
+                    }
+                });
+
+                // Image upload
+                this.initImageHandlers();
+
+                // Form submit
+                elements.form.addEventListener('submit', this.handleSubmit.bind(this));
+            },
+
+
+            initImageHandlers() {
+                elements.mainImageDropzone.onclick = () => elements.mainImageInput.click();
+
+                elements.mainImageInput.onchange = (e) => {
+                    if (e.target.files[0]) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            elements.mainImagePreview.querySelector('img').src = e.target.result;
+                            elements.mainImagePreview.classList.remove('hidden');
+                            elements.mainImageDropzone.classList.add('hidden');
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                };
+
+                elements.removeMainImage.onclick = () => {
+                    elements.mainImageInput.value = '';
+                    elements.mainImagePreview.classList.add('hidden');
+                    elements.mainImageDropzone.classList.remove('hidden');
+                };
+            },
+            async handleSubmit(e) {
+                e.preventDefault();
+                if (!this.validateForm()) return;
+
+                try {
+                    elements.submitBtn.disabled = true;
+                    loadingUtils.show('Đang khởi tạo...');
+
+                    // Chuẩn bị dữ liệu
+                    loadingUtils.updateProgress(20, 'Đang chuẩn bị dữ liệu...');
+                    const formData = this.getFormData();
+
+                    // Upload hình ảnh nếu có
+                    if (elements.mainImageInput.files[0]) {
+                        loadingUtils.updateProgress(40, 'Đang tải lên hình ảnh...');
+                        formData['Hình ảnh'] = await api.uploadImage(elements.mainImageInput.files[0]);
+                    }
+
+                    // Gửi dữ liệu
+                    loadingUtils.updateProgress(60, 'Đang tạo phiếu chi...');
+                    await api.sendRequest('Chi', 'Add', { Rows: [formData] });
+
+                    // Xử lý thành công
+                    loadingUtils.updateProgress(80, 'Hoàn thành xử lý...');
+                    setTimeout(() => {
+                        loadingUtils.updateProgress(100, 'Thành công!');
+                        utils.showToast('Tạo phiếu chi thành công!', 'success');
+                        this.resetForm();
+                        loadingUtils.hide();
+                    }, 500);
+
+                } catch (error) {
+                    console.error(error);
+                    loadingUtils.updateText('Đã xảy ra lỗi!');
+                    loadingUtils.updateProgress(100, 'Không thể xử lý yêu cầu');
+                    setTimeout(() => {
+                        loadingUtils.hide();
+                        utils.showToast('Có lỗi xảy ra khi xử lý yêu cầu!', 'error');
+                    }, 1000);
+                } finally {
+                    elements.submitBtn.disabled = false;
+                }
+            },
+            validateForm() {
+                const requiredFields = ['khuVuc', 'duAn', 'maChi', 'thoiGian', 'soTien', 'noiDung', 'nhanVien'];
+
+                const missingFields = requiredFields.filter(field => !elements[field].value.trim());
+
+                if (missingFields.length > 0) {
+                    utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+                    return false;
+                }
+
+                const soTien = elements.soTien.value.replace(/\D/g, '');
+                if (isNaN(soTien) || parseInt(soTien) <= 0) {
+                    utils.showToast('Vui lòng nhập số tiền hợp lệ', 'error');
+                    return false;
+                }
+
+                return true;
+            },
+
+            getFormData() {
+                return {
+                    'Mã chuyển khoản': elements.maChuyenKhoan.value,
+                    'IDPHIEU': elements.idPhieu.value,
+                    'KHU VỰC': elements.khuVuc.value,
+                    'Dự án': elements.duAn.value,
+                    'Mã CHI': elements.maChi.value,
+                    'Thời gian': elements.thoiGian.value,
+                    'MDA': elements.mda.value,
+                    'SỐ TIỀN': elements.soTien.value.replace(/\D/g, ''),
+                    'NỘI DUNG': elements.noiDung.value,
+                    'NHÂN VIÊN THỰC HIỆN': elements.nhanVien.value,
+                    'TRẠNG THÁI': elements.trangThai.value,
+                    'Công nợ': elements.congNo.value
+                };
+            },
+
+            resetForm() {
+                elements.form.reset();
+                elements.mainImagePreview.classList.add('hidden');
+                elements.mainImageDropzone.classList.remove('hidden');
+                elements.idPhieu.value = utils.generateIdPhieu();
+                elements.thoiGian.value = new Date().toISOString().slice(0, 16);
+            }
+        };
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            formHandlers.initForm();
+        });
+    </script>
+</body>
+
+</html>
