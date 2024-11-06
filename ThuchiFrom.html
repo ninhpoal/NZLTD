@@ -110,17 +110,27 @@
         <form id="uploadForm" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Các trường input cơ bản -->
+
+                <!-- Các trường còn lại -->
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Mã chuyển khoản</label>
-                    <input type="text" id="maChuyenKhoan"
+                    <label class="block text-sm font-medium text-gray-700">Thời gian <span
+                            class="text-red-500">*</span></label>
+                    <input type="datetime-local" id="thoiGian" required
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
+                
+
                 <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">IDPHIEU <span
+                    <label class="block text-sm font-medium text-gray-700">SỐ TIỀN <span
                             class="text-red-500">*</span></label>
-                    <input type="text" id="idPhieu"
-                        class="readonly-field w-full px-4 py-3 border border-gray-300 rounded-lg" readonly>
+                    <input type="text" id="soTien" required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">MDA</label>
+                    <input type="text" id="mda"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
                 <!-- Dropdowns -->
@@ -151,26 +161,7 @@
                     </select>
                 </div>
 
-                <!-- Các trường còn lại -->
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Thời gian <span
-                            class="text-red-500">*</span></label>
-                    <input type="datetime-local" id="thoiGian" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">MDA</label>
-                    <input type="text" id="mda"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">SỐ TIỀN <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" id="soTien" required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
+            
 
                 <div class="space-y-2 md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700">NỘI DUNG <span
@@ -186,24 +177,8 @@
                         class="readonly-field w-full px-4 py-3 border border-gray-300 rounded-lg" readonly>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">TRẠNG THÁI</label>
-                    <select id="trangThai"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="Phiếu mới">Phiếu mới</option>
-                        <option value="Đang xử lý">Đang xử lý</option>
-                        <option value="Hoàn thành">Hoàn thành</option>
-                    </select>
-                </div>
+              
 
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-gray-700">Công nợ</label>
-                    <select id="congNo"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="Không">Không</option>
-                        <option value="Có">Có</option>
-                    </select>
-                </div>
             </div>
 
             <!-- Image upload section -->
@@ -284,8 +259,6 @@
         // Store DOM elements
         const elements = {
             form: document.getElementById('uploadForm'),
-            maChuyenKhoan: document.getElementById('maChuyenKhoan'),
-            idPhieu: document.getElementById('idPhieu'),
             khuVuc: document.getElementById('khuVuc'),
             duAn: document.getElementById('duAn'),
             maChi: document.getElementById('maChi'),
@@ -294,8 +267,6 @@
             soTien: document.getElementById('soTien'),
             noiDung: document.getElementById('noiDung'),
             nhanVien: document.getElementById('nhanVien'),
-            trangThai: document.getElementById('trangThai'),
-            congNo: document.getElementById('congNo'),
             mainImageInput: document.getElementById('mainImageInput'),
             mainImagePreview: document.getElementById('mainImagePreview'),
             mainImageDropzone: document.getElementById('mainImageDropzone'),
@@ -322,20 +293,7 @@
                 }).showToast();
             },
 
-            generateIdPhieu: () => {
-                const date = new Date();
-                const dateStr = date.toLocaleDateString('vi-VN', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit'
-                }).replace(/\//g, '');
-                const timeStr = date.toLocaleTimeString('vi-VN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                }).replace(/:/g, '');
-                return `PC${dateStr}${timeStr}`;
-            }
+
         };
 
         // API functions
@@ -457,12 +415,7 @@
                         elements.nhanVien.value = maNV;
                     }
 
-                    // Generate ID
-                    elements.idPhieu.value = utils.generateIdPhieu();
 
-                    // Set default values
-                    elements.trangThai.value = 'Phiếu mới';
-                    elements.congNo.value = 'Không';
 
                     // Init event listeners
                     this.initEventListeners();
@@ -676,8 +629,7 @@
 
             getFormData() {
                 return {
-                    'Mã chuyển khoản': elements.maChuyenKhoan.value,
-                    'IDPHIEU': elements.idPhieu.value,
+
                     'KHU VỰC': elements.khuVuc.value,
                     'Dự án': elements.duAn.value,
                     'Mã CHI': elements.maChi.value,
@@ -685,9 +637,7 @@
                     'MDA': elements.mda.value,
                     'SỐ TIỀN': elements.soTien.value.replace(/\D/g, ''),
                     'NỘI DUNG': elements.noiDung.value,
-                    'NHÂN VIÊN THỰC HIỆN': elements.nhanVien.value,
-                    'TRẠNG THÁI': elements.trangThai.value,
-                    'Công nợ': elements.congNo.value
+                    'NHÂN VIÊN THỰC HIỆN': elements.nhanVien.value
                 };
             },
 
@@ -695,7 +645,6 @@
                 elements.form.reset();
                 elements.mainImagePreview.classList.add('hidden');
                 elements.mainImageDropzone.classList.remove('hidden');
-                elements.idPhieu.value = utils.generateIdPhieu();
                 elements.thoiGian.value = new Date().toISOString().slice(0, 16);
             }
         };
