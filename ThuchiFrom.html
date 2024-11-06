@@ -119,7 +119,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
-                
+
 
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">SỐ TIỀN <span
@@ -161,7 +161,7 @@
                     </select>
                 </div>
 
-            
+
 
                 <div class="space-y-2 md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700">NỘI DUNG <span
@@ -177,7 +177,7 @@
                         class="readonly-field w-full px-4 py-3 border border-gray-300 rounded-lg" readonly>
                 </div>
 
-              
+
 
             </div>
 
@@ -642,10 +642,19 @@
             },
 
             resetForm() {
+                // Lưu giá trị nhân viên trước khi reset
+                const nhanVienValue = elements.nhanVien.value;
+
+                // Reset form
                 elements.form.reset();
+
+                // Khôi phục các giá trị và trạng thái mặc định
                 elements.mainImagePreview.classList.add('hidden');
                 elements.mainImageDropzone.classList.remove('hidden');
                 elements.thoiGian.value = new Date().toISOString().slice(0, 16);
+
+                // Khôi phục lại giá trị nhân viên
+                elements.nhanVien.value = nhanVienValue;
             }
         };
 
