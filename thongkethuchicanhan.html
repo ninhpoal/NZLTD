@@ -1,20 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" class="light">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Thống kê chi phí</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="shortcut icon" href="Logo N có bóng/Logo N.png" type="image/x-icon">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
         .loading {
             position: fixed;
@@ -28,579 +20,520 @@
             align-items: center;
             z-index: 9999;
         }
-
         .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
-
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .filter-dropdown {
-            transition: all 0.3s ease-in-out;
-        }
-
-        .sidebar {
-            transition: transform 0.3s ease-in-out;
-        }
-
-        @media (max-width: 1023px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-            }
-        }
-
-        .responsive-table {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .responsive-table table {
-            min-width: 100%;
-        }
-
-        @media (max-width: 640px) {
-
-            .responsive-table th,
-            .responsive-table td {
-                padding: 0.5rem;
-                font-size: 0.75rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .responsive-table {
-                font-size: 0.75rem;
-            }
-
-            .responsive-table th,
-            .responsive-table td {
-                padding: 0.5rem 0.25rem;
-            }
-        }
-
-        .sidebar {
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-        }
-
-        @media (max-width: 1023px) {
-            .sidebar {
-                transform: translateX(-100%);
-                opacity: 0;
-                position: fixed;
-                top: 0;
-                left: 0;
-                bottom: 0;
-                width: 100%;
-                z-index: 50;
-            }
-
-            .sidebar.open {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+<body class="bg-gray-100 dark:bg-gray-900">
+    <!-- Loading spinner -->
     <div id="loading" class="loading hidden">
         <div class="loading-spinner"></div>
     </div>
-    <div class="min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-white dark:bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-30">
-            <div class="max-w-9xl mx-auto px-4 py-3 flex justify-between items-center">
-                <h1 class="text-lg font-bold text-gray-900 dark:text-white">NZ ERP PRO</h1>
-                <div class="flex items-center space-x-2">
-                    <button id="toggleFilters"
-                        class="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                        <i class="fas fa-filter"></i>
+
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-md fixed top-0 left-0 right-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-lg font-bold text-gray-900 dark:text-white">Thống kê chi phí</h1>
+            <div class="flex items-center space-x-2">
+                <button id="toggleFilters" class="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                    <i class="fas fa-filter"></i>
+                </button>
+                <button id="toggleDarkMode" class="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                    <i class="fas fa-moon dark:hidden"></i>
+                    <i class="fas fa-sun hidden dark:inline"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filter Sidebar -->
+    <div id="filterSidebar" class="fixed inset-y-0 right-0 w-80 bg-white dark:bg-gray-800 shadow-lg transform translate-x-full transition-transform duration-300 ease-in-out z-40">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Bộ lọc</h2>
+                <button id="closeFilters" class="text-gray-500 hover:text-gray-700 dark:text-gray-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Từ ngày</label>
+                    <input type="date" id="fromDate" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Đến ngày</label>
+                    <input type="date" id="toDate" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trạng thái</label>
+                    <select id="filterStatus" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                        <option value="">Tất cả</option>
+                        <option value="Đã giải ngân">Đã giải ngân</option>
+                        <option value="Không duyệt cấp 1">Không duyệt cấp 1</option>
+                        <option value="Không duyệt cấp 2">Không duyệt cấp 2</option>
+                        <option value="Đã duyệt cấp 1">Đã duyệt cấp 1</option>
+                        <option value="Phiếu mới">Phiếu mới</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dự án</label>
+                    <select id="filterProject" class="w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                        <option value="">Tất cả</option>
+                    </select>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="applyFilters" class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700">
+                        Áp dụng
                     </button>
-                    <button id="toggleDarkMode"
-                        class="p-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                        <i class="fas fa-moon dark:hidden"></i>
-                        <i class="fas fa-sun hidden dark:inline"></i>
+                    <button id="resetFilters" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400">
+                        Đặt lại
                     </button>
                 </div>
             </div>
-        </header>
-
-        <!-- Main Content -->
-        <div class="flex-grow flex mt-16">
-            <!-- Filters Sidebar -->
-            <aside id="filtersSidebar"
-                class="sidebar fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-lg overflow-y-auto z-40">
-                <div class="p-4">
-                    <h2 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Tìm kiếm</h2>
-                    <button id="closeSidebar"
-                        class="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Từ
-                                ngày</label>
-                            <input id="fromDate" type="date"
-                                class="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Đến
-                                ngày</label>
-                            <input id="toDate" type="date"
-                                class="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 dark:text-white">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Mã nhân
-                                viên</label>
-                            <select id="filterMaNhanVien"
-                                class="w-full bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 text-gray-900 dark:text-white">
-                            </select>
-                        </div>
-                        <div class="flex flex-wrap gap-2">
-                            <button id="applyFilters" type="button"
-                                class="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50">
-                                <i class="fas fa-filter mr-2"></i>Lọc
-                            </button>
-                            <button id="resetFilters" type="button"
-                                class="bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50">
-                                <i class="fas fa-undo mr-2"></i>Đặt lại
-                            </button>
-                            <button id="exportExcel" type="button"
-                                class="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
-                                <i class="fas fa-file-excel mr-2"></i>Xuất Excel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Dashboard Content -->
-            <main class="flex-grow p-4 overflow-x-hidden">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                                <i class="fas fa-box-open text-white"></i>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Tổng thu</dt>
-                                <dd id="totalProducts" class="text-lg font-medium text-gray-900 dark:text-white">0</dd>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-green-500 rounded-md p-3">
-                                <i class="fas fa-money-bill-wave text-white"></i>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Tổng chi</dt>
-                                <dd id="totalRevenue" class="text-lg font-medium text-gray-900 dark:text-white">0 ₫</dd>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                                <i class="fas fa-calendar-day text-white"></i>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Tổng ứng</dt>
-                                <dd id="totalWorkDays" class="text-lg font-medium text-gray-900 dark:text-white">0</dd>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg p-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                                <i class="fas fa-calendar-day text-white"></i>
-                            </div>
-                            <div class="ml-4 flex-1">
-                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Số dư</dt>
-                                <dd id="totalSundayWorkDays" class="text-lg font-medium text-gray-900 dark:text-white">0
-                                </dd>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Biểu đồ Thu Chi Ứng</h2>
-                    <div id="chartContainer" class="h-64 sm:h-96 bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
-                    </div>
-                </div>
-
-                <div class="space-y-6">
-                    <div>
-                        <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Danh sách Chi phí</h2>
-                        <div id="salaryTableContainer" class="responsive-table"></div>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Danh sách ứng</h2>
-                        <div id="productTableContainer" class="responsive-table"></div>
-                    </div>
-                    <div>
-                        <h2 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Danh sách thu</h2>
-                        <div id="productListContainer" class="responsive-table"></div>
-                    </div>
-                </div>
-            </main>
         </div>
     </div>
 
-    <!-- Overlay for mobile -->
-    <div id="overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden"></div>
+    <!-- Main Content -->
+    <main class="pt-16 pb-20 px-4">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mr-3">
+                        <i class="fas fa-check text-green-600 dark:text-green-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Đã giải ngân</p>
+                        <p id="totalDisbursed" class="text-lg font-semibold text-gray-900 dark:text-white">0 ₫</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-yellow-100 dark:bg-yellow-900 flex items-center justify-center mr-3">
+                        <i class="fas fa-clock text-yellow-600 dark:text-yellow-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Chờ duyệt</p>
+                        <p id="totalPending" class="text-lg font-semibold text-gray-900 dark:text-white">0 ₫</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900 flex items-center justify-center mr-3">
+                        <i class="fas fa-times text-red-600 dark:text-red-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Không duyệt</p>
+                        <p id="totalRejected" class="text-lg font-semibold text-gray-900 dark:text-white">0 ₫</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                        <i class="fas fa-file-invoice text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Tổng chi phí</p>
+                        <p id="totalAmount" class="text-lg font-semibold text-gray-900 dark:text-white">0 ₫</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+       <!-- Chart -->
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Biểu đồ chi phí</h2>
+    <div class="relative h-64">
+        <canvas id="transactionChart"></canvas>
+    </div>
+</div>
+
+        <!-- Transaction List -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Danh sách chi phí</h2>
+            </div>
+            <div id="transactionList" class="divide-y divide-gray-200 dark:divide-gray-700">
+                <!-- Transactions will be inserted here -->
+            </div>
+        </div>
+    </main>
 
     <script>
         // Global variables
-        const appId = '3429512c-79d0-44f0-8197-e6a77f2bb498';
-        const accessKey = 'V2-CmjiU-ViCzw-1xjZc-QAlWm-zNnZ4-eTiEz-lODjW-fqJmt';
+        const appId = '1a8d9270-a4ff-46b8-94fc-db1e4632f273';
+        const accessKey = 'V2-IEkJl-GKXgi-aBjtl-fN3Ur-QQSYX-Ggn6e-m9pkA-GtxEU';
         const region = 'www';
-        let thu = [], chi = [], ung = [];
-        let filteredThu = [], filteredChi = [], filteredUng = [];
-        let currentPage = { chi: 1, ung: 1, thu: 1 };
-        const itemsPerPage = 5;
-
-        // DOM elements
+        let transactions = [];
+        let filteredTransactions = [];
+        let chartInstance = null; 
+        // DOM Elements
         const elements = {
             loading: document.getElementById('loading'),
+            toggleFilters: document.getElementById('toggleFilters'),
+            closeFilters: document.getElementById('closeFilters'),
+            filterSidebar: document.getElementById('filterSidebar'),
             fromDate: document.getElementById('fromDate'),
             toDate: document.getElementById('toDate'),
-            filterMaNhanVien: document.getElementById('filterMaNhanVien'),
+            filterStatus: document.getElementById('filterStatus'),
+            filterProject: document.getElementById('filterProject'),
             applyFilters: document.getElementById('applyFilters'),
             resetFilters: document.getElementById('resetFilters'),
-            totalProducts: document.getElementById('totalProducts'),
-            totalRevenue: document.getElementById('totalRevenue'),
-            totalWorkDays: document.getElementById('totalWorkDays'),
-            totalSundayWorkDays: document.getElementById('totalSundayWorkDays'),
-            salaryTableContainer: document.getElementById('salaryTableContainer'),
-            productTableContainer: document.getElementById('productTableContainer'),
-            productListContainer: document.getElementById('productListContainer'),
-            toggleFilters: document.getElementById('toggleFilters'),
-            toggleDarkMode: document.getElementById('toggleDarkMode'),
-            filtersSidebar: document.getElementById('filtersSidebar'),
-            closeSidebar: document.getElementById('closeSidebar'),
-            overlay: document.getElementById('overlay')
+            totalDisbursed: document.getElementById('totalDisbursed'),
+            totalPending: document.getElementById('totalPending'),
+            totalRejected: document.getElementById('totalRejected'),
+            totalAmount: document.getElementById('totalAmount'),
+            transactionList: document.getElementById('transactionList'),
+            toggleDarkMode: document.getElementById('toggleDarkMode')
         };
 
-        // Utility functions
-        const formatDate = date => {
-            date = new Date(date);
+        // Utility Functions
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        };
+
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
             return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
         };
 
-        const formatCurrency = amount => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-
-        const sortByDate = (array, dateField) => array.sort((a, b) => new Date(b[dateField]) - new Date(a[dateField]));
-
-        const filterByCurrentMonth = (array, dateField) => {
-            const now = new Date();
-            return array.filter(item => {
-                const itemDate = new Date(item[dateField]);
-                return itemDate.getFullYear() === now.getFullYear() && itemDate.getMonth() === now.getMonth();
-            });
-        };
-
-        // API functions
-        const apiRequest = async (tableName, action, data, Properties) => {
+        // API Functions
+        const fetchTransactions = async () => {
             elements.loading.classList.remove('hidden');
-            const apiUrl = `https://${region}.appsheet.com/api/v2/apps/${appId}/tables/${tableName}/Action`;
             try {
-                const response = await fetch(apiUrl, {
+                const urlParams = new URLSearchParams(window.location.search);
+                const manv = urlParams.get('manv');
+                const response = await fetch(`https://${region}.appsheet.com/api/v2/apps/${appId}/tables/Chi/Action`, {
                     method: 'POST',
                     headers: {
                         'ApplicationAccessKey': accessKey,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ Action: action, ...Properties, ...data })
+                    body: JSON.stringify({
+                        Action: 'Find',
+                        Properties: {
+                            Selector: `Filter(Chi, [NHÂN VIÊN THỰC HIỆN]="${manv}")`
+                        }
+                    })
                 });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return await response.json();
+
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                return data;
             } catch (error) {
-                console.error("API Error:", error);
+                console.error('Error fetching transactions:', error);
                 throw error;
             } finally {
                 elements.loading.classList.add('hidden');
             }
         };
 
-        const fetchData = async (tableName, dateField ,manv) => {
-            
-            try {
-                const response = await apiRequest(tableName, 'Find', {}, {
-                    Properties: { Selector: `Filter(${tableName}, [Nhân viên]="${manv}")` }
-                });
-                if (!Array.isArray(response) || response.length === 0) {
-                    throw new Error("Invalid data received from API");
+        // Rendering Functions
+        const updateDashboardStats = (data) => {
+            const stats = data.reduce((acc, transaction) => {
+                const amount = parseFloat(transaction['SỐ TIỀN'] || 0);
+                const status = transaction['TRẠNG THÁI'];
+                
+                acc.total += amount;
+                
+                if (status === 'Đã giải ngân') {
+                    acc.disbursed += amount;
+                } else if (status === 'Không duyệt cấp 1' || status === 'Không duyệt cấp 2') {
+                    acc.rejected += amount;
+                } else {
+                    acc.pending += amount;
                 }
-                return sortByDate(response, dateField);
-            } catch (error) {
-                console.error(`Error fetching ${tableName} data:`, error);
-                throw error;
+                
+                return acc;
+            }, { disbursed: 0, pending: 0, rejected: 0, total: 0 });
+
+            elements.totalDisbursed.textContent = formatCurrency(stats.disbursed);
+            elements.totalPending.textContent = formatCurrency(stats.pending);
+            elements.totalRejected.textContent = formatCurrency(stats.rejected);
+            elements.totalAmount.textContent = formatCurrency(stats.total);
+        };
+
+        const renderTransactionList = (data) => {
+            elements.transactionList.innerHTML = data.map(transaction => `
+                <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <div class="flex justify-between items-start mb-1">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900 dark:text-white">
+                                ${transaction['NỘI DUNG']}
+                                ${transaction['Số phiếu trong ngày'] ? `<span class="text-sm text-gray-500">#${transaction['Số phiếu trong ngày']}</span>` : ''}
+                            </p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                ${formatDate(transaction['Thời gian'])} • ${transaction['Dự án']} • ${transaction['IDPHIEU'] || ''}
+                            </p>
+                        </div>
+                        <div class="flex flex-col items-end">
+                            <span class="font-medium text-gray-900 dark:text-white">
+                                ${formatCurrency(parseFloat(transaction['SỐ TIỀN'] || 0))}
+                            </span>
+                            <span class="${getStatusColorClass(transaction['TRẠNG THÁI'])} text-sm">
+                                ${transaction['TRẠNG THÁI']}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        ${transaction['ĐỐI TƯỢNG'] ? `Đối tượng: ${transaction['ĐỐI TƯỢNG']}` : ''}
+                        ${transaction['GHI CHÚ'] ? ` • ${transaction['GHI CHÚ']}` : ''}
+                        ${transaction['Công nợ'] ? ` • Công nợ: ${transaction['Công nợ']}` : ''}
+                    </div>
+                </div>
+            `).join('');
+        };
+
+       // Thêm biến global để theo dõi instance của chart
+
+const renderChart = (data) => {
+    try {
+        const ctx = document.getElementById('transactionChart');
+        if (!ctx) {
+            console.error('Canvas element not found');
+            return;
+        }
+
+        // Destroy existing chart if it exists
+        if (chartInstance) {
+            chartInstance.destroy();
+        }
+
+        const monthlyData = processMonthlyData(data);
+
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: monthlyData.labels,
+                datasets: [
+                    {
+                        label: 'Đã giải ngân',
+                        data: monthlyData.disbursed,
+                        backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Chờ duyệt',
+                        data: monthlyData.pending,
+                        backgroundColor: 'rgba(234, 179, 8, 0.5)',
+                        borderColor: 'rgb(234, 179, 8)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Không duyệt',
+                        data: monthlyData.rejected,
+                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        stacked: true,
+                        ticks: {
+                            callback: function(value) {
+                                return formatCurrency(value).slice(0, -2) + 'Đ';
+                            }
+                        }
+                    },
+                    x: {
+                        stacked: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + 
+                                       formatCurrency(context.raw);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error rendering chart:', error);
+    }
+};
+        // Helper Functions
+        const getStatusColorClass = (status) => {
+            switch (status) {
+                case 'Đã giải ngân':
+                    return 'text-green-600 dark:text-green-400';
+                case 'Không duyệt cấp 1':
+                case 'Không duyệt cấp 2':
+                    return 'text-red-600 dark:text-red-400';
+                case 'Đã duyệt cấp 1':
+                    return 'text-blue-600 dark:text-blue-400';
+                case 'Phiếu mới':
+                    return 'text-yellow-600 dark:text-yellow-400';
+                default:
+                    return 'text-gray-600 dark:text-gray-400';
             }
         };
 
-        // Rendering functions
-        const renderTable = (data, headers, containerId, dataType) => {
-            const container = elements[containerId];
-            const table = document.createElement('table');
-            table.className = 'w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400';
-
-            const headerRow = document.createElement('tr');
-            headers.forEach(header => {
-                const th = document.createElement('th');
-                th.textContent = header;
-                th.className = 'px-6 py-3';
-                headerRow.appendChild(th);
-            });
-            table.appendChild(headerRow);
-
-            const startIndex = (currentPage[dataType] - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            data.slice(startIndex, endIndex).forEach(item => {
-                const row = document.createElement('tr');
-                headers.forEach(header => {
-                    const td = document.createElement('td');
-                    td.textContent = header === 'Số tiền' ? formatCurrency(parseFloat(item[header] || 0)) : item[header] || '';
-                    td.className = 'px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white';
-                    row.appendChild(td);
-                });
-                table.appendChild(row);
-            });
-
-            container.innerHTML = '';
-            container.appendChild(table);
-
-            renderPagination(data.length, currentPage[dataType], dataType, container);
-        };
-
-        const renderPagination = (totalItems, currentPageNum, dataType, container) => {
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            const paginationContainer = document.createElement('div');
-            paginationContainer.className = 'flex justify-between items-center mt-4';
-
-            const pageInfo = document.createElement('span');
-            pageInfo.textContent = `Trang ${currentPageNum} / ${totalPages}`;
-            pageInfo.className = 'text-sm text-gray-700 dark:text-gray-300';
-
-            const buttonContainer = document.createElement('div');
-            buttonContainer.className = 'flex space-x-2';
-
-            const createButton = (text, onClick, isDisabled) => {
-                const button = document.createElement('button');
-                button.textContent = text;
-                button.className = `px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`;
-                button.onclick = onClick;
-                button.disabled = isDisabled;
-                return button;
-            };
-
-            buttonContainer.appendChild(createButton('Trước', () => {
-                if (currentPage[dataType] > 1) {
-                    currentPage[dataType]--;
-                    updateTable(dataType);
+        const processMonthlyData = (data) => {
+            const months = {};
+            
+            data.forEach(transaction => {
+                const date = new Date(transaction['Thời gian']);
+                const monthKey = `${date.getMonth() + 1}/${date.getFullYear()}`;
+                
+                if (!months[monthKey]) {
+                    months[monthKey] = { disbursed: 0, pending: 0, rejected: 0 };
                 }
-            }, currentPageNum === 1));
+                
+                const amount = parseFloat(transaction['SỐ TIỀN'] || 0);
+                const status = transaction['TRẠNG THÁI'];
 
-            buttonContainer.appendChild(createButton('Sau', () => {
-                if (currentPage[dataType] < totalPages) {
-                    currentPage[dataType]++;
-                    updateTable(dataType);
+                if (status === 'Đã giải ngân') {
+                    months[monthKey].disbursed += amount;
+                } else if (status === 'Không duyệt cấp 1' || status === 'Không duyệt cấp 2') {
+                    months[monthKey].rejected += amount;
+                } else {
+                    months[monthKey].pending += amount;
                 }
-            }, currentPageNum === totalPages));
-
-            paginationContainer.appendChild(pageInfo);
-            paginationContainer.appendChild(buttonContainer);
-            container.appendChild(paginationContainer);
-        };
-
-        const updateTable = dataType => {
-            const tables = {
-                chi: { data: filteredChi, headers: ['Ngày chi', 'Nội dung', 'Số tiền', 'Trạng thái'], containerId: 'salaryTableContainer' },
-                ung: { data: filteredUng, headers: ['Thời gian','Nội dung', 'Số tiền', 'Trạng thái'], containerId: 'productTableContainer' },
-                thu: { data: filteredThu, headers: ['Ngày thu', 'Nội dung', 'Số tiền', 'Trạng thái'], containerId: 'productListContainer' }
-            };
-            const { data, headers, containerId } = tables[dataType];
-            renderTable(data, headers, containerId, dataType);
-        };
-
-        const updateDashboardStats = () => {
-            const calculateTotal = data => data.reduce((sum, item) => sum + parseFloat(item['Số tiền'] || 0), 0);
-            const totalThu = calculateTotal(filteredThu);
-            const totalChi = calculateTotal(filteredChi);
-            const totalUng = calculateTotal(filteredUng);
-            const balance = totalThu - totalChi;
-
-            elements.totalProducts.textContent = formatCurrency(totalThu);
-            elements.totalRevenue.textContent = formatCurrency(totalChi);
-            elements.totalWorkDays.textContent = formatCurrency(totalUng);
-            elements.totalSundayWorkDays.textContent = formatCurrency(balance);
-        };
-
-        const renderChart = () => {
-            const prepareChartData = () => {
-                const months = {};
-                [...filteredThu, ...filteredChi, ...filteredUng].forEach(item => {
-                    const date = new Date(item['Ngày thu'] || item['Ngày chi'] || item['Thời gian']);
-                    const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
-                    if (!months[monthYear]) {
-                        months[monthYear] = { month: monthYear, thu: 0, chi: 0, ung: 0 };
-                    }
-                    if (item['Ngày thu']) months[monthYear].thu += parseFloat(item['Số tiền'] || 0);
-                    if (item['Ngày chi']) months[monthYear].chi += parseFloat(item['Số tiền'] || 0);
-                    if (item['Thời gian']) months[monthYear].ung += parseFloat(item['Số tiền'] || 0);
-                });
-                return Object.values(months).sort((a, b) => new Date(a.month) - new Date(b.month));
-            };
-
-            const chartData = prepareChartData();
-            Highcharts.chart('chartContainer', {
-                chart: { type: 'column' },
-                title: { text: 'Thu Chi Ứng theo tháng' },
-                xAxis: { categories: chartData.map(d => d.month), crosshair: true },
-                yAxis: { min: 0, title: { text: 'Số tiền (VNĐ)' } },
-                tooltip: {
-                    headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
-                    pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td><td style="padding:0"><b>{point.y:.1f} VNĐ</b></td></tr>',
-                    footerFormat: '</table>',
-                    shared: true,
-                    useHTML: true
-                },
-                plotOptions: { column: { pointPadding: 0.2, borderWidth: 0 } },
-                series: [
-                    { name: 'Thu', data: chartData.map(d => d.thu) },
-                    { name: 'Chi', data: chartData.map(d => d.chi) },
-                    { name: 'Ứng', data: chartData.map(d => d.ung) }
-                ]
             });
+
+            const sortedMonths = Object.keys(months).sort((a, b) => {
+                const [monthA, yearA] = a.split('/').map(Number);
+                const [monthB, yearB] = b.split('/').map(Number);
+                return yearA === yearB ? monthA - monthB : yearA - yearB;
+            });
+
+            return {
+                labels: sortedMonths,
+                disbursed: sortedMonths.map(month => months[month].disbursed),
+                pending: sortedMonths.map(month => months[month].pending),
+                rejected: sortedMonths.map(month => months[month].rejected)
+            };
         };
 
-        // Filter functions
-        const setupFilters = () => {
-            const allEmployees = [...new Set([...chi, ...ung, ...thu].map(item => item['Nhân viên']))];
-            elements.filterMaNhanVien.innerHTML = '<option value="">Tất cả</option>' +
-                allEmployees.filter(Boolean).map(employee => `<option value="${employee}">${employee}</option>`).join('');
-
-            elements.applyFilters.addEventListener('click', applyFilters);
-            elements.resetFilters.addEventListener('click', resetFilters);
-        };
-
+        // Filter Functions
         const applyFilters = () => {
-            const fromDate = elements.fromDate.value;
-            const toDate = elements.toDate.value;
-            const selectedEmployee = elements.filterMaNhanVien.value;
+    const fromDate = elements.fromDate.value ? new Date(elements.fromDate.value) : null;
+    const toDate = elements.toDate.value ? new Date(elements.toDate.value) : null;
+    const status = elements.filterStatus.value;
+    const project = elements.filterProject.value;
 
-            const filterItem = (item, dateField) => {
-                const itemDate = new Date(item[dateField]);
-                const fromDateObj = fromDate ? new Date(fromDate) : null;
-                const toDateObj = toDate ? new Date(toDate) : null;
-                return (!fromDateObj || itemDate >= fromDateObj) &&
-                    (!toDateObj || itemDate <= toDateObj) &&
-                    (!selectedEmployee || item['Nhân viên'] === selectedEmployee);
-            };
+    filteredTransactions = transactions.filter(transaction => {
+        const transactionDate = new Date(transaction['Thời gian']);
+        
+        const dateMatch = (!fromDate || transactionDate >= fromDate) &&
+                        (!toDate || transactionDate <= toDate);
+        const statusMatch = !status || transaction['TRẠNG THÁI'] === status;
+        const projectMatch = !project || transaction['Dự án'] === project;
 
-            filteredChi = chi.filter(item => filterItem(item, 'Ngày chi'));
-            filteredUng = ung.filter(item => filterItem(item, 'Thời gian'));
-            filteredThu = thu.filter(item => filterItem(item, 'Ngày thu'));
+        return dateMatch && statusMatch && projectMatch;
+    });
 
-            currentPage = { chi: 1, ung: 1, thu: 1 };
-            updateDashboardStats();
-            updateTable('chi');
-            updateTable('ung');
-            updateTable('thu');
-            renderChart();
-        };
+    if (filteredTransactions && filteredTransactions.length > 0) {
+        updateDashboardStats(filteredTransactions);
+        renderTransactionList(filteredTransactions);
+        renderChart(filteredTransactions);
+    } else {
+        updateDashboardStats([]);
+        renderTransactionList([]);
+        renderChart([]);
+    }
+    toggleFilterSidebar();
+};
 
         const resetFilters = () => {
             const now = new Date();
             elements.fromDate.valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
             elements.toDate.valueAsDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            elements.filterMaNhanVien.value = '';
+            elements.filterStatus.value = '';
+            elements.filterProject.value = '';
             applyFilters();
         };
 
+        // UI Functions
+        const toggleFilterSidebar = () => {
+            elements.filterSidebar.classList.toggle('translate-x-full');
+        };
+
+        const toggleDarkMode = () => {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', 
+                document.documentElement.classList.contains('dark'));
+        };
+
+        // Event Listeners
+        const setupEventListeners = () => {
+            elements.toggleFilters.addEventListener('click', toggleFilterSidebar);
+            elements.closeFilters.addEventListener('click', toggleFilterSidebar);
+            elements.applyFilters.addEventListener('click', applyFilters);
+            elements.resetFilters.addEventListener('click', resetFilters);
+            elements.toggleDarkMode.addEventListener('click', toggleDarkMode);
+        };
+
         // Initialization
-        const init = async () => {
+        const initializeApp = async () => {
             try {
-                const urlParams = new URLSearchParams(window.location.search);
-                const manv = urlParams.get('manv');
-                elements.loading.classList.remove('hidden');
-                [thu, chi, ung] = await Promise.all([
-                    fetchData('Thu', 'Ngày thu' ,manv),
-                    fetchData('Chi phí', 'Ngày chi'  ,manv),
-                    fetchData('Ứng', 'Thời gian',manv)
-                ]);
-
-                filteredThu = filterByCurrentMonth(thu, 'Ngày thu');
-                filteredChi = filterByCurrentMonth(chi, 'Ngày chi');
-                filteredUng = filterByCurrentMonth(ung, 'Thời gian');
-
-                updateDashboardStats();
-                updateTable('chi');
-                updateTable('ung');
-                updateTable('thu');
-                setupFilters();
-                renderChart();
-                updateChartSize();
+                // Set up initial dates
                 const now = new Date();
                 elements.fromDate.valueAsDate = new Date(now.getFullYear(), now.getMonth(), 1);
                 elements.toDate.valueAsDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+                // Load dark mode preference
+                if (localStorage.getItem('darkMode') === 'true') {
+                    document.documentElement.classList.add('dark');
+                }
+
+                // Fetch and process data
+                transactions = await fetchTransactions();
+                
+                // Populate project filter
+                const projects = [...new Set(transactions.map(t => t['Dự án']))];
+                elements.filterProject.innerHTML = '<option value="">Tất cả</option>' +
+                    projects.map(project => `<option value="${project}">${project}</option>`).join('');
+
+                // Initialize with current month's data
+                filteredTransactions = transactions;
+                applyFilters();
+                
+                // Set up event listeners
+                setupEventListeners();
+                
             } catch (error) {
-                console.error("Error initializing app:", error);
-                alert("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
-            } finally {
-                elements.loading.classList.add('hidden');
-            }
-        };
-        // Toggle dark mode
-        elements.toggleDarkMode.addEventListener('click', () => {
-            document.documentElement.classList.toggle('dark');
-        });
-
-        // Toggle filters sidebar
-        elements.toggleFilters.addEventListener('click', () => {
-            elements.filtersSidebar.classList.add('open');
-            elements.overlay.classList.remove('hidden');
-        });
-
-        elements.closeSidebar.addEventListener('click', () => {
-            elements.filtersSidebar.classList.remove('open');
-            elements.overlay.classList.add('hidden');
-        });
-
-        elements.overlay.addEventListener('click', () => {
-            elements.filtersSidebar.classList.remove('open');
-            elements.overlay.classList.add('hidden');
-        });
-        // Responsive chart
-        const updateChartSize = () => {
-            const chart = Highcharts.charts[0];
-            if (chart) {
-                chart.setSize(document.getElementById('chartContainer').offsetWidth);
+                console.error('Error initializing app:', error);
+                alert('Có lỗi xảy ra khi khởi tạo ứng dụng. Vui lòng thử lại sau.');
             }
         };
 
-        window.addEventListener('resize', updateChartSize);
-        document.addEventListener('DOMContentLoaded', init);
+        // Start the application
+        document.addEventListener('DOMContentLoaded', () => {
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js is not loaded');
+        return;
+    }
+    initializeApp();
+});
     </script>
-
 </body>
-
 </html>
