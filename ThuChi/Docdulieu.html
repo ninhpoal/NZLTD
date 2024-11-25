@@ -1,1 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <title>Đọc dữ liệu NZ</title>
+    <link rel="shortcut icon" href="/Logo N có bóng/Logo N.png" type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-50">
+    <div class=" mx-auto px-4 py-7 max-w-8xl">
+        <div class="mb-8 bg-white p-6 rounded-lg shadow">
+            <div class="flex gap-4 items-center">
+                <input type="file" id="fileInput" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-md file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-blue-50 file:text-blue-700
+                              hover:file:bg-blue-100">
+                <button id="pushToAppSheet"
+                    class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    disabled>
+                    Đẩy dữ liệu lên AppSheet
+                    <span id="validRowCount" class="ml-2 bg-green-600 px-2 py-1 rounded-full text-xs">0</span>
+                </button>
+            </div>
+
+            <div id="uploadStatus" class="mt-4 hidden">
+                <div class="p-4 rounded-lg">
+                    <p class="text-sm mb-2">Trạng thái:</p>
+                    <div id="uploadProgress" class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div class="progress-bar h-full bg-green-500 transition-all duration-300" style="width: 0%">
+                        </div>
+                    </div>
+                    <p id="uploadMessage" class="text-sm mt-2"></p>
+                </div>
+            </div>
+
+            <div id="stats" class="mt-4 grid grid-cols-2 gap-4">
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h3 class="text-green-700 font-semibold">Dòng có ID</h3>
+                    <p id="validCount" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg">
+                    <h3 class="text-red-700 font-semibold">Dòng không có ID</h3>
+                    <p id="invalidCount" class="text-2xl font-bold text-red-600">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày
+                            giao dịch</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số
+                            tiền giao dịch</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi
+                            tiết giao dịch</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID
+                            Giao dịch</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nhập
+                            ID</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="bg-white divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const appsheetConfig = {
+            appId: '1a8d9270-a4ff-46b8-94fc-db1e4632f273',
+            accessKey: 'V2-IEkJl-GKXgi-aBjtl-fN3Ur-QQSYX-Ggn6e-m9pkA-GtxEU',
+            region: 'www',
+            apiKey: '93bfdf6d5910909c985faf82ee7220cc',
+            tableName: 'Chi'
+
+        };
+
+        let transactionsData = [];
+
+        async function sendToAppSheet(action, data) {
+            const apiUrl = `https://${appsheetConfig.region}.appsheet.com/api/v2/apps/${appsheetConfig.appId}/tables/${appsheetConfig.tableName}/Action`;
+
+            try {
+                const response = await $.ajax({
+                    url: apiUrl,
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': appsheetConfig.accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({
+                        Action: action,
+                        Properties: {
+                            Locale: 'vi-VN',
+                            Timezone: 'Asia/Ho_Chi_Minh'
+                        },
+                        Rows: data
+                    })
+                });
+                return response;
+            } catch (error) {
+                console.error('Error sending data to AppSheet:', error);
+                throw error;
+            }
+        }
+
+        function extractTransactionId(text) {
+            const regex = /CP\w+\s+([0-9a-fA-F]{8})\s+x/;
+            const idMatch = text.match(regex);
+            const amountMatch = text.match(/x\s+(\d+)/);
+
+            return {
+                id: idMatch ? idMatch[1] : '',
+                amount: amountMatch ? amountMatch[1] : ''
+            };
+        }
+
+        // Xử lý sự kiện nút đẩy lên AppSheet
+        document.getElementById('pushToAppSheet').addEventListener('click', async () => {
+            const button = document.getElementById('pushToAppSheet');
+            const uploadStatus = document.getElementById('uploadStatus');
+            const progressBar = document.querySelector('.progress-bar');
+            const uploadMessage = document.getElementById('uploadMessage');
+
+            const validTransactions = transactionsData.filter(transaction => transaction.IDPHIEU);
+
+            if (validTransactions.length === 0) {
+                alert('Không có dữ liệu có ID để đẩy lên AppSheet!');
+                return;
+            }
+
+            try {
+                button.disabled = true;
+                uploadStatus.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                uploadMessage.textContent = 'Đang chuẩn bị dữ liệu...';
+
+                // Update progress
+                progressBar.style.width = '30%';
+                uploadMessage.textContent = `Đang xử lý ${validTransactions.length} dòng dữ liệu...`;
+                console.log(validTransactions)
+                 await sendToAppSheet('Edit', validTransactions);
+
+                // Update progress
+                progressBar.style.width = '100%';
+                uploadMessage.textContent = `Đã đẩy thành công ${validTransactions.length} dòng dữ liệu lên AppSheet!`;
+                uploadMessage.className = 'text-sm mt-2 text-green-600';
+
+                setTimeout(() => {
+                    uploadStatus.classList.add('hidden');
+                }, 3000);
+
+            } catch (error) {
+                uploadMessage.textContent = 'Lỗi khi đẩy dữ liệu: ' + error.message;
+                uploadMessage.className = 'text-sm mt-2 text-red-600';
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets['Sheet1'];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { range: 12 });
+
+                const tableBody = document.getElementById('tableBody');
+                tableBody.innerHTML = '';
+                transactionsData = [];
+
+                let validCount = 0;
+                let invalidCount = 0;
+
+                jsonData.forEach((row, index) => {
+                    if (row['Chi tiết giao dịch']) {
+                        const tr = document.createElement('tr');
+                        const transactionInfo = extractTransactionId(row['Chi tiết giao dịch']);
+
+                        const transaction = {
+                            'Ngày giao thực hiện giao dịch': row['Ngày giao dịch'],
+                            'Số tiền chuyển khoản': transactionInfo.amount,
+                            'Chi tiết giao dịch': row['Chi tiết giao dịch'],
+                            IDPHIEU: transactionInfo.id
+                        };
+                        transactionsData.push(transaction);
+
+                        if (transactionInfo.id) {
+                            validCount++;
+                            tr.className = 'hover:bg-gray-50';
+                        } else {
+                            invalidCount++;
+                            tr.className = 'bg-red-50 hover:bg-red-100';
+                        }
+
+                        tr.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row['Ngày giao dịch']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transactionInfo.amount}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">${row['Chi tiết giao dịch']}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm ${transactionInfo.id ? 'text-green-600 font-medium' : 'text-red-600'}" id="id-display-${index}">
+                                ${transactionInfo.id || 'Không có ID'}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex gap-2">
+                                    <input type="text" 
+                                           id="manual-id-${index}" 
+                                           placeholder="Nhập ID" 
+                                           class="border rounded px-2 py-1 text-sm"
+                                           ${transactionInfo.id ? 'disabled' : ''}>
+                                    <button onclick="updateId(${index})"
+                                            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                                            ${transactionInfo.id ? 'disabled' : ''}>
+                                        Cập nhật
+                                    </button>
+                                </div>
+                            </td>
+                        `;
+                        tableBody.appendChild(tr);
+                    }
+                });
+
+                document.getElementById('validCount').textContent = validCount;
+                document.getElementById('invalidCount').textContent = invalidCount;
+                document.getElementById('validRowCount').textContent = validCount;
+
+                // Enable/disable upload button based on valid rows
+                const uploadButton = document.getElementById('pushToAppSheet');
+                uploadButton.disabled = validCount === 0;
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        function updateId(index) {
+            const inputElement = document.getElementById(`manual-id-${index}`);
+            const displayElement = document.getElementById(`id-display-${index}`);
+            const newId = inputElement.value.trim();
+
+            if (newId) {
+                displayElement.textContent = newId;
+                displayElement.className = 'px-6 py-4 whitespace-nowrap text-sm text-green-600 font-medium';
+                inputElement.disabled = true;
+                inputElement.parentElement.querySelector('button').disabled = true;
+
+                const validCount = document.getElementById('validCount');
+                const invalidCount = document.getElementById('invalidCount');
+                const validRowCount = document.getElementById('validRowCount');
+                const uploadButton = document.getElementById('pushToAppSheet');
+
+                const newValidCount = parseInt(validCount.textContent) + 1;
+                validCount.textContent = newValidCount;
+                validRowCount.textContent = newValidCount;
+                invalidCount.textContent = parseInt(invalidCount.textContent) - 1;
+
+                transactionsData[index].id = newId;
+
+                // Enable upload button if there are valid rows
+                uploadButton.disabled = newValidCount === 0;
+            }
+        }
+    </script>
+</body>
+
+</html>
