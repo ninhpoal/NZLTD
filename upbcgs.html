@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-gray-100">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo Cáo Giám Sát Thi Công Hạ Tầng</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Button Styles */
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-success {
+            background-color: #22c55e;
+            color: white;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: background-color 0.2s;
+        }
+
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .data-table th {
+            padding: 0.75rem 1.5rem;
+            background-color: #f9fafb;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .data-table td {
+            padding: 1rem 1.5rem;
+            white-space: nowrap;
+            font-size: 0.875rem;
+            color: #111827;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        /* Input Styles */
+        .editable-input {
+            display: block;
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid #d1d5db;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            color: #111827;
+            background-color: white;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .editable-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        .readonly-input {
+            display: block;
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid #e5e7eb;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            color: #6b7280;
+            background-color: #f9fafb;
+        }
+
+        .approved-row {
+            background-color: #f9fafb;
+        }
+
+        .approved-input {
+            display: block;
+            width: 100%;
+            border-radius: 0.375rem;
+            border: 1px solid #e5e7eb;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.5rem;
+            color: #9ca3af;
+            background-color: #f3f4f6;
+        }
+
+        /* Loading Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(75, 85, 99, 0.5);
+            overflow-y: auto;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .loading-spinner {
+            height: 3rem;
+            width: 3rem;
+            border: 4px solid #3b82f6;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Hover Effects */
+        .data-table tr:hover {
+            background-color: #f9fafb;
+        }
+
+        /* Status Badge Styles */
+        .status-badge {
+            display: inline-flex;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1.25rem;
+        }
+
+        .status-success {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-warning {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        .status-default {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+    </style>
+</head>
+
+<body class="h-full">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="min-h-full">
+        <div class="bg-white shadow">
+            <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <h1 class="text-3xl font-bold text-gray-900">Báo Cáo Giám Sát Thi Công Hạ Tầng</h1>
+            </div>
+        </div>
+
+        <main>
+            <div class="max-w-9xl mx-auto py-6 sm:px-6 lg:px-8">
+                <!-- Action Buttons -->
+                <div class="mb-6 flex gap-4">
+                    <button id="exportBtn" class="btn-primary">
+                        <i class="fas fa-file-export mr-2"></i>Xuất Excel
+                    </button>
+                    <button id="updateBtn" class="btn-success">
+                        <i class="fas fa-sync-alt mr-2"></i>Cập Nhật AppSheet
+                    </button>
+                </div>
+
+                <!-- Report Info -->
+                <div class="bg-white shadow rounded-lg mb-6">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h2 class="text-xl font-semibold text-gray-900 mb-4">Thông Tin Báo Cáo</h2>
+                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            <div>
+                                <p class="text-sm text-gray-600">Giám sát thi công</p>
+                                <p id="giamSatThiCong" class="mt-1 text-base font-medium text-gray-900"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Ngày thi công</p>
+                                <p id="ngayThiCong" class="mt-1 text-base font-medium text-gray-900"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Đơn vị thi công</p>
+                                <p class="mt-1 text-base font-medium text-gray-900">Công Ty TNHH Thương Mại và Dịch Vụ
+                                    NZ</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-600">Mã Kế Hoạch</p>
+                                <p id="maKeHoach" class="mt-1 text-base font-medium text-gray-900"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="bg-white shadow rounded-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table id="dataTable" class="data-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Tuyến cáp</th>
+                                    <th scope="col">Dự toán</th>
+                                    <th scope="col">Tuyến</th>
+                                    <th scope="col">Loại cáp</th>
+                                    <th scope="col">Số mét</th>
+                                    <th scope="col">TDN Số đầu</th>
+                                    <th scope="col">TDN Số cuối</th>
+                                    <th scope="col">Mã cáp</th>
+                                    <th scope="col">Đội kéo</th>
+                                    <th scope="col">Ghi chú keo</th>
+                                    <th scope="col">Đội hàn</th>
+                                    <th scope="col">Trạng thái</th>
+                                    <th hidden scope="col">lịch sử</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_CONFIG = {
+            appId: '0ffda765-62b7-4260-b7ed-5bcbb530b113',
+            accessKey: 'V2-OjHkE-1jfLk-F8bt0-QWJgC-QHUwP-mJIQN-WIpvd-ALOIF',
+            region: 'www'
+        };
+
+        let originalData = [];
+        const EDITABLE_FIELDS = ['TDN Số đầu', 'TDN Số cuối', 'Mã cáp'];
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        const formatDate = dateString => moment(dateString).format('DD/MM/YYYY');
+
+        async function apiRequest(tableName, action, data, Properties) {
+            const apiUrl = `https://${API_CONFIG.region}.appsheet.com/api/v2/apps/${API_CONFIG.appId}/tables/${tableName}/Action`;
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': API_CONFIG.accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ Action: action, ...Properties, ...data })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error("API Error:", error);
+                throw error;
+            }
+        }
+
+        async function fetchSanphamData() {
+            showLoading();
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const mada = urlParams.get('mada');
+                if (!mada) throw new Error('Missing mada parameter');
+
+                const response = await apiRequest('BCGS', 'Find', {}, {
+                    Properties: { Selector: `Filter(BCGS, [MKH] = "${mada}")` }
+                });
+                if (!Array.isArray(response) || response.length === 0) {
+                    throw new Error("Invalid data received from API");
+                }
+                return response;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'Đã duyệt':
+                    return 'bg-green-100 text-green-800';
+                case 'Chờ duyệt':
+                    return 'bg-yellow-100 text-yellow-800';
+                default:
+                    return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function createCell(value, fieldName, rowId, row) {
+            const isApproved = row['Trạng thái'] === 'Đã duyệt';
+            const isEditable = EDITABLE_FIELDS.includes(fieldName) && !isApproved;
+
+            if (isEditable) {
+                return `<input type="text" 
+                       class="editable-input" 
+                       value="${value || ''}" 
+                       data-field="${fieldName}"
+                       data-row-id="${rowId}"
+                       data-idtuyen="${row['IDTUYEN']}"
+                       onchange="updateMetricCalculation(${rowId})">`
+            } else {
+                return `<input type="text" 
+                       class="${isApproved ? 'approved-input' : 'readonly-input'}" 
+                       value="${value || ''}" 
+                       ${fieldName === 'Số mét T/C' ? 'id="metric_' + rowId + '"' : ''}
+                       readonly>`
+            }
+        }
+
+        function updateMetricCalculation(rowId) {
+            const tdnStart = document.querySelector(`input[data-field="TDN Số đầu"][data-row-id="${rowId}"]`)?.value || 0;
+            const tdnEnd = document.querySelector(`input[data-field="TDN Số cuối"][data-row-id="${rowId}"]`)?.value || 0;
+
+            const startValue = parseFloat(tdnStart);
+            const endValue = parseFloat(tdnEnd);
+
+            if (!isNaN(startValue) && !isNaN(endValue)) {
+                const metricCell = document.getElementById(`metric_${rowId}`);
+                if (metricCell) {
+                    const calculatedValue = Math.abs(endValue - startValue);
+                    metricCell.value = calculatedValue;
+                }
+            }
+        }
+        // Thêm vào hàm populateTable để bao gồm cả id cho ô số mét
+        function populateTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = data.map((row, index) => `
+        <tr data-row-id="${index}">
+            <td>${row['Tuyến cáp'] || ''}</td>
+            <td>${row['Dự toán'] || ''}</td>
+            <td>${row['Điểm đầu'] || ''}=>${row['Điểm cuối'] || ''}</td>
+            <td>${row['Loại cáp'] || ''}</td>
+            <td><input type="text" 
+                      class="readonly-input" 
+                      id="metric_${index}" 
+                      value="${row['Số mét T/C'] || ''}" 
+                      readonly></td>
+            <td>${createCell(row['TDN Số đầu'], 'TDN Số đầu', index, row)}</td>
+            <td>${createCell(row['TDN Số cuối'], 'TDN Số cuối', index, row)}</td>
+            <td>${createCell(row['Mã cáp'], 'Mã cáp', index, row)}</td>
+            <td>${row['Đội kéo'] || ''}</td>
+            <td>${row['Ghi chú keo'] || ''}</td>
+            <td>${row['Đội hàn'] || ''}</td>
+            <td>
+                <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${getStatusBadgeClass(row['Trạng thái'])}">
+                    ${row['Trạng thái'] || ''}
+                </span>
+            </td>
+             <td hidden><div class="history-cell">${row['Lịch sử'] || ''}</div></td>
+        </tr>
+    `).join('');
+
+            // Tính toán ban đầu cho tất cả các hàng
+            data.forEach((_, index) => {
+                updateMetricCalculation(index);
+            });
+        }
+
+        async function updateAppSheet() {
+            try {
+                showLoading();
+                const urlParams = new URLSearchParams(window.location.search);
+                const nhanvien = urlParams.get('manv') || 'Unknown';
+                const updatedRows = [];
+                originalData.forEach((originalRow, index) => {
+                    if (originalRow['Trạng thái'] === 'Đã duyệt') return;
+
+                    const editableCells = document.querySelectorAll(`input[data-row-id="${index}"].editable-input`);
+                    let hasChanges = false;
+                    const updatedFields = {
+                        IDTUYEN: originalRow.IDTUYEN,
+                        "Thời gian": formatDate(new Date())
+                    };
+                    let historyChanges = [];
+                    if (originalRow['Lịch sử']) {
+                        historyChanges.push(originalRow['Lịch sử']);
+                    }
+
+                    editableCells.forEach(input => {
+                        const fieldName = input.dataset.field;
+                        if (input.value !== originalRow[fieldName]) {
+                            // Ghi lại thay đổi cho từng trường
+                            const changeRecord = `${fieldName}: ${originalRow[fieldName]} => ${input.value}`;
+                            historyChanges.push(`[${moment().format('DD/MM/YYYY HH:mm')}] ${nhanvien}: ${changeRecord}`);
+
+                            updatedFields[fieldName] = input.value;
+                            hasChanges = true;
+                        }
+                    });
+
+                    if (hasChanges) {
+                        // Cập nhật lịch sử vào fields
+                        updatedFields['Lịch sử'] = historyChanges.join('\n');
+                        updatedRows.push(updatedFields);
+                    }
+                });
+
+                if (updatedRows.length === 0) {
+                    alert('Không có thay đổi để cập nhật');
+                    return;
+                }
+
+                const updatePayload = {
+                    Action: "Edit",
+                    Properties: {
+                        Locale: "vi-VN",
+                        Timezone: "Asia/Ho_Chi_Minh"
+                    },
+                    Rows: updatedRows
+                };
+
+                await apiRequest('BCGS', 'Edit', updatePayload, {});
+                showNotification('Cập nhật thành công!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } catch (error) {
+                console.error('Error updating AppSheet:', error);
+                showNotification(`Lỗi khi cập nhật: ${error.message}`, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        function createExcelWorkbook(data) {
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['BÁO CÁO GIÁM SÁT THI CÔNG HẠ TẦNG'],
+                ['Giám sát thi công:', data[0]['Giám sát thi công'] || '', 'Ngày thi công:', formatDate(data[0]['Thời gian']) || ''],
+                ['Đơn vị thi công:', 'Công Ty TNHH Thương Mại và Dịch Vụ NZ'],
+                ['Mã Kế Hoạch:', data[0]['MKH'] || ''],
+                []
+            ]);
+
+            const headers = ['Tuyến cáp', 'Dự toán', 'Tuyến', 'Loại cáp', 'Số mét', 'TDN Số đầu', 'TDN Số cuối', 'Mã cáp', 'Đội kéo', 'Ghi chú keo', 'Đội hàn', 'Trạng thái'];
+            const tableData = [headers, ...data.map(row => [
+                row['Tuyến cáp'] || '',
+                row['Dự toán'] || '',
+                `${row['Điểm đầu'] || ''}=>${row['Điểm cuối'] || ''}`,
+                row['Loại cáp'] || '',
+                row['Số mét T/C'] || '',
+                row['TDN Số đầu'] || '',
+                row['TDN Số cuối'] || '',
+                row['Mã cáp'] || '',
+                row['Đội kéo'] || '',
+                row['Ghi chú keo'] || '',
+                row['Đội hàn'] || '',
+                row['Trạng thái'] || ''
+            ])];
+
+            XLSX.utils.sheet_add_aoa(ws, tableData, { origin: 'A6' });
+
+            // Add styles
+            const headerRange = XLSX.utils.decode_range(ws['!ref']);
+            for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+                const address = XLSX.utils.encode_cell({ r: 5, c: C });
+                if (!ws[address]) continue;
+                ws[address].s = {
+                    font: { bold: true },
+                    fill: { fgColor: { rgb: "FFFFAA00" } },
+                    alignment: { horizontal: "center", vertical: "center" }
+                };
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, "Báo cáo giám sát");
+            XLSX.writeFile(wb, 'bao_cao_giam_sat_thi_cong.xlsx');
+        }
+
+        function exportToExcel(data) {
+            try {
+                showLoading();
+                createExcelWorkbook(data);
+                showNotification('Xuất Excel thành công!', 'success');
+            } catch (error) {
+                console.error('Error exporting to Excel:', error);
+                showNotification('Lỗi khi xuất Excel!', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function updateHeaderInfo(data) {
+            if (data.length > 0) {
+                document.getElementById('giamSatThiCong').textContent = data[0]['Giám sát thi công'] || 'N/A';
+                document.getElementById('ngayThiCong').textContent = formatDate(data[0]['Thời gian']) || 'N/A';
+                document.getElementById('maKeHoach').textContent = data[0]['MKH'] || 'N/A';
+            }
+        }
+
+        async function init() {
+            try {
+                const sanpham = await fetchSanphamData();
+                if (sanpham.length === 0) {
+                    showNotification('Không có dữ liệu cho mã dự án này', 'error');
+                    return;
+                }
+                originalData = sanpham;
+                updateHeaderInfo(sanpham);
+                populateTable(sanpham);
+
+                // Add event listeners
+                document.getElementById('exportBtn').addEventListener('click', () => exportToExcel(sanpham));
+                document.getElementById('updateBtn').addEventListener('click', updateAppSheet);
+
+                // Add keyboard shortcuts
+                document.addEventListener('keydown', e => {
+                    if (e.ctrlKey && e.key === 's') {
+                        e.preventDefault();
+                        updateAppSheet();
+                    } else if (e.ctrlKey && e.key === 'e') {
+                        e.preventDefault();
+                        exportToExcel(sanpham);
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing app:", error);
+                showNotification(`Có lỗi xảy ra: ${error.message}`, 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>
