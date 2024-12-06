@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -35,9 +34,9 @@
             Đẩy dữ liệu lên appsheet
         </button>
         <button type="button" id="addBCGSButton" onclick="addBCGSData()"
-    class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-    Thêm dữ liệu BCGS
-</button>
+            class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+            Thêm dữ liệu BCGS
+        </button>
         <div id="keHoachForm" class="    mx-auto p-6 bg-white shadow-md rounded-lg">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">Kế Hoạch Form</h1>
             <div class="space-y-6">
@@ -242,6 +241,8 @@
 
             });
         }
+
+
         async function sendDataToAppSheet() {
             return FuiToast.promise(
                 (async () => {
@@ -272,7 +273,8 @@
                         "Tổng bộ chia": (document.getElementById('tongBoChua').value) || '',
                         "Tổng số Tủ/ODF/tập điểm": (document.getElementById('tongTuODFTapDiem').value) || '',
                         "Dự toán Core": (document.getElementById('duToanCore').value) || '',
-                        "Lịch sử" : manv + " Đã nhận dự án vào ngày :"+ formatDate(document.getElementById('ngayNhan').value)
+                        "Lịch sử": manv + " Đã nhận dự án vào ngày :" + formatDate(document.getElementById('ngayNhan').value),
+                        "Nhân viên dự án phụ trách": manv || '',
                     };
 
                     console.log(duAnData)
@@ -312,14 +314,19 @@
 
                         await apiRequest('BCGS', 'Add', { Rows: bcsgData });
                     }
-                    const file = document.getElementById('excelFile').files[0];
-                    filebase = await readFile(file);
-                    const fileData = {
-                        "Tên File": "File dự toán" + duAnData["Mã kế hoạch"] + duAnData["POP"],
-                        "Key": duAnData["Mã kế hoạch"],
-                        "File": filebase
-                    };
-                    await apiRequest('FILE', 'Add', { Rows: [fileData] });
+
+                    const fileInput = document.getElementById('excelFile');
+                    if (fileInput && fileInput.files && fileInput.files.length > 0) {
+                        const file = fileInput.files[0];
+                        filebase = await readFile(file);
+                        const fileData = {
+                            "Tên File": "File dự toán" + duAnData["Mã kế hoạch"] + duAnData["POP"],
+                            "Key": duAnData["Mã kế hoạch"],
+                            "File": filebase
+                        };
+                        await apiRequest('FILE', 'Add', { Rows: [fileData] });
+                    }
+
 
 
 
@@ -341,6 +348,9 @@
                 }
             );
         }
+
+
+
         function addBCGSData() {
             return FuiToast.promise(
                 (async () => {
