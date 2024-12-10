@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sản Phẩm nhà cung cấp</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        /* Table styles */
+        #productsTable {
+            border-collapse: collapse;
+        }
+
+        #productsTable th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            padding: 8px;
+            font-weight: 600;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        #productsTable input:focus,
+        #productsTable select:focus {
+            outline: none;
+            background-color: #f0f7ff;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Loading Overlay -->
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl">
+            <div class="flex items-center space-x-3">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div id="loadingText" class="text-gray-700">Đang xử lý...</div>
+            </div>
+            <div id="progressContainer" class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="loadingProgressBar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                        style="width: 0%"></div>
+                </div>
+                <div id="loadingStatus" class="text-sm text-gray-600 mt-1 text-center">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <!-- Header Section -->
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">Quản lý Thu Chi</h1>
+                <div class="flex items-center space-x-4">
+
+                    <button id="addNewRow" onclick="addNewRow()"
+                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Thêm phiếu mới
+                    </button>
+                    <button id="saveAll" onclick="saveAllRecords()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                        </svg>
+                        Lưu tất cả
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- Thu Chi Table -->
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table id="thuChiTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Thời gian</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Khu vực</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Dự án</th>
+
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Mã chi</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                MDA</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Số tiền</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nội dung</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Đối tượng</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Nhân viên thực hiện</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Hình ảnh</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batch Actions -->
+    <div id="batchActions"
+        class="hidden fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white px-6 py-4 rounded-lg shadow-xl flex items-center gap-4">
+        <span class="text-gray-600" id="selectedCount">Đã chọn: 0</span>
+        <button onclick="deleteBatchProducts()"
+            class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+            Xóa đã chọn
+        </button>
+        <button onclick="copyBatchProducts()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            Nhân bản
+        </button>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div id="floatingButtons" class="fixed bottom-6 right-6 flex flex-col gap-3">
+        <button onclick="addNewRow()"
+            class="bg-green-600 hover:bg-green-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-105">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+        </button>
+        <button onclick="saveAllProducts()"
+            class="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-105">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        // Constants
+        const APP_ID = '1a8d9270-a4ff-46b8-94fc-db1e4632f273';
+        const ACCESS_KEY = 'V2-IEkJl-GKXgi-aBjtl-fN3Ur-QQSYX-Ggn6e-m9pkA-GtxEU';
+        const REGION = 'www';
+        const IMGBB_API_KEY = '93bfdf6d5910909c985faf82ee7220cc';
+        const maNV  =''
+        // State Management
+        const state = {
+            records: new Map(),
+            lastRecordId: 0,
+            hierarchyData: {
+                khuVuc: new Set(),
+                duAn: {},
+                maChi: {},
+                tenLoaiChi: {}
+            }
+        };
+        const loadingUtils = {
+            init() {
+                if (!this.overlay) {
+                    this.overlay = document.getElementById('loadingOverlay');
+                    this.text = document.getElementById('loadingText');
+                    this.status = document.getElementById('loadingStatus');
+                    this.progressBar = document.getElementById('loadingProgressBar');
+                }
+            },
+
+            show(text = 'Đang xử lý...') {
+                this.init();
+                if (this.overlay && this.text) {
+                    this.overlay.style.display = 'flex';
+                    this.text.textContent = text;
+                    if (this.status) this.status.textContent = '';
+                    if (this.progressBar) this.progressBar.style.width = '0%';
+                }
+            },
+
+            hide() {
+                this.init();
+                if (this.overlay) {
+                    this.overlay.style.display = 'none';
+                }
+            },
+
+            updateProgress(progress, status = '') {
+                this.init();
+                if (this.progressBar) {
+                    this.progressBar.style.width = `${progress}%`;
+                }
+                if (this.status && status) {
+                    this.status.textContent = status;
+                }
+            }
+        };
+
+        const toast = {
+            show(message, type = 'success') {
+                Toastify({
+                    text: message,
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: type === 'success' ? "#4CAF50" :
+                            type === 'error' ? "#f44336" :
+                                type === 'warning' ? "#ff9800" : "#2196F3"
+                    }
+                }).showToast();
+            }
+        };
+        const api = {
+            async sendRequest(tableName, action, data) {
+                const apiUrl = `https://${REGION}.appsheet.com/api/v2/apps/${APP_ID}/tables/${tableName}/Action`;
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'ApplicationAccessKey': ACCESS_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            Action: action,
+                            Properties: {
+                                Locale: 'vi-VN',
+                                Timezone: 'Asia/Ho_Chi_Minh'
+                            },
+                            ...data
+                        })
+                    });
+
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return await response.json();
+                } catch (error) {
+                    console.error('API request failed:', error);
+                    throw error;
+                }
+            },
+            async loadMDAData() {
+                try {
+                    const response = await this.sendRequest('Duan', 'Find', {
+                        Properties: {
+                            Selector: "Filter(Duan, true)"
+                        }
+                    });
+
+                    return response.map(item => ({
+                        value: `${item['POP']}+ ${item['Mã kế hoạch']}`,
+                        label: `${item['POP']}+ ${item['Mã kế hoạch']}`
+                    }));
+                } catch (error) {
+                    console.error('Error loading MDA data:', error);
+                    throw error;
+                }
+            },
+
+            async loadNhanVienData() {
+                try {
+                    const response = await this.sendRequest('NHÂN VIÊN', 'Find', {
+                        Properties: {
+                            Selector: "Filter(NHÂN VIÊN, true)"
+                        }
+                    });
+
+                    return response.map(item => ({
+                        value: item['Mã nhân viên'],
+                        label: `${item['Mã nhân viên']}`
+                    }));
+                } catch (error) {
+                    console.error('Error loading NhanVien data:', error);
+                    throw error;
+                }
+            },
+            async uploadImage(file) {
+                if (!file) return '';
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    const response = await axios.post(
+                        `https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`,
+                        formData
+                    );
+                    return response.data.data.url;
+                } catch (error) {
+                    throw new Error('Failed to upload image');
+                }
+            },
+
+            async loadHierarchyData() {
+                try {
+                    loadingUtils.show('Đang tải dữ liệu...');
+                    const response = await this.sendRequest('LCHIPHI', 'Find', {
+                        Properties: {
+                            Selector: "Filter(LCHIPHI, true)"
+                        }
+                    });
+
+                    // Process hierarchy data
+                    response.forEach(item => {
+                        const khuVuc = item['Khu vực'];
+                        const duAn = item['Dự án'];
+                        const maChi = item['Mã CHI'];
+                        const tenLoaiChi = item['Tên loại chi'];
+
+                        // Add to khuVuc
+                        state.hierarchyData.khuVuc.add(khuVuc);
+
+                        // Add to duAn
+                        if (!state.hierarchyData.duAn[khuVuc]) {
+                            state.hierarchyData.duAn[khuVuc] = new Set();
+                        }
+                        state.hierarchyData.duAn[khuVuc].add(duAn);
+
+                        // Add to maChi
+                        const key = `${khuVuc}_${duAn}`;
+                        if (!state.hierarchyData.maChi[key]) {
+                            state.hierarchyData.maChi[key] = new Map();
+                        }
+                        state.hierarchyData.maChi[key].set(maChi, tenLoaiChi);
+
+                        // Store tenLoaiChi mapping
+                        state.hierarchyData.tenLoaiChi[maChi] = tenLoaiChi;
+                    });
+
+                    loadingUtils.updateProgress(100, 'Đã tải xong dữ liệu!');
+                    setTimeout(() => loadingUtils.hide(), 500);
+
+                } catch (error) {
+                    console.error('Error loading hierarchy data:', error);
+                    loadingUtils.hide();
+                    toast.show('Không thể tải dữ liệu phân cấp', 'error');
+                    throw error;
+                }
+            }
+        };
+        function toggleMDADropdown(recordId) {
+            const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+            const dropdown = row.querySelector('.dropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        function updateMDADisplay(recordId) {
+            const record = state.records.get(recordId);
+            const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+            const selectedValuesContainer = row.querySelector('.selected-values');
+
+            if (!record.mda || record.mda.length === 0) {
+                selectedValuesContainer.innerHTML = '<span class="text-gray-400">Chọn MDA...</span>';
+            } else {
+                selectedValuesContainer.innerHTML = record.mda.map(value => `
+            <span class="badge bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                ${value}
+                <button class="ml-1" onclick="removeMDA('${recordId}', '${value}')">&times;</button>
+            </span>
+        `).join('');
+            }
+        }
+
+        function removeMDA(recordId, value) {
+            const record = state.records.get(recordId);
+            if (record && record.mda) {
+                record.mda = record.mda.filter(v => v !== value);
+                state.records.set(recordId, record);
+                updateMDADisplay(recordId);
+            }
+        }
+        const handlers = {
+            handleKhuVucChange(event, recordId) {
+                const khuVuc = event.target.value;
+                const row = event.target.closest('tr');
+
+                // Update duAn dropdown
+                const duAnSelect = row.querySelector('[data-field="duAn"]');
+                const duAnOptions = state.hierarchyData.duAn[khuVuc] || new Set();
+                duAnSelect.innerHTML = `
+            <option value="">Chọn dự án</option>
+            ${Array.from(duAnOptions).map(da =>
+                    `<option value="${da}">${da}</option>`
+                ).join('')}
+        `;
+
+                // Reset maChi dropdown
+                const maChiSelect = row.querySelector('[data-field="maChi"]');
+                maChiSelect.innerHTML = '<option value="">Chọn mã chi</option>';
+
+                // Update state
+                const record = state.records.get(recordId);
+                if (record) {
+                    record.khuVuc = khuVuc;
+                    record.duAn = '';
+                    record.maChi = '';
+                    state.records.set(recordId, record);
+                }
+            },
+
+            handleDuAnChange(event, recordId) {
+                const duAn = event.target.value;
+                const row = event.target.closest('tr');
+                const khuVuc = row.querySelector('[data-field="khuVuc"]').value;
+
+                // Update maChi dropdown
+                const maChiSelect = row.querySelector('[data-field="maChi"]');
+                const key = `${khuVuc}_${duAn}`;
+                const maChiOptions = state.hierarchyData.maChi[key] || new Map();
+
+                maChiSelect.innerHTML = `
+            <option value="">Chọn mã chi</option>
+            ${Array.from(maChiOptions.entries()).map(([maChi, tenLoaiChi]) =>
+                    `<option value="${maChi}" data-tenloai="${tenLoaiChi}">
+                    ${tenLoaiChi} (${maChi})
+                </option>`
+                ).join('')}
+        `;
+
+                // Update state
+                const record = state.records.get(recordId);
+                if (record) {
+                    record.duAn = duAn;
+                    record.maChi = '';
+                    state.records.set(recordId, record);
+                }
+            },
+
+            handleMaChiChange(event, recordId) {
+                const maChi = event.target.value;
+                const selectedOption = event.target.selectedOptions[0];
+                const tenLoaiChi = selectedOption?.getAttribute('data-tenloai');
+
+                if (tenLoaiChi) {
+                    const noiDungInput = document.querySelector(`[data-record-id="${recordId}"] [data-field="noiDung"]`);
+                    noiDungInput.value = `${tenLoaiChi}: `;
+                    noiDungInput.focus();
+                    noiDungInput.setSelectionRange(
+                        noiDungInput.value.length,
+                        noiDungInput.value.length
+                    );
+                }
+
+                // Update state
+                const record = state.records.get(recordId);
+                if (record) {
+                    record.maChi = maChi;
+                    record.noiDung = tenLoaiChi ? `${tenLoaiChi}: ` : '';
+                    state.records.set(recordId, record);
+                }
+            },
+
+            handleImageUpload(event, recordId) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const record = state.records.get(recordId);
+                if (record) {
+                    record.imageFile = file;
+                    state.records.set(recordId, record);
+
+                    // Hiển thị preview
+                    const imagePreview = document.querySelector(
+                        `[data-record-id="${recordId}"] .image-preview`
+                    );
+                    const uploadText = imagePreview.parentElement.querySelector('.flex.flex-col');
+
+                    imagePreview.src = URL.createObjectURL(file);
+                    imagePreview.classList.remove('hidden');
+                    uploadText.classList.add('hidden');
+                }
+            },
+
+            handleInputChange(event, recordId, field) {
+                const value = event.target.value;
+                const record = state.records.get(recordId);
+
+                if (record) {
+                    if (field === 'soTien') {
+                        record[field] = value.replace(/\D/g, '');
+                        event.target.value = utils.formatCurrency(record[field]);
+                    } else {
+                        record[field] = value;
+                    }
+                    state.records.set(recordId, record);
+                }
+            }
+        };
+        function createMDASelect(recordId, selectedValues = []) {
+            const container = document.createElement('div');
+            container.className = 'relative';
+            container.innerHTML = `
+        <div class="selected-values flex flex-wrap gap-1 min-h-[38px] p-1 border rounded cursor-pointer"
+             onclick="toggleMDADropdown('${recordId}')">
+            ${selectedValues.length > 0 ? selectedValues.map(v => `
+                <span class="badge bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                    ${v}
+                    <button class="ml-1" onclick="event.stopPropagation(); removeMDA('${recordId}', '${v}')">×</button>
+                </span>
+            `).join('') : '<span class="text-gray-400">Chọn MDA...</span>'}
+        </div>
+        <div class="dropdown hidden absolute z-10 w-full mt-1 bg-white border rounded shadow-lg">
+            <div class="p-2 border-b">
+                <input type="text" 
+                       class="w-full px-2 py-1 border rounded"
+                       placeholder="Tìm kiếm..."
+                       onclick="event.stopPropagation()"
+                       oninput="filterMDA(event, '${recordId}')">
+            </div>
+            <div class="max-h-48 overflow-y-auto p-2" id="mda-options-${recordId}">
+            </div>
+        </div>
+    `;
+
+            // Add event listener to close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!container.contains(e.target)) {
+                    const dropdown = container.querySelector('.dropdown');
+                    if (dropdown) {
+                        dropdown.classList.add('hidden');
+                    }
+                }
+            });
+
+            // Render initial options
+            setTimeout(() => {
+                renderMDAOptions(recordId, state.mdaOptions || []);
+            }, 0);
+
+            return container;
+        }
+
+        function filterMDA(event, recordId) {
+            const searchText = event.target.value.toLowerCase();
+            const filteredOptions = state.mdaOptions.filter(opt =>
+                opt.label.toLowerCase().includes(searchText)
+            );
+            renderMDAOptions(recordId, filteredOptions);
+        }
+        function renderMDAOptions(recordId, options) {
+            const container = document.getElementById(`mda-options-${recordId}`);
+            if (!container) return;
+
+            const record = state.records.get(recordId);
+            const selectedValues = record?.mda || [];
+
+            container.innerHTML = options.map(opt => `
+        <div class="option p-2 hover:bg-gray-100 cursor-pointer flex items-center"
+             onclick="toggleMDA('${recordId}', '${opt.value}')">
+            <input type="checkbox" 
+                   class="mr-2" 
+                   ${selectedValues.includes(opt.value) ? 'checked' : ''}>
+            <span>${opt.label}</span>
+        </div>
+    `).join('');
+        }
+
+        function toggleMDA(recordId, value) {
+            const record = state.records.get(recordId);
+            if (!record) return;
+
+            record.mda = record.mda || [];
+            const index = record.mda.indexOf(value);
+
+            if (index === -1) {
+                record.mda.push(value);
+            } else {
+                record.mda.splice(index, 1);
+            }
+
+            state.records.set(recordId, record);
+            updateMDADisplay(recordId);
+        }
+        const utils = {
+            formatCurrency(number) {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'decimal',
+                    maximumFractionDigits: 0
+                }).format(number);
+            },
+
+            createUniqueId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            },
+
+            generateHistoryEntry(action, user) {
+                return {
+                    timestamp: new Date().toISOString(),
+                    action: action,
+                    user: user || 'Unknown'
+                };
+            },
+
+            getCurrentUser() {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('manv') || 'Unknown';
+            }
+        };
+        const formOperations = {
+            addNewRow() {
+                const tbody = document.querySelector('#thuChiTable tbody');
+                const recordId = utils.createUniqueId();
+
+                const record = {
+                    id: recordId,
+                    thoiGian: new Date().toISOString().slice(0, 16),
+                    khuVuc: '',
+                    duAn: '',
+                    maChi: '',
+                    soTien: '',
+                    noiDung: '',
+                    doiTuong: '',
+                    mda: [],
+                    nhanVien: '',
+                    image: '', // URL ảnh trên server
+                    imageFile: null, // Lưu file ảnh tạm thời
+                    congNo: false,
+                    ghiChu: '',
+                    lichSu: [utils.generateHistoryEntry('Tạo mới', currentUser)]
+                };
+
+
+                state.records.set(recordId, record);
+                this.renderRow(record);
+            },
+            renderRow(record) {
+                const tbody = document.querySelector('#thuChiTable tbody');
+                const row = document.createElement('tr');
+                row.dataset.recordId = record.id;
+                row.className = 'hover:bg-gray-50';
+
+                row.innerHTML = `
+        <!-- Thời gian -->
+        <td class="p-2">
+            <input type="datetime-local" 
+                class="w-full px-2 py-1 border rounded"
+                value="${record.thoiGian}"
+                data-field="thoiGian"
+                onchange="handlers.handleInputChange(event, '${record.id}', 'thoiGian')">
+        </td>
+
+        <!-- Khu vực -->
+        <td class="p-2">
+            <select class="w-full px-2 py-1 border rounded"
+                data-field="khuVuc"
+                onchange="handlers.handleKhuVucChange(event, '${record.id}')">
+                <option value="">Chọn khu vực</option>
+                ${Array.from(state.hierarchyData.khuVuc).map(kv =>
+                    `<option value="${kv}" ${record.khuVuc === kv ? 'selected' : ''}>
+                        ${kv}
+                    </option>`
+                ).join('')}
+            </select>
+        </td>
+
+        <!-- Dự án -->
+        <td class="p-2">
+            <select class="w-full px-2 py-1 border rounded"
+                data-field="duAn"
+                onchange="handlers.handleDuAnChange(event, '${record.id}')">
+                <option value="">Chọn dự án</option>
+                ${record.khuVuc ? Array.from(state.hierarchyData.duAn[record.khuVuc] || [])
+                        .map(da => `<option value="${da}" ${record.duAn === da ? 'selected' : ''}>
+                        ${da}
+                    </option>`).join('') : ''}
+            </select>
+        </td>
+    <!-- Mã chi -->
+        <td class="p-2">
+            <select class="w-full px-2 py-1 border rounded"
+                data-field="maChi"
+                onchange="handlers.handleMaChiChange(event, '${record.id}')">
+                <option value="">Chọn mã chi</option>
+                ${record.khuVuc && record.duAn ?
+                        Array.from(state.hierarchyData.maChi[`${record.khuVuc}_${record.duAn}`] || [])
+                            .map(([maChi, tenLoaiChi]) =>
+                                `<option value="${maChi}" 
+                                data-tenloai="${tenLoaiChi}"
+                                ${record.maChi === maChi ? 'selected' : ''}>
+                                ${tenLoaiChi} (${maChi})
+                            </option>`
+                            ).join('') : ''}
+            </select>
+        </td>
+
+        <!-- MDA -->
+        <td class="p-2">
+            ${createMDASelect(record.id, record.mda || []).outerHTML}
+        </td>
+
+    
+        <!-- Số tiền -->
+        <td class="p-2">
+            <input type="text" 
+                class="w-full px-2 py-1 border rounded"
+                value="${record.soTien ? utils.formatCurrency(record.soTien) : ''}"
+                data-field="soTien"
+                placeholder="Nhập số tiền"
+                onchange="handlers.handleInputChange(event, '${record.id}', 'soTien')">
+        </td>
+
+        <!-- Nội dung -->
+        <td class="p-2">
+            <textarea class="w-full px-2 py-1 border rounded"
+                data-field="noiDung"
+                rows="2"
+                onchange="handlers.handleInputChange(event, '${record.id}', 'noiDung')">${record.noiDung || ''}</textarea>
+        </td>
+
+        <!-- Đối tượng -->
+        <td class="p-2">
+            <input type="text" 
+                class="w-full px-2 py-1 border rounded"
+                value="${record.doiTuong || ''}"
+                data-field="doiTuong"
+                placeholder="Nhập đối tượng"
+                onchange="handlers.handleInputChange(event, '${record.id}', 'doiTuong')">
+        </td>
+
+        <!-- Nhân viên thực hiện -->
+        <td class="p-2">
+            <select class="w-full px-2 py-1 border rounded"
+                data-field="nhanVien"
+                onchange="handlers.handleInputChange(event, '${record.id}', 'nhanVien')">
+                <option value="">Chọn nhân viên</option>
+                ${state.nhanVienOptions ? state.nhanVienOptions.map(nv => `
+                    <option value="${nv.value}" ${record.nhanVien === nv.value ? 'selected' : ''}>
+                        ${nv.label}
+                    </option>
+                `).join('') : ''}
+            </select>
+        </td>
+
+        <!-- Hình ảnh -->
+        <td class="p-2">
+        <div class="relative">
+            <div class="drop-zone flex items-center justify-center gap-2 rounded border-2 border-dashed border-gray-300 
+                hover:border-blue-500 transition-colors p-4 ${record.imageFile || record.image ? 'has-image' : ''}"
+                ondrop="handleImageDrop(event, '${record.id}')"
+                ondragover="handleDragOver(event)"
+                ondragleave="handleDragLeave(event)">
+                <img class="image-preview w-24 h-24 object-cover rounded ${record.imageFile || record.image ? '' : 'hidden'}" 
+                    src="${record.imageFile ? URL.createObjectURL(record.imageFile) : record.image || ''}" 
+                    alt="Preview">
+                <div class="flex flex-col items-center ${record.imageFile || record.image ? 'hidden' : ''}">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <p class="mt-2 text-sm text-gray-500">Kéo thả ảnh vào đây hoặc</p>
+                    <label class="cursor-pointer mt-2">
+                        <input type="file" 
+                            accept="image/*" 
+                            class="hidden" 
+                            onchange="handlers.handleImageUpload(event, '${record.id}')">
+                        <span class="text-blue-600 hover:text-blue-700">Chọn ảnh</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </td>
+
+        <!-- Thao tác -->
+        <td class="p-2">
+            <div class="flex items-center justify-center gap-1">
+                <button onclick="deleteRecord('${record.id}')" 
+                    class="text-gray-400 hover:text-red-600 transition-colors p-1"
+                    title="Xóa phiếu">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+                <button onclick="duplicateRecord('${record.id}')" 
+                    class="text-gray-400 hover:text-blue-600 transition-colors p-1"
+                    title="Nhân bản phiếu">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </td>
+    `;
+
+                tbody.appendChild(row);
+            },
+
+
+            async saveAllRecords() {
+                try {
+                    loadingUtils.show('Đang lưu dữ liệu...');
+                    const records = Array.from(state.records.values());
+
+                    // Validate
+                    const invalidRecords = records.filter(r => !this.validateRecord(r));
+                    if (invalidRecords.length > 0) {
+                        toast.show('Vui lòng điền đầy đủ thông tin bắt buộc', 'warning');
+                        return;
+                    }
+
+                    // Upload ảnh lên server trước khi lưu records
+                    const uploadPromises = records
+                        .filter(record => record.imageFile)
+                        .map(async record => {
+                            try {
+                                const imageUrl = await api.uploadImage(record.imageFile);
+                                record.image = imageUrl;
+                            } catch (error) {
+                                console.error(`Error uploading image for record ${record.id}:`, error);
+                                throw error;
+                            }
+                        });
+
+                    await Promise.all(uploadPromises);
+
+                    // Format data và lưu
+                    const formattedRecords = records.map(record => ({
+                        'Thời gian': record.thoiGian,
+                        'KHU VỰC': record.khuVuc,
+                        'Dự án': record.duAn,
+                        'MDA': record.mda ? record.mda.join(', ') : '',
+                        'Mã CHI': record.maChi,
+                        'SỐ TIỀN': record.soTien,
+                        'NỘI DUNG': record.noiDung,
+                        'ĐỐI TƯỢNG': record.doiTuong,
+                        'NHÂN VIÊN THỰC HIỆN': record.nhanVien,
+                        'Hình ảnh': record.image || '',
+                        'LỊCH SỬ':  maNV + ' đã tạo phiếu nhanh qua apl lúc ' +  record.thoiGian
+                    }));
+
+                    // Lưu records
+                    await api.sendRequest('Chi', 'Add', { Rows: formattedRecords });
+
+                    loadingUtils.hide();
+                    toast.show('Lưu dữ liệu thành công!', 'success');
+                    this.resetForm();
+
+                } catch (error) {
+                    console.error('Error saving records:', error);
+                    loadingUtils.hide();
+                    toast.show('Lỗi khi lưu dữ liệu', 'error');
+                }
+            },
+
+            validateRecord(record) {
+                const requiredFields = ['khuVuc', 'duAn', 'maChi', 'soTien', 'noiDung', 'nhanVien'];
+                return requiredFields.every(field => record[field]?.trim());
+            },
+
+            resetForm() {
+                state.records.clear();
+                document.querySelector('#thuChiTable tbody').innerHTML = '';
+                this.addNewRow();
+            }
+        };
+        // Thêm các hàm xử lý kéo thả
+        function handleDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+        }
+
+        async function handleImageDrop(event, recordId) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
+
+            const file = event.dataTransfer.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                toast.show('Vui lòng chỉ kéo thả file ảnh', 'error');
+                return;
+            }
+
+            // Lưu file vào state và hiển thị preview
+            const record = state.records.get(recordId);
+            if (record) {
+                record.imageFile = file;
+                state.records.set(recordId, record);
+
+                // Hiển thị preview
+                const dropZone = event.currentTarget;
+                const preview = dropZone.querySelector('.image-preview');
+                const uploadText = dropZone.querySelector('.flex.flex-col');
+
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove('hidden');
+                uploadText.classList.add('hidden');
+            }
+        }
+        function deleteRecord(recordId) {
+            if (!confirm('Bạn có chắc chắn muốn xóa phiếu này?')) return;
+
+            const row = document.querySelector(`tr[data-record-id="${recordId}"]`);
+            if (row) {
+                row.remove();
+                state.records.delete(recordId);
+                toast.show('Đã xóa phiếu thành công');
+            }
+        }
+
+        function duplicateRecord(recordId) {
+            const originalRecord = state.records.get(recordId);
+            if (!originalRecord) return;
+
+            const newRecord = {
+                ...originalRecord,
+                id: utils.createUniqueId(),
+                thoiGian: new Date().toISOString().slice(0, 16),
+                lichSu: [utils.generateHistoryEntry('Tạo mới (Nhân bản)', utils.getCurrentUser())]
+            };
+
+            state.records.set(newRecord.id, newRecord);
+            formOperations.renderRow(newRecord);
+            toast.show('Đã nhân bản phiếu thành công');
+        }
+
+        function addNewRow() {
+            formOperations.addNewRow();
+        }
+
+        function saveAllRecords() {
+            formOperations.saveAllRecords();
+        }
+        // Initialize
+        const currentUser = utils.getCurrentUser();
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            maNV = urlParams.get('manv');
+            if (maNV === 'NZ - Anh PL' || maNV === 'NZ - Admin app' || maNV === 'NZ - Nam PH') {
+                try {
+                    // Load all necessary data
+                    const [hierarchyData, mdaData, nhanVienData] = await Promise.all([
+                        api.loadHierarchyData(),
+                        api.loadMDAData(),
+                        api.loadNhanVienData()
+                    ]);
+
+                    // Store options in state
+                    state.mdaOptions = mdaData;
+                    state.nhanVienOptions = nhanVienData;
+
+                    // Initialize first row
+                    formOperations.addNewRow();
+                    formOperations.addNewRow();
+                    formOperations.addNewRow();
+                    formOperations.addNewRow();
+                    formOperations.addNewRow();
+                    formOperations.addNewRow();
+                } catch (error) {
+                    console.error('Initialization error:', error);
+                    toast.show('Không thể khởi tạo ứng dụng', 'error');
+                }
+            } else {
+                toast.show('bạn không có quyền', 'error');
+            }
+
+
+        });
+    </script>
+
+</body>
+
+</html>
