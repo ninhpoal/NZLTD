@@ -968,7 +968,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             maNV = urlParams.get('manv');
-            if (maNV === 'NZ - Anh PL' || maNV === 'NZ - Admin app' || maNV === 'NZ - Nam PH') {
+        
                 try {
                     // Load all necessary data
                     const [hierarchyData, mdaData, nhanVienData] = await Promise.all([
@@ -992,9 +992,7 @@
                     console.error('Initialization error:', error);
                     toast.show('Không thể khởi tạo ứng dụng', 'error');
                 }
-            } else {
-                toast.show('bạn không có quyền', 'error');
-            }
+            
 
 
         });
