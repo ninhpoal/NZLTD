@@ -759,6 +759,7 @@
                 data-field="nhanVien"
                 onchange="handlers.handleInputChange(event, '${record.id}', 'nhanVien')">
                 <option value="">Chọn nhân viên</option>
+                    <option value="NZ - Anh PL" selected>NZ - Anh PL</option>
                 ${state.nhanVienOptions ? state.nhanVienOptions.map(nv => `
                     <option value="${nv.value}" ${record.nhanVien === nv.value ? 'selected' : ''}>
                         ${nv.label}
