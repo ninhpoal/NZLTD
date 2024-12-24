@@ -128,7 +128,7 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="space-y-2 w-full max-w-md mx-auto p-4">
-                    <div class="relative">
+                    <div id="mdaContainer" class="relative">
                         <div id="mdaInput"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white flex flex-wrap gap-1">
                             <span class="text-gray-500">Chọn MDA...</span>
@@ -229,7 +229,21 @@
                     </div>
                 </div>
             </div>
-
+            <!-- Add this after the main image upload section -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Hình ảnh khác</label>
+                <div id="additionalImagesContainer" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div id="additionalImageDropzone"
+                        class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-500 transition-colors">
+                        <input type="file" id="additionalImageInput" accept="image/*" multiple class="hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <p class="mt-2 text-sm text-gray-600">Thêm ảnh khác</p>
+                    </div>
+                </div>
+            </div>
             <!-- Submit button -->
             <button type="submit" id="submitBtn"
                 class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors flex items-center justify-center space-x-2">
@@ -277,43 +291,7 @@
             apiKey: '93bfdf6d5910909c985faf82ee7220cc'
         };
         const mdaHandler = {
-            options: ['HCMP573-HCM.I.U.BD.081123.25',
-                'HCMF382-HCM.I.T.RN.271123.11', 'HCMP580-HCM.I.U.PP.221223.15', 'HCMP711-HCM.I.T.FA.271223.41',
-                'BDGP111-BDG.I.U.DP.130324.32', 'HCMP370-HCM.I.T.PB.050524.02', 'BPCP007-BPC.I.N.RN.270424.28',
-                'HCMP102-HCM.I.U.BD.150524.62', 'BPCP007-BPC.I.N.PP.170524.35', 'HCMP047-HCM.I.I.FA.050624.38',
-                'HCMP588-HCM.I.I.FA.050624.30', 'HCMP223-HCM.I.I.FA.050624.34', 'NM-VHM-NMH.24T02H.VHM.T06',
-                'BDGP087-BDG.I.R.FA.080724.50', 'HCMP455-HCM.I.N.BD.100724.24', 'HCMP035-HCM.I.T.RN.270624.64',
-                'HCMP644-HCM.I.T.FA.270624.67', 'NM-TL-NMH.24T02H.BPC.T07', 'BDGP090-BDG.I.U.PP.060824.20',
-                'BDGP062-BDG.I.U.PP.060824.56', 'BDGP090-BDG.I.U.DP.070824.14', 'BDGP108-BDG.I.U.PP.120824.102',
-                'DNIP074-DNI.I.U.PP.150824.30', 'BDGP058-BDG.I.U.PP.160824.55', 'BDGP082-BDG.I.U.PP.190824.04',
-                'BDGP108-BDG.I.U.PP.190824.29', 'BDGP021-BDG.I.U.PP.190824.36', 'BDGP104-BDG.I.U.PP.190824.49',
-                'BDGP037-BDG.I.U.PP.190824.34', 'BDGP104-BDG.I.U.PP.190824.35', 'BDGP076-BDG.I.U.PP.090824.42',
-                'BDGP021-BDG.I.U.PP.170824.23', 'BDGP021-BDG.I.U.PP.220824.36', 'BDGP104-BDG.I.U.PP.210824.04',
-                'BDGP066-BDG.I.R.FA.220824.53', 'DNIP113-DNI.I.U.PP.220824.09', 'DNIP106 POP+-DNI.I.U.RN.170724.36',
-                'BDGP064-BDG.I.U.PP.240824.03', 'BDGP103-BDG.I.U.PP.240824.20', 'DNIP018-DNI.I.U.PP.280824.33',
-                'DNIP066-DNI.I.U.DP.270824.21', 'BDGP090-BDG.I.U.PP.290824.01', 'DNIP071-DNI.I.U.PP.290824.36',
-                'BDGP028-BDG.I.U.PP.290824.29', 'BDGP099-BDG.I.U.PP.290824.28', 'BDGP039-BDG.I.U.FA.280824.46',
-
-                'BDGP055-BDG.I.U.PP.040924.20', 'BDGP104-BDG.I.U.PP.040924.58', 'BDGP108-BDG.I.U.PP.050924.08', 'BDGP028-BDG.I.U.PP.050924.09',
-                'BDGP058-BDG.I.U.PP.050924.49', 'BDGP058-BDG.I.U.PP.050924.51', 'BDGP058-BDG.I.U.PP.050924.74', 'DNIP037-DNI.I.U.PP.050924.76',
-                'BDGP058-BDG.I.U.PP.050924.84', 'DNIP103-DNI.I.U.PP.050924.01', 'BDGP058-BDG.I.U.PP.100924.52', 'BDGP058-BDG.I.U.PP.110924.08',
-                'BDGP105-BDG.I.U.PP.120924.05', 'DNIP112-DNI.I.U.PP.050924.06', 'BDGP109-BDG.I.U.PP.130924.03', 'BDGP021-BDG.I.U.PP.120924.19',
-                'BDGP034-BDG.I.U.PP.140924.12', 'BDGP054-BDG.I.U.PP.150924.15', 'BDGP079-BDG.I.U.PP.150924.22', 'BDGP065-BDG.I.U.PP.160924.65',
-                'HCMP512-HCM.I.U.PP.300924.01', 'HCMP192-HCM.I.U.PP.160924.46', 'DNIP102-DNI.I.U.PP.180924.60',
-                'BDGP108-BDG.I.U.PP.180924.33', 'HCMP174-HCM.I.U.PP.190924.30', 'BDGP008-BDG.I.U.PP.200924.12', 'BDGP009-BDG.I.U.PP.200924.13', 'BDGP021-BDG.I.U.PP.190924.12',
-                'BDGP103-BDG.I.U.PP.200924.15', 'BDGP054-BDG.I.D.FA.200924.42', 'DNIP068-DNI.I.U.PP.190924.34', 'HCMP502-HCM.I.U.PP.220924.10', 'BDGP065-BDG.I.U.PP.190924.21',
-                'BDGP073-BDG.I.D.FA.240924.04', 'BDGP022-BDG.I.U.PP.230924.55', 'BDGP105-BDG.I.U.PP.190924.28', 'NZ THI CÔNG-NZLTD01092024.01', 'Intercom Bát Nàn-ITC.170924-60BN',
-                'HCMP177-HCM.I.U.PP.230924.49', 'HCMP277-HCM.I.U.PP.240924.14', 'HCMP014-HCM.I.U.PP.240924.27',
-                'HCMP192-HCM.I.U.DP.230924.82', '"Intercom Nguyễn Duy Trinh-', 'ITC.210924-NDT"', 'Intercom 316c Phạm Hùng-ITC.230924-PH', 'Intercom Phạm Thế Hiển-ITC.230924-PTH',
-                'Intercom 2B Phổ Quang-01-ITC.190924.PQ', 'Intercom 2B Phổ Quang-02-ITC.200924.PQ', 'Intercom Tân Phú-ITC.190924.TP', 'Intercom Trương Quốc Dung-ITC.190924.TQD',
-                'Intercom 283 CMT8-ITC.190924.283CMT8', 'DNIP031-DNI.I.U.PP.050924.03', 'HCMP525-HCM.I.U.PP.250924.27', 'UDC - HCM-UDC - T9', 'DNIP018-DNI.I.U.PP.270924.31',
-                'DNIP051-DNI.I.U.PP.270924.29', 'HCMP273-HCM.I.U.PP.260924.63', 'HCMP513-HCM.I.U.BD.270924.17', 'UDC - HCM-UDC - Bảo Trì', 'BDGP092-BDG.I.U.PP.280924.42', 'BDGP071-BDG.I.U.PP.280924.43', 'BDGP103-BDG.I.R.RN.230924.61', 'BDGP103-BDG.I.U.PP.280924.39',
-                'HCMP528-HCM.I.U.BD.260924.34', 'Trại Gà Minh Tâm-NM - MINH TÂM 2', 'HCMP050-HCM.I.U.PP.021024.19', 'HCMP573-HCM.I.U.BD.220924.08', 'HCMP611-HCM.I.U.BD.011024.75', 'HCMP610-HCM.I.U.PP.011024.69', 'BDGM002-BDG.I.R.RN.021024.22', 'BDGP108-BDG.I.U.PP.021024.02',
-                'BDGP113-BDG.I.R.FA.021024.18', 'BDGP104-BDG.I.U.PP.021024.47', 'BDGP103-BDG.I.U.PP.021024.17', 'MPOP01-Ring-BDG.I.D.RN.021024.38', 'BDGP004-Ring-BDG.I.D.RN.021024.39', 'BDGP087-BDG.I.D.FA.021024.40', 'DNIP103-DNI.I.U.PP.011024.74', 'HCMP564-HCM.I.U.BD.011024.21', 'DNIP105-DNI.I.U.DP.011024.25', 'DNIP106-DNI.I.U.PP.011024.23', 'BDGP061-BDG.I.U.PP.031024.24', '01- ITC 01102024', 'HCMP377-HCM.I.U.BD.240924.28', 'BDGP113-BDG.I.U.PP.031024.57', 'DNIP104-DNI.I.U.PP.041024.51', 'DNIP102-DNI.I.U.PP.031024.54', 'BDGP021-BDG.I.U.PP.071024.69', 'BDGP046-BDG.I.U.PP.071024.65', 'BDGP028-BDG.I.U.PP.071024.26', 'HCMP125-HCM.I.U.PP.071024.80',
-                'ITC-ITC07102024', 'DNIP034-DNI.I.U.PP.031024.39', 'DNIP033-DNI.I.U.PP.260924.44', 'DNIP101-DNI.I.U.PP.071024.58', 'DNIP032-DNI.I.U.PP.031024.37 ', 'BDGP094-BDG.I.U.PP.111024.15', 'BDGP036-BDG.I.U.PP.111024.39', 'BDGP104-BDG.I.U.PP.111024.43', 'BDGP039-BDG.I.U.PP.111024.45', 'DNIP147-DNI.I.U.PP.101024.28', 'HCMP155-HCM.I.I.PP.100924.38', 'HCMP273-HCM.I.I.PP.100924.37', 'HCMP503-HCM.I.I.PP.100924.40', 'HCMP496-HCM.I.U.PP.121024.02', 'HCMP075-HCM.I.U.BD.091024.40', 'HCMP503-HCM.I.U.BD.091024.41', 'HCMP572-HCM.I.U.BD.091024.43', 'HCMP419-HCM.I.U.PP.091024.28', 'HCMP662-HCM.I.U.PP.111024.31', 'DNIP106-DNI.I.U.PP.111024.47', 'BDGP036-BDG.I.U.PP.081024.03', 'HCMP326-HCM.I.U.PP.131024.03', 'HCMP370-HCM.I.U.BD.041024.10', 'DNIP101-DNI.I.U.PP.151024.03', 'DNIP069-DNI.I.U.PP.151024.02', 'BDGP021-BDG.I.U.PP.151024.72', 'BDGP094-BDG.I.U.PP.151024.75', 'BDGP104-BDG.I.U.PP.151024.70', 'BPCP001-BPC.I.U.PP.011024.68', 'BDGP041-BDG.I.U.PP.161024.10', 'BDGP058-BDG.I.U.PP.141024.90', 'BDGP085-BDG.I.U.PP.161024.52', 'HCMP035-HCM.I.D.RN.151024.93', 'HCMP644-HCM.I.D.FA.151024.96', 'HCMP388-HCM.I.U.PP.151024.98', 'HCMP536-HCM.I.U.PP.161024.51',
-                'HCMP474-HCM.I.U.PP.161024.53', 'HCMP419-HCM.I.U.PP.151024.27', 'BDGP094-BDG.I.U.PP.171024.35', 'BDGP103-BDG.I.U.PP.181024.18', 'BDGP105-BDG.I.U.PP.161024.02', 'DNIP037-DNI.I.U.PP.171024.31', 'DNIP104-DNI.I.U.PP.171024.22', 'DNIP103-DNI.I.U.PP.171024.21', 'BDGP099-BDG.I.U.PP.211024.68', 'BDGP111-BDG.I.U.PP.191024.08', 'BDGP031-BDG.I.D.FA.181024.37', 'BPCP001-BPC.I.U.PP.141024.17', 'BDGP006-BDG.I.U.PP.211024.91', 'BDGP110-BDG.I.U.PP.191024.10', 'BDGP109-BDG.I.U.PP.211024.47', 'BDGP021-BDG.I.U.PP.221024.27', 'HCMP507-HCM.I.I.PP.221024.41', 'HCMP468-HCM.I.U.PP.231024.33', 'HCMP063-HCM.I.U.PP.231024.60', 'HCMP248-HCM.I.U.BD.081024.12', 'HCMP283-HCM.I.U.BD.141024.27', 'HCMP455-HCM.I.U.BD.141024.01', 'DNIP104-DNI.I.U.PP.231024.53', 'DNIP106-DNI.I.U.PP.231024.54', '"BPCP007-BPC.I.U.PP.221024.30\t\t"', 'UDC-Triển khai 2 camera UDC - Nhà Bè', 'BDGP036-BDG.I.U.PP.251024.26', 'HCMP082-HCM.I.U.PP.241024.04', 'HCMP699-HCM.I.U.PP.241024.03', 'HCMP478-HCM.I.U.PP.231024.04', 'HCMP517-HCM.I.U.PP.231024.06', 'HCMP344-HCM.I.U.BD.211024.55', 'BDGP094-BDG.I.U.PP.261024.19', 'BDGP094-BDG.I.U.PP.261024.21', 'BDGP104-BDG.I.U.PP.261024.11', 'ITC HVT-ITC21102024', 'HCMP704-HCM.I.U.PP.271024.01', 'DNIP105-DNI.I.U.PP.251024.58', 'BDGP104-BDG.I.U.BD.291024.19', 'BDGP104-BDG.I.U.BD.291024.23', 'BDGP104-BDG.I.U.BD.291024.25', 'DNIP051-DNI.I.U.PP.281024.11', 'HCMP184-HCM.I.U.PP.211024.66', 'HCMP553-HCM.I.U.PP.181024.15', 'HCMP342-HCM.I.U.DP.291024.56', 'DNIP114-DNI.I.N.PP.211024.32', 'DNIP037-DNI.I.U.PP.291024.41', 'UDC - NM-VẬN HÀNH CAMERA UDC THÁNG 10', 'DNIP065-DNI.I.U.PP.291024.45', 'HCMP079-HCM.I.U.FA.221024.26', 'HCMP079-HCM.I.U.FA.311024.21', 'HCMP005-HCM.I.U.PP.311024.34', 'DNIP105-DNI.I.U.PP.311024.24', 'BDGP021-BDG.I.U.BD.311024.10', 'BDGP082-BDG.I.U.BD.311024.04', 'BDGP021-BDG.I.D.FA.011124.01', 'HCMP552-HCM.I.U.PP.011124.67', 'HCMP400-HCM.I.U.BD.011124.10', 'HCMP530-HCM.I.U.BD.011124.07', 'DNIP101-DNI.I.U.PP.021124.44', 'DNIP072-DNI.I.U.PP.021124.46', 'HCMP601-HCM.I.R.RN.040524.37', 'BDGP065-BDG.I.U.BD.021124.26', 'HCMP510-HCM.I.U.PP.231024.01', 'HCMP684-HCM.I.U.PP.301024.45', 'HCMP222-HCM.I.U.PP.301024.39', 'Intercom Thăng Long-ITC 05102024', 'NGầm Hóa NGuyễn Đình Chiểu =>Phan Văn Hân-ITC10102024', 'Bùi Hữu Nghĩa -ITC19102024', 'DNIP104-DNI.I.U.PP.061124.47', 'HCMP633-HCM.I.U.PP.041124.60', 'HCMP103-HCM.I.D.FA.041124.63', 'HCMP727-HCM.I.D.PP.041124.65', 'HCMP644-HCM.I.T.FA.151024.97', 'HCMP035-HCM.I.T.RN.151024.94', 'BDGP021-BDG.I.U.BD.051124.32', 'BDGP046-BDG.I.R.FA.071124.103', 'BDGP058- BDG.I.U.BD.051124.04', 'BDGP097-BDG.I.U.BD.021124.28', 'BDGP058-BDG.I.U.BD.051124.06', 'HCMP152-HCM.I.U.PP.011124.09', 'HCMP296-HCM.I.U.PP.011124.05', 'HCMP409-HCM.I.U.PP.301024.17', 'HCMP518-HCM.I.U.PP.011124.46', 'BDGP028-BDG.I.U.PP.041124.24', 'HCMP163-HCM.I.U.PP.311024.02', 'BPCP002-BPC.I.U.PP.121124.01', 'DNIP034-DNI.I.U.PP.101124.10', 'DNIP035-DNI.I.U.PP.101124.07', 'DNIP102-DNI.I.U.PP.101124.11', 'DNIP114-DNI.I.N.RN.211024.34', 'DNIP026-SC0911240194', 'HCMP458-HCM.I.U.BD.081124.35', 'BDGP094-BDG.I.U.BD.121124.85', 'BDGP094-BDG.I.U.BD.131124.37', '"BPCP003-BPC.I.U.PP.141124.14\t\t"', 'BDGP071-BDG.I.U.BD.131124.39', 'BDGP108-BDG.I.U.BD.121124.80', 'BDGP021-BDG.I.U.BD.131124.35', 'HCMP562-HCM.I.D.FA.131124.26', 'BDGM002-BDG.I.R.RN.151124.89', 'BDGP010-BDG.I.R.FA.151124.91', 'BDGP071-BDG.I.D.DP.151124.01', 'BDGP045-BDG.I.U.PP.151124.71', 'BDGP066-BDG.I.U.PP.311024.38', 'BDGP102-BDG.I.U.PP.181024.35', 'BDGP061- BDG.I.U.PP.151124.63'
-                ,  'BDGP065-BDG.I.U.PP.151124.68' , 'BDGP099-BDG.I.U.PP.151124.78' , 'INTERCOM-151124.ITC' , 'HCMP192-HCM.I.U.BD.011124.12' , 'DNIP074-DNI.I.U.PP.151124.03' , 'DNIP104-DNI.I.U.PP.151124.69' , 'BDGP008-BDG.I.U.PP.161124.08' , 'HCMP620-HCM.I.U.PP.301024.44' , 'HCMP489-HCM.I.U.PP.181124.55' , 'BDGP046-BDG.I.U.PP.201124.41' , 'BDGP061-BDG.I.U.PP.201124.71' , 'HCMP066-HCM.I.U.PP.201124.32' , 'HCMP279-HCM.I.U.PP.201124.37' , 'BDGP094-         BDG.I.U.BD.211124.06' , 'BDGP094-BDG.I.U.BD.211124.05 ' , 'BDGP108-BDG.I.U.BD.221124.11' , 'BDGP104-BDG.I.U.BD.211124.65 ' , 'BDGP039-BDG.I.U.BD.211124.07' , 'INTERCOM-231124.ITC' , 'HCMP513-HCM.I.U.BD.051124.18' , 'HCMP370-HCM.I.U.BD.191124.04' , 'HCMP724-HCM.I.U.PP.221124.44' , 'BDGP114-BDG.I.N.RN.221124.04' , 'BPCP007- BPC.I.U.PP.251124.62                ' , 'HCMP713-HCM.I.D.FA.221124.62' , 'HCMP562-HCM.I.D.FA.201124.45' , 'BDGP114-BDG.I.N.PP.221124.02' , 'DNIP011-DNI.I.U.PP.181124.59' , 'DNIP016-DNI.I.U.PP.121124.32' , 'BDGP108- BDG.I.U.PP.251124.82' , 'DNIP0125-DNI.I.U.PP.121124.29' , 'BPCP007- BPC.I.U.PP.281124.41' , 'BDGP094-BDG.I.U.BD.271124.04' , 'DNIP027-DNI.I.U.PP.291124.02' , 'BDGP031- BDG.I.U.PP.291124.42' , ' INTERCOM-281124.ITC' , ' INTERCOM-011124.ITC' , 'HCMP078-HCM.I.U.BD.181124.14' , ' INTERCOM-011224.ITC' , 'BDGP109-BDG.I.U.PP.291124.67' , 'UDC - NM-UDC - BẢO TRÌ CAMERA T12' , 'BDGP008-BDG.I.U.BD.151124.97 ' , 'BDGP021-BDG.I.U.BD.271124.07 ' , 'HCMP558-HCM.I.U.PP.031224.07' , 'BDGP001-BDG.I.U.PP.031224.13' , 'BDGP021-         BDG.I.U.BD.031224.10 ' , 'BDGP105-BDG.I.D.FA.301124.04' , 'HCMP458-HCM.I.D.RN.041224.42' , 'HCMP458-HCM.I.D.FA.041224.38' , 'HCMP175-HCM.I.D.FA.041224.41'
-            ],
+            options: [],
             selectedValues: [],
             isOpen: false,
 
@@ -330,13 +308,18 @@
                 this.initEventListeners();
                 this.renderOptions();
                 this.updateDisplay();
+                this.initializeOptions();
 
                 // Close dropdown when clicking outside
-                document.addEventListener('click', (e) => {
-                    if (!this.container.contains(e.target)) {
-                        this.closeDropdown();
-                    }
-                });
+                if (this.container) { // Add this check
+                    document.addEventListener('click', (e) => {
+                        if (!this.container.contains(e.target)) {
+                            this.closeDropdown();
+                        }
+                    });
+                } else {
+                    console.warn('MDA container not found');
+                }
             },
 
             initEventListeners() {
@@ -387,6 +370,16 @@
                 }
                 this.updateDisplay();
                 this.updateHiddenInput();
+            },
+            async initializeOptions() {
+                try {
+                    const mdaOptions = await api.fetchMDAOptions();
+                    this.options = mdaOptions;
+                    this.renderOptions();
+                } catch (error) {
+                    console.error('Error initializing MDA options:', error);
+                    utils.showToast('Không thể tải danh sách MDA', 'error');
+                }
             },
 
             renderOptions(options = this.options) {
@@ -482,7 +475,33 @@
                     throw new Error('Failed to upload image');
                 }
             },
+            async fetchMDAOptions() {
+                try {
+                    const response = await this.sendRequest('Duan', 'Find', {
+                        Properties: {
+                            Locale: 'vi-VN',
+                            Timezone: 'Asia/Ho_Chi_Minh',
+                            Selector: "Filter(Duan, true)"
+                        },
+                        Rows: []
+                    });
 
+                    // Extract unique MDA values
+                    const mdaSet = new Set();
+                    response.forEach(item => {
+                        if (item.MDA) {
+                            item.MDA.split(',').forEach(mda => {
+                                mdaSet.add(mda.trim());
+                            });
+                        }
+                    });
+
+                    return Array.from(mdaSet);
+                } catch (error) {
+                    console.error('Error fetching MDA options:', error);
+                    throw error;
+                }
+            },
             sendRequest: async (tableName, action, data) => {
                 const apiUrl = `https://${config.region}.appsheet.com/api/v2/apps/${config.appId}/tables/${tableName}/Action`;
                 return $.ajax({
@@ -589,11 +608,55 @@
 
                     // Init event listeners
                     this.initEventListeners();
+                    this.initImageHandlers();
+                    this.initAdditionalImageHandlers();
 
                 } catch (error) {
                     console.error('Error initializing form:', error);
                     utils.showToast('Không thể khởi tạo form', 'error');
                 }
+            },
+            additionalImages: [],
+            initAdditionalImageHandlers() {
+                const container = document.getElementById('additionalImagesContainer');
+                const dropzone = document.getElementById('additionalImageDropzone');
+                const input = document.getElementById('additionalImageInput');
+
+                dropzone.onclick = () => {
+                    // Reset giá trị input để có thể chọn lại cùng một file
+                    input.value = '';
+                    input.click();
+                };
+
+                input.onchange = (e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                        Array.from(e.target.files).forEach(file => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const imageDiv = document.createElement('div');
+                                imageDiv.className = 'relative';
+                                imageDiv.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-48 object-cover rounded-lg">
+                        <button type="button" class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    `;
+
+                                this.additionalImages.push(file);
+                                container.insertBefore(imageDiv, dropzone);
+
+                                imageDiv.querySelector('button').onclick = () => {
+                                    const index = Array.from(container.children).indexOf(imageDiv) - 1; // Trừ 1 vì có dropzone
+                                    this.additionalImages.splice(index, 1);
+                                    imageDiv.remove();
+                                };
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    }
+                };
             },
 
             updateKhuVucDropdown(data) {
@@ -735,6 +798,7 @@
                     elements.mainImageDropzone.classList.remove('hidden');
                 };
             },
+
             async handleSubmit(e) {
                 e.preventDefault();
                 if (!this.validateForm()) return;
@@ -759,6 +823,24 @@
 
                     // Xử lý thành công
                     loadingUtils.updateProgress(80, 'Hoàn thành xử lý...');
+                    if (this.additionalImages.length > 0) {
+                        loadingUtils.updateProgress(70, 'Đang tải lên các hình ảnh khác...');
+
+                        // Get the IDPHIEU from the response
+                        const chiResponse = await api.sendRequest('Chi', 'Add', { Rows: [formData] });
+                        const idPhieu = chiResponse.Rows[0].IDPHIEU;
+
+                        // Upload each additional image
+                        for (const file of this.additionalImages) {
+                            const imageUrl = await api.uploadImage(file);
+                            await api.sendRequest('Image', 'Add', {
+                                Rows: [{
+                                    KEY: idPhieu,
+                                    'Hình ảnh': imageUrl
+                                }]
+                            });
+                        }
+                    }
                     setTimeout(() => {
                         loadingUtils.updateProgress(100, 'Thành công!');
                         utils.showToast('Tạo phiếu chi thành công!', 'success');
@@ -778,6 +860,7 @@
                     elements.submitBtn.disabled = false;
                 }
             },
+
             validateForm() {
                 const requiredFields = ['khuVuc', 'duAn', 'maChi', 'thoiGian', 'soTien', 'noiDung', 'nhanVien'];
 
@@ -825,6 +908,12 @@
 
                 // Khôi phục lại giá trị nhân viên
                 elements.nhanVien.value = nhanVienValue;
+                this.additionalImages = [];
+                const container = document.getElementById('additionalImagesContainer');
+                const dropzone = document.getElementById('additionalImageDropzone');
+                while (container.firstChild !== dropzone) {
+                    container.removeChild(container.firstChild);
+                }
             }
         };
 
