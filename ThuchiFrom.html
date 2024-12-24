@@ -807,60 +807,70 @@
                     elements.submitBtn.disabled = true;
                     loadingUtils.show('Đang khởi tạo...');
 
+                    // Tạo IDCHI ngẫu nhiên
+                    const idChi = 'CHI' + Date.now() + Math.random().toString(36).substr(2, 5);
+
                     // Chuẩn bị dữ liệu
                     loadingUtils.updateProgress(20, 'Đang chuẩn bị dữ liệu...');
                     const formData = this.getFormData();
+                    formData['IDPHIEU'] = idChi; // Thêm IDCHI vào formData
 
-                    // Upload hình ảnh nếu có
+                    // Upload tất cả hình ảnh song song
+                    const uploadPromises = [];
+
+                    // Upload hình ảnh chính nếu có
                     if (elements.mainImageInput.files[0]) {
                         loadingUtils.updateProgress(40, 'Đang tải lên hình ảnh...');
-                        formData['Hình ảnh'] = await api.uploadImage(elements.mainImageInput.files[0]);
+                        uploadPromises.push(
+                            api.uploadImage(elements.mainImageInput.files[0])
+                                .then(url => {
+                                    formData['Hình ảnh'] = url;
+                                })
+                        );
                     }
 
-                    // Gửi dữ liệu
-                    loadingUtils.updateProgress(60, 'Đang tạo phiếu chi...');
+                    // Upload các hình ảnh phụ nếu có
+                    if (this.additionalImages.length > 0) {
+                        loadingUtils.updateProgress(50, 'Đang tải lên các hình ảnh khác...');
+
+                        this.additionalImages.forEach(file => {
+                            uploadPromises.push(
+                                api.uploadImage(file)
+                                    .then(url => {
+                                        return api.sendRequest('Image', 'Add', {
+                                            Rows: [{
+                                                KEY: idChi,
+                                                'Hình ảnh': url
+                                            }]
+                                        });
+                                    })
+                            );
+                        });
+                    }
+
+                    // Chờ tất cả hình ảnh upload xong
+                    await Promise.all(uploadPromises);
+
+                    // Gửi dữ liệu phiếu chi
+                    loadingUtils.updateProgress(80, 'Đang tạo phiếu chi...');
                     await api.sendRequest('Chi', 'Add', { Rows: [formData] });
 
-                    // Xử lý thành công
-                    loadingUtils.updateProgress(80, 'Hoàn thành xử lý...');
-                    if (this.additionalImages.length > 0) {
-                        loadingUtils.updateProgress(70, 'Đang tải lên các hình ảnh khác...');
-
-                        // Get the IDPHIEU from the response
-                        const chiResponse = await api.sendRequest('Chi', 'Add', { Rows: [formData] });
-                        const idPhieu = chiResponse.Rows[0].IDPHIEU;
-
-                        // Upload each additional image
-                        for (const file of this.additionalImages) {
-                            const imageUrl = await api.uploadImage(file);
-                            await api.sendRequest('Image', 'Add', {
-                                Rows: [{
-                                    KEY: idPhieu,
-                                    'Hình ảnh': imageUrl
-                                }]
-                            });
-                        }
-                    }
-                    setTimeout(() => {
-                        loadingUtils.updateProgress(100, 'Thành công!');
-                        utils.showToast('Tạo phiếu chi thành công!', 'success');
-                        this.resetForm();
-                        loadingUtils.hide();
-                    }, 500);
+                    // Hoàn thành
+                    loadingUtils.updateProgress(100, 'Thành công!');
+                    utils.showToast('Tạo phiếu chi thành công!', 'success');
+                    this.resetForm();
+                    loadingUtils.hide();
 
                 } catch (error) {
                     console.error(error);
                     loadingUtils.updateText('Đã xảy ra lỗi!');
                     loadingUtils.updateProgress(100, 'Không thể xử lý yêu cầu');
-                    setTimeout(() => {
-                        loadingUtils.hide();
-                        utils.showToast('Có lỗi xảy ra khi xử lý yêu cầu!', 'error');
-                    }, 1000);
+                    utils.showToast('Có lỗi xảy ra khi xử lý yêu cầu!', 'error');
+                    loadingUtils.hide();
                 } finally {
                     elements.submitBtn.disabled = false;
                 }
             },
-
             validateForm() {
                 const requiredFields = ['khuVuc', 'duAn', 'maChi', 'thoiGian', 'soTien', 'noiDung', 'nhanVien'];
 
