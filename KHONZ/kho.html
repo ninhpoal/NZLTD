@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Kho - NZ UI</title>
+    <link rel="shortcut icon" href="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png"
+        type="image/x-icon">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printArea,
+            #printArea * {
+                visibility: visible;
+            }
+
+            #printArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay fixed inset-0 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-5 rounded-lg shadow-xl flex items-center space-x-4">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <span class="text-gray-700">Đang xử lý...</span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <div id="sidebar"
+            class="w-96 bg-white shadow-lg flex flex-col h-screen sticky top-0 transition-all duration-300 transform">
+            <!-- Sidebar Header -->
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold flex items-center space-x-2">
+                    <img src="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png" width="30" alt="">
+                    <span>Danh Mục Vật Tư</span>
+                </h2>
+            </div>
+
+            <!-- Search Box -->
+            <div class="p-4 border-b border-gray-200">
+                <div class="relative">
+                    <input type="text" id="searchProduct"
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Tìm kiếm vật tư...">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+            </div>
+
+            <!-- Category Tags -->
+            <div class="p-4 border-b border-gray-200">
+                <div id="categoryTags" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Product List -->
+            <div class="flex-1 overflow-y-auto p-4">
+                <div id="productList" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-6">
+            <!-- Header -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-gray-800 flex items-center space-x-3">
+                    <span>Phiếu Nhập Xuất Kho</span>
+                </h1>
+            </div>
+
+            <!-- Form Section -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <form id="warehouseForm" class="space-y-6">
+                    <!-- Form Grid -->
+                    <div class="grid grid-cols-3 gap-6">
+                        <!-- ID Phiếu -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">ID phiếu</label>
+                            <input type="text" id="IDPHIEUNXT"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50" readonly>
+                        </div>
+
+                        <!-- Số Chứng Từ -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">Số Chứng Từ</label>
+                            <input type="text" id="soChungTu"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
+                        </div>
+
+                        <!-- Thời Gian -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">Thời Gian</label>
+                            <input type="datetime-local" id="thoiGian"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
+                        </div>
+
+                        <!-- TỪ -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">Từ</label>
+                            <select id="tu"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
+                                <option value="">Chọn điểm xuất</option>
+                            </select>
+                        </div>
+
+                        <!-- ĐẾN -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">Đến</label>
+                            <select id="den"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                required>
+                                <option value="">Chọn điểm nhận</option>
+                            </select>
+                        </div>
+
+                        <!-- Diễn Giải -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">Diễn Giải</label>
+                            <input type="text" id="dienGiai"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <!-- Loại Phiếu -->
+                    <div class="space-y-2">
+                        <label class="text-sm font-medium text-gray-700 block">Loại Phiếu</label>
+                        <div id="loaiPhieuTags" class="flex flex-wrap gap-3">
+                            <div class="space-x-4">
+                                <label
+                                    class="inline-flex items-center px-4 py-2 rounded-full border cursor-pointer hover:bg-blue-50 transition-colors">
+                                    <input type="radio" name="loaiPhieu" value="Xuất thi công" class="hidden peer">
+                                    <span class="text-sm peer-checked:text-blue-600 peer-checked:font-medium">
+                                        <i class="fas fa-tools mr-2"></i>Xuất thi công
+                                    </span>
+                                </label>
+
+                                <label
+                                    class="inline-flex items-center px-4 py-2 rounded-full border cursor-pointer hover:bg-blue-50 transition-colors">
+                                    <input type="radio" name="loaiPhieu" value="Nhập trả kho FPT" class="hidden peer">
+                                    <span class="text-sm peer-checked:text-blue-600 peer-checked:font-medium">
+                                        <i class="fas fa-warehouse mr-2"></i>Nhập trả kho FPT
+                                    </span>
+                                </label>
+
+                                <label
+                                    class="inline-flex items-center px-4 py-2 rounded-full border cursor-pointer hover:bg-blue-50 transition-colors">
+                                    <input type="radio" name="loaiPhieu" value="Nhập kho NZ" class="hidden peer">
+                                    <span class="text-sm peer-checked:text-blue-600 peer-checked:font-medium">
+                                        <i class="fas fa-box mr-2"></i>Nhập kho NZ
+                                    </span>
+                                </label>
+
+                                <label
+                                    class="inline-flex items-center px-4 py-2 rounded-full border cursor-pointer hover:bg-blue-50 transition-colors">
+                                    <input type="radio" name="loaiPhieu" value="Nhập tồn kho NZ" class="hidden peer">
+                                    <span class="text-sm peer-checked:text-blue-600 peer-checked:font-medium">
+                                        <i class="fas fa-boxes mr-2"></i>Nhập tồn kho NZ
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <input type="hidden" id="loaiNhap" name="loaiNhap">
+                    </div>
+                    <!-- Bottom Form Row -->
+                    <div class="grid grid-cols-3 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">Người Tạo</label>
+                            <input type="text" id="nguoiTao"
+                                class="w-full px-3 py-2 border bg-gray-50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                readonly>
+                        </div>
+                        <!-- Thêm vào phần grid form, cạnh người tạo -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">MDA</label>
+                            <input type="text" id="mda"
+                                class="w-full px-3 py-2 border bg-gray-50 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                readonly>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 block">Ghi Chú</label>
+                            <input type="text" id="ghiChu"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="flex items-end space-x-3">
+                            <button type="button" onclick="resetForm()"
+                                class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors flex items-center">
+                                <i class="fas fa-redo mr-2"></i>Reset
+                            </button>
+                            <button type="button" onclick="printPhieuNXT()"
+                                class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center">
+                                <i class="fas fa-print mr-2"></i>In phiếu
+                            </button>
+                            <button type="button" onclick="submitForm()"
+                                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex-1 flex items-center justify-center">
+                                <i class="fas fa-save mr-2"></i>Lưu Phiếu
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Products Table -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-gray-800">Chi Tiết Nhập Xuất Kho</h2>
+                    <div class="text-sm text-gray-500">
+                        Tổng số mặt hàng: <span id="productCount" class="font-medium">0</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th hidden>ID</th>
+                                <th hidden>IDPHIEUNXT</th>
+                                <th hidden>MÃ HÀNG</th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Tên vật tư
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Số Lượng
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ĐVT
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Ghi Chú
+                                </th>
+                                <th
+                                    class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Thao Tác
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="warehouseDetails"
+                            class="bg-white divide-y divide-gray-200 text-sm font-medium text-gray-900">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal nhập đầu số cáp -->
+    <div id="cableModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-4xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Nhập Đầu Số Cáp - <span id="cableProductName"></span></h3>
+                <button onclick="closeCableModal()" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Form nhập đầu số -->
+            <div class="space-y-4 mb-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Số đầu</label>
+                        <input type="number" id="soDau" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Số cuối</label>
+                        <input type="number" id="soCuoi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Mã cáp</label>
+                        <input type="text" id="maCap" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Đơn vị sản xuất</label>
+                        <input type="text" id="donViSanXuat"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Ghi chú</label>
+                    <textarea id="ghiChuCap" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+                <div class="text-right">
+                    <button onclick="addCableSegment()"
+                        class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        Thêm đoạn cáp
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bảng hiển thị các đoạn đã nhập -->
+            <div class="mt-6">
+                <h4 class="text-lg font-medium mb-3">Danh sách đoạn cáp đã nhập</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số đầu</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số cuối</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Số mét</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mã cáp</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Đơn vị SX
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ghi chú</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Thao tác
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="cableSegmentsList" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-gray-50">
+                                <td colspan="2" class="px-6 py-3 text-right font-medium">Tổng số mét:</td>
+                                <td id="totalMeters" class="px-6 py-3 font-medium">0</td>
+                                <td colspan="4"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end space-x-3">
+                <button onclick="closeCableModal()" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-50">
+                    Đóng
+                </button>
+                <button onclick="saveCableInfo()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Lưu thông tin
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- Print Template -->
+    <div id="printArea" class="hidden">
+        <!-- Print content will be dynamically generated -->
+    </div>
+
+    <script>
+        const API_CONFIG = {
+            APP_ID: '269a45b5-ce3b-463a-9ef7-d85322d32b46',
+            ACCESS_KEY: 'V2-fVRby-Ok8c7-0Hv05-ZFWhS-4pyO8-Y2R6d-1ReoI-szUsx',
+            REGION: 'www',
+            BASE_URL: 'https://www.appsheet.com/api/v2/apps'
+        };
+
+        let state = {
+            currentWarehouseId: 'NXT' + Date.now(),
+            products: [],
+            selectedCategories: [],
+            loading: false,
+            phieuNXT: [],
+            cableDetails: new Map()
+        };
+        function updateFromToOptions(loaiPhieu) {
+            const tuSelect = document.getElementById('tu');
+            const denSelect = document.getElementById('den');
+
+            tuSelect.innerHTML = '<option value="">Chọn điểm xuất</option>';
+            denSelect.innerHTML = '<option value="">Chọn điểm nhận</option>';
+
+            // Add console.log for debugging
+            console.log('Selected loaiPhieu:', loaiPhieu);
+            console.log('Available employees:', state.nhanVien);
+
+            switch (loaiPhieu) {
+                case 'Xuất thi công':
+                    // TỪ: Kho NZ
+                    addOptions(tuSelect, ['Kho NZ']);
+
+                    // ĐẾN: Đội thi công + Admin
+                    const thiCongStaff = state.nhanVien
+                        .filter(nv => nv['Phòng ban'] === 'Đội thi công')
+                        .map(nv => nv['Mã nhân viên']);
+                    addOptions(denSelect, [...thiCongStaff, 'NZ - Admin', 'NZ - Phước NV']);
+                    break;
+
+                case 'Nhập kho NZ':
+                    // TỪ: Kho FPT + Đội thi công
+                    const fromList = ['Kho FPT', ...state.nhanVien
+                        .filter(nv => nv['Phòng ban'] === 'Đội thi công')
+                        .map(nv => nv['Mã nhân viên'])];
+                    addOptions(tuSelect, fromList);
+
+                    // ĐẾN: Kho NZ + Admin
+                    addOptions(denSelect, ['Kho NZ', 'NZ - Admin', 'NZ - Phước NV']);
+                    break;
+
+                case 'Nhập trả kho FPT':
+                    // TỪ: Kho NZ
+                    addOptions(tuSelect, ['Kho NZ']);
+
+                    // ĐẾN: Kho FPT + Admin
+                    addOptions(denSelect, ['Kho FPT', 'NZ - Admin', 'NZ - Phước NV']);
+                    break;
+
+                case 'Nhập tồn kho NZ':
+                    // TỪ: Kho NZ
+                    addOptions(tuSelect, ['Kho NZ']);
+
+                    // ĐẾN: Kho NZ + Admin
+                    addOptions(denSelect, ['Kho NZ', 'NZ - Admin', 'NZ - Phước NV']);
+                    break;
+            }
+        }
+        // Function thêm đoạn cáp
+        function addCableSegment() {
+            const soDau = parseInt(document.getElementById('soDau').value);
+            const soCuoi = parseInt(document.getElementById('soCuoi').value);
+
+            if (!soDau || !soCuoi) {
+                showToast('Vui lòng nhập đủ số đầu và số cuối', 'error');
+                return;
+            }
+
+            const soMet = Math.abs(soCuoi - soDau);
+            if (soMet === 0) {
+                showToast('Số đầu và số cuối không thể bằng nhau', 'error');
+                return;
+            }
+
+            const segment = {
+                IDCAPDE: 'CAP' + Date.now(),
+                IDPHIEUNXTDE: state.currentCableProduct.IDPHIEUNXTDE,
+                IDPHIEUNXT: state.currentWarehouseId,
+                "MÃ HÀNG": state.currentCableProduct['Mã hàng'],
+                "SỐ MÉT": soMet,
+                "SỐ ĐẦU": soDau,
+                "SỐ CUỐI": soCuoi,
+                "MÃ CÁP": document.getElementById('maCap').value,
+                "ĐƠN VỊ SẢN XUẤT": document.getElementById('donViSanXuat').value,
+                "GHI CHÚ": document.getElementById('ghiChuCap').value
+            };
+
+            // Thêm vào state
+            const maHang = state.currentCableProduct['Mã hàng'];
+            if (!state.cableDetails.has(maHang)) {
+                state.cableDetails.set(maHang, []);
+            }
+            state.cableDetails.get(maHang).push(segment);
+
+            // Render lại danh sách và cập nhật số lượng
+            renderCableSegments();
+
+            // Reset form
+            document.getElementById('soDau').value = '';
+            document.getElementById('soCuoi').value = '';
+            document.getElementById('maCap').value = '';
+            document.getElementById('donViSanXuat').value = '';
+            document.getElementById('ghiChuCap').value = '';
+
+            showToast('Đã thêm đoạn cáp', 'success');
+        }
+        // Function xóa đoạn cáp
+        function removeCableSegment(idCapDe) {
+            const maHang = state.currentCableProduct['Mã hàng'];
+            const segments = state.cableDetails.get(maHang);
+            const newSegments = segments.filter(seg => seg.IDCAPDE !== idCapDe);
+            state.cableDetails.set(maHang, newSegments);
+            renderCableSegments();
+            showToast('Đã xóa đoạn cáp', 'success');
+        }
+        // Function render danh sách đoạn cáp
+        function renderCableSegments() {
+            const tbody = document.getElementById('cableSegmentsList');
+            const maHang = state.currentCableProduct['Mã hàng'];
+            const segments = state.cableDetails.get(maHang) || [];
+
+            tbody.innerHTML = segments.map(segment => `
+        <tr>
+            <td class="px-6 py-4">${segment['SỐ ĐẦU']}</td>
+            <td class="px-6 py-4">${segment['SỐ CUỐI']}</td>
+            <td class="px-6 py-4">${segment['SỐ MÉT']}</td>
+            <td class="px-6 py-4">${segment['MÃ CÁP']}</td>
+            <td class="px-6 py-4">${segment['ĐƠN VỊ SẢN XUẤT']}</td>
+            <td class="px-6 py-4">${segment['GHI CHÚ']}</td>
+            <td class="px-6 py-4">
+                <button onclick="removeCableSegment('${segment.IDCAPDE}')" 
+                        class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+
+            // Cập nhật tổng số mét
+            const totalMeters = segments.reduce((sum, seg) => sum + seg['SỐ MÉT'], 0);
+            document.getElementById('totalMeters').textContent = totalMeters;
+
+            // Cập nhật số lượng trong bảng chi tiết
+            const row = document.querySelector(`tr[data-product-id="${maHang}"]`);
+            if (row) {
+                const quantityInput = row.querySelector('[data-quantity]');
+                if (quantityInput) {
+                    quantityInput.value = totalMeters;
+                }
+            }
+        }
+        // Function lưu thông tin cáp
+        function saveCableInfo() {
+            closeCableModal();
+            showToast('Đã lưu thông tin cáp', 'success');
+        }
+
+        // Function mở modal cáp
+        function openCableModal(maHang) {
+            const modal = document.getElementById('cableModal');
+            modal.style.display = 'flex';
+
+            // Tìm sản phẩm từ state.products
+            const product = state.products.find(p => p['Mã hàng'] === maHang);
+            if (!product) return;
+
+            state.currentCableProduct = product;
+
+            // Hiển thị tên sản phẩm
+            document.getElementById('cableProductName').textContent = product['Tên vật tư'];
+
+            // Load các đoạn cáp đã nhập (nếu có)
+            renderCableSegments();
+
+            // Reset form
+            document.getElementById('soDau').value = '';
+            document.getElementById('soCuoi').value = '';
+            document.getElementById('maCap').value = '';
+            document.getElementById('donViSanXuat').value = '';
+            document.getElementById('ghiChuCap').value = '';
+        }
+        function addOptions(selectElement, options) {
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option;
+                opt.textContent = option;
+                selectElement.appendChild(opt);
+            });
+        }
+        async function loadNhanVien() {
+            try {
+                const response = await apiService.request('NHÂN VIÊN', 'Find', {}, {
+                    Selector: 'Filter(NHÂN VIÊN, true)'
+                });
+                state.nhanVien = response;
+            } catch (error) {
+                console.error('Error loading nhân viên:', error);
+                showToast('Lỗi khi tải dữ liệu nhân viên', 'error');
+            }
+        }
+        // API Service
+        const apiService = {
+            createAxiosInstance() {
+                return axios.create({
+                    baseURL: `${API_CONFIG.BASE_URL}/${API_CONFIG.APP_ID}/tables`,
+                    headers: {
+                        'ApplicationAccessKey': API_CONFIG.ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            },
+
+            async request(tableName, action, data = {}, select = {}) {
+                try {
+                    showLoading();
+                    const api = this.createAxiosInstance();
+                    const response = await api.post(`/${tableName}/Action`, {
+                        Action: action,
+                        Properties: select,
+                        ...data
+                    });
+                    return response.data;
+                } catch (error) {
+                    console.error('API request failed:', error);
+                    throw error;
+                } finally {
+                    hideLoading();
+                }
+            }
+        };
+
+        // Loading Management
+        const showLoading = () => {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            state.loading = true;
+        };
+
+        const hideLoading = () => {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            state.loading = false;
+        };
+
+        // Load Main Data
+        async function loadProducts() {
+            try {
+                const response = await apiService.request('DMHH', 'Find', {}, {
+                    Selector: 'Filter(DMHH, true)'
+                });
+                state.products = response;
+                renderProducts(state.products);
+                renderCategoryTags(state.products);
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showToast('Lỗi khi tải dữ liệu vật tư', 'error');
+            }
+        }
+
+        async function loadPhieuNXT() {
+            try {
+                const response = await apiService.request('PHIEUNXT', 'Find', {}, {
+                    Selector: 'Filter(PHIEUNXT, true)'
+                });
+                state.phieuNXT = response;
+            } catch (error) {
+                console.error('Error loading PHIEUNXT data:', error);
+                showToast('Lỗi khi tải dữ liệu phiếu nhập xuất', 'error');
+            }
+        }
+
+        // Render Functions
+        function renderProducts(productsToRender) {
+            const productList = document.getElementById('productList');
+            productList.innerHTML = '';
+
+            if (productsToRender.length === 0) {
+                productList.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-12">
+                        <i class="fas fa-box-open text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Không tìm thấy vật tư phù hợp</p>
+                    </div>`;
+                return;
+            }
+
+            productsToRender.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = `flex items-center p-3 rounded-lg border hover:bg-gray-50 cursor-pointer relative group
+                    ${product.selected ? 'border-2 border-blue-500 bg-blue-50' : 'border-gray-100'}`;
+                productCard.onclick = () => selectProduct(product['Mã hàng']);
+
+                productCard.innerHTML = `
+                    <div class="w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 overflow-hidden">
+                        <img src="${getImageUrl(product['HÌNH ẢNH'])}" 
+                             alt="${product['Tên vật tư']}" 
+                             class="w-full h-full object-cover"
+                             onerror="this.src='https://i.ibb.co/cYHCSgp/image.png'">
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <div class="flex items-start justify-between">
+                            <h3 class="font-medium text-gray-900 text-sm">${product['Tên vật tư']}</h3>
+                            <span class="px-2 py-0.5 rounded-full text-xs font-medium">
+                               ${product['Đơn vị tính']}
+                            </span>
+                        </div>
+                        <div class="mt-1 flex items-center gap-3 text-xs text-gray-500">
+                            <span class="flex items-center">
+                                <i class="fas fa-barcode mr-1"></i>
+                                ${product['Mã hàng']}
+                            </span>
+                            <span class="flex items-center">
+                                <i class="fas fa-box mr-1"></i>
+                                ${product['Loại vật tư']}
+                            </span>
+                        </div>
+                    </div>`;
+                productList.appendChild(productCard);
+            });
+        }
+
+        function renderCategoryTags(products) {
+            const categories = [...new Set(products.map(p => p['Loại vật tư']))].filter(Boolean);
+            const tagsContainer = document.getElementById('categoryTags');
+            tagsContainer.innerHTML = '';
+
+            // Add "All" tag
+            const allTag = createCategoryTag('Tất cả', products.length, state.selectedCategories.length === 0);
+            allTag.onclick = () => {
+                state.selectedCategories = [];
+                renderProducts(state.products);
+                renderCategoryTags(state.products);
+            };
+            tagsContainer.appendChild(allTag);
+
+            // Add category tags
+            categories.forEach(category => {
+                const count = products.filter(p => p['Loại vật tư'] === category).length;
+                const tag = createCategoryTag(category, count, state.selectedCategories.includes(category));
+                tag.onclick = () => toggleCategory(category);
+                tagsContainer.appendChild(tag);
+            });
+        }
+
+        function createCategoryTag(name, count, isActive) {
+            const tag = document.createElement('button');
+            tag.className = `px-3 py-1.5 rounded-full text-sm font-medium flex items-center space-x-2 transition-colors
+                ${isActive ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`;
+            tag.innerHTML = `
+                <span>${name}</span>
+                <span class="px-2 py-0.5 text-xs rounded-full 
+                    ${isActive ? 'bg-blue-400 text-white' : 'bg-gray-200 text-gray-600'}">
+                    ${count}
+                </span>`;
+            return tag;
+        }
+
+        // Selection and Search Functions
+        function selectProduct(maHang) {
+            const product = state.products.find(p => p['Mã hàng'] === maHang);
+            if (!product) return;
+
+            const tbody = document.getElementById('warehouseDetails');
+            const existingRow = Array.from(tbody.children).find(row => {
+                const maHangCell = row.querySelector('td[data-ma-hang]');
+                return maHangCell && maHangCell.dataset.maHang === maHang;
+            });
+
+            if (existingRow) {
+                const quantityInput = existingRow.querySelector('[data-quantity]');
+                quantityInput.value = parseInt(quantityInput.value) + 1;
+                updateRowCalculations(existingRow);
+            } else {
+                addNewProductRow(product);
+            }
+            updateProductCount();
+        }
+        // Function to update calculations for a row
+        function updateRowCalculations(row) {
+            const quantityInput = row.querySelector('[data-quantity]');
+            if (quantityInput) {
+                // Make sure the quantity is at least 1
+                const quantity = parseInt(quantityInput.value) || 1;
+                quantityInput.value = Math.max(1, quantity);
+            }
+        }
+
+        // Function to toggle category selection
+        function toggleCategory(category) {
+            if (state.selectedCategories.includes(category)) {
+                state.selectedCategories = state.selectedCategories.filter(c => c !== category);
+            } else {
+                state.selectedCategories.push(category);
+            }
+
+            // Filter products based on selected categories
+            const filteredProducts = state.selectedCategories.length === 0
+                ? state.products
+                : state.products.filter(p => state.selectedCategories.includes(p['Loại vật tư']));
+
+            // Re-render products and category tags
+            renderProducts(filteredProducts);
+            renderCategoryTags(state.products);
+        }
+
+        function addNewProductRow(product) {
+            const tbody = document.getElementById('warehouseDetails');
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-gray-50 transition-colors';
+            tr.setAttribute('data-product-id', product['Mã hàng']);
+            const IDPHIEUNXTDE = 'NXTDE' + Date.now();
+
+            let quantityInputHtml;
+            if (product['Loại vật tư'] === 'Cáp') {
+                quantityInputHtml = `
+        <td class="px-6 py-4">
+            <div class="flex items-center space-x-2">
+                <input type="number" data-quantity 
+                       class="w-20 px-3 py-1 border border-gray-300 rounded bg-gray-100" 
+                       value="0" readonly>
+                <button onclick="openCableModal('${product['Mã hàng']}')" 
+                        class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nhập đầu số
+                </button>
+            </div>
+        </td>`;
+            }
+            else {
+                // Cho các sản phẩm khác: input bình thường
+                quantityInputHtml = `
+            <td class="px-6 py-4">
+                <input type="number" data-quantity 
+                       class="w-20 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                       value="1" min="1" 
+                       onchange="updateRowCalculations(this.parentElement.parentElement)">
+            </td>`;
+            }
+
+            tr.innerHTML = `
+        <td hidden>${IDPHIEUNXTDE}</td>
+        <td hidden>${state.currentWarehouseId}</td>
+        <td hidden data-ma-hang="${product['Mã hàng']}">${product['Mã hàng']}</td>
+        <td class="px-6 py-4">
+            <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0 w-12 h-12">
+                    <img src="${getImageUrl(product['HÌNH ẢNH'])}" 
+                         alt="${product['Tên vật tư']}" 
+                         class="w-12 h-12 object-cover rounded-lg"
+                         onerror="this.src='https://i.ibb.co/cYHCSgp/image.png'">
+                </div>
+                <div>
+                    <div class="font-medium text-gray-900">${product['Tên vật tư']}</div>
+                    <div class="text-sm text-gray-500">${product['Mã hàng']}</div>
+                </div>
+            </div>
+        </td>
+        ${quantityInputHtml}
+        <td class="px-6 py-4">${product['Đơn vị tính']}</td>
+        <td class="px-6 py-4">
+            <input type="text" 
+                   class="w-full px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                   placeholder="Ghi chú">
+        </td>
+        <td class="px-6 py-4">
+            <button onclick="this.parentElement.parentElement.remove(); updateProductCount();" 
+                    class="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-full transition-colors">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>`;
+
+            tbody.appendChild(tr);
+        }
+
+        // Function đóng modal
+        function closeCableModal() {
+            document.getElementById('cableModal').style.display = 'none';
+        }
+        // Form Submission and Document Generation
+        async function submitForm() {
+            try {
+                showLoading();
+
+                // Validate form
+                const requiredFields = ['soChungTu', 'thoiGian', 'nguoiTao', 'loaiNhap', 'tu', 'den'];
+                const missingFields = requiredFields.filter(field => !document.getElementById(field).value);
+
+                if (missingFields.length > 0) {
+                    throw new Error('Vui lòng điền đầy đủ thông tin bắt buộc');
+                }
+
+                // Create PHIEUNXT object
+                const phieuNXT = {
+                    IDPHIEUNXT: document.getElementById('IDPHIEUNXT').value,
+                    "LOẠI PHIẾU": document.getElementById('loaiNhap').value,
+                    "SỐ CHỨNG TỪ": document.getElementById('soChungTu').value,
+                    "THỜI GIAN": document.getElementById('thoiGian').value,
+                    "DIỄN GIẢI": document.getElementById('dienGiai').value,
+                    "TỪ": document.getElementById('tu').value,
+                    "ĐẾN": document.getElementById('den').value,
+                    "NGƯỜI TẠO": document.getElementById('nguoiTao').value,
+                    "MDA": document.getElementById('mda').value,
+                    "GHI CHÚ": document.getElementById('ghiChu').value,
+                    "TRẠNG THÁI": "Phiếu mới"
+                };
+
+                // Create PHIEUNXTDE objects
+                const chiTiet = Array.from(document.getElementById('warehouseDetails').getElementsByTagName('tr'))
+                    .map(row => ({
+                        IDPHIEUNXTDE: row.cells[0].textContent,
+                        IDPHIEUNXT: document.getElementById('IDPHIEUNXT').value,
+                        "LOẠI PHIẾU": document.getElementById('loaiNhap').value,
+                        "SỐ CHỨNG TỪ": document.getElementById('soChungTu').value,
+                        "MDA": document.getElementById('mda').value,
+                        "THỜI GIAN": document.getElementById('thoiGian').value,
+                        "TỪ": document.getElementById('tu').value,
+                        "ĐẾN": document.getElementById('den').value,
+                        "MÃ HÀNG": row.cells[2].textContent,
+                        "TÊN HÀNG": row.querySelector('.font-medium').textContent,
+                        "SỐ LƯỢNG": row.querySelector('[data-quantity]').value,
+                        "ĐƠN VỊ TÍNH": row.cells[5].textContent,
+                        "Trạng thái": "Phiếu mới",
+                        "GHI CHÚ": row.cells[6].querySelector('input').value
+                    }));
+
+                if (chiTiet.length === 0) {
+                    throw new Error('Vui lòng thêm ít nhất một vật tư');
+                }
+
+                // Submit to API
+                const responsePhieuNXT = await apiService.request('PHIEUNXT', 'Add', { Rows: [phieuNXT] });
+                const responseChiTiet = await apiService.request('PHIEUNXTDE', 'Add', { Rows: chiTiet });
+                const allCableSegments = Array.from(state.cableDetails.values())
+                    .reduce((all, segments) => [...all, ...segments], []);
+
+                // Lưu thông tin cáp
+                if (allCableSegments.length > 0) {
+                    try {
+                        const response = await apiService.request('CAPDE', 'Add', { Rows: allCableSegments });
+                        console.log('CAPDE save response:', response);
+                    } catch (error) {
+                        console.error('Error saving CAPDE:', error);
+                        throw new Error(`Failed to save cable details: ${error.message}`);
+                    }
+                }
+
+                showToast("Đã lưu phiếu thành công!", "success");
+                resetForm();
+                state.cableDetails.clear(); // Reset cable details
+
+            } catch (error) {
+                showToast(error.message || 'Có lỗi xảy ra khi lưu phiếu', "error");
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+
+        function resetForm() {
+            document.getElementById('IDPHIEUNXT').value = '';
+            document.getElementById('loaiNhap').value = '';
+            document.getElementById('soChungTu').value = '';
+            document.getElementById('thoiGian').value = '';
+            document.getElementById('dienGiai').value = '';
+            document.getElementById('tu').value = '';
+            document.getElementById('den').value = '';
+            document.getElementById('ghiChu').value = '';
+            document.getElementById('warehouseDetails').innerHTML = '';
+            document.getElementById('cableModal').style.display = 'none';
+            state.cableDetails.clear(); // Reset cable details
+
+        }
+        function printPhieuNXT() {
+            // First generate the print template
+            const printArea = document.getElementById('printArea');
+            printArea.innerHTML = generatePrintTemplate();
+
+            // Now that the template exists in DOM, update the values
+            try {
+                const loaiPhieu = document.getElementById('loaiNhap').value;
+                document.getElementById('printTitle').textContent = `PHIẾU ${loaiPhieu.toUpperCase()}`;
+                document.getElementById('printSoChungTu').textContent = document.getElementById('soChungTu').value;
+                document.getElementById('printTu').textContent = document.getElementById('tu').value;
+                document.getElementById('printDen').textContent = document.getElementById('den').value;
+                document.getElementById('printThoiGian').textContent = new Date(document.getElementById('thoiGian').value).toLocaleString('vi-VN');
+                document.getElementById('printNguoiTao').textContent = document.getElementById('nguoiTao').value;
+                document.getElementById('printDienGiai').textContent = document.getElementById('dienGiai').value;
+                document.getElementById('printGhiChu').textContent = document.getElementById('ghiChu').value;
+                document.getElementById('printDateTime').textContent = new Date().toLocaleString('vi-VN');
+                document.getElementById('printCreatorName').textContent = document.getElementById('nguoiTao').value;
+
+                // Generate table content
+                generatePrintTableContent();
+
+                // Show print dialog
+                printArea.classList.remove('hidden');
+                window.print();
+                printArea.classList.add('hidden');
+            } catch (error) {
+                console.error('Error during print preparation:', error);
+                showToast('Lỗi khi chuẩn bị in phiếu', 'error');
+            }
+        }
+
+
+        function generatePrintTemplate() {
+            return `
+        <div class="p-8">
+            <!-- Header -->
+            <div class="grid grid-cols-12 gap-4 mb-8">
+                <div class="col-span-2">
+                    <img src="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png" 
+                         alt="Logo" class="w-20 h-auto">
+                </div>
+                <div class="col-span-8 text-center">
+                    <h2 class="font-bold text-xl">CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ NZ</h2>
+                    <p class="text-sm">MST: 0317496891</p>
+                    <p class="text-sm">32/21/11 Hà Thị Khiêm, Phường Trung Mỹ Tây, Quận 12, Thành phố Hồ Chí Minh, Việt Nam</p>
+                   
+                </div>
+                <div class="col-span-2 text-right">
+                    <p class="text-sm">Mẫu số: 01-VT</p>
+                    <p class="text-sm">Số: <span id="printSoChungTu"></span></p>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold" id="printTitle">PHIẾU NHẬP XUẤT KHO</h1>
+                <p class="text-sm text-gray-600" id="printDateTime"></p>
+            </div>
+
+            <!-- Info -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <p><strong>Số chứng từ:</strong> <span id="printSoChungTu"></span></p>
+                    <p><strong>Từ:</strong> <span id="printTu"></span></p>
+                    <p><strong>Đến:</strong> <span id="printDen"></span></p>
+                </div>
+                <div>
+                    <p><strong>Thời gian:</strong> <span id="printThoiGian"></span></p>
+                    <p><strong>Người tạo:</strong> <span id="printNguoiTao"></span></p>
+                    <p><strong>Diễn giải:</strong> <span id="printDienGiai"></span></p>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <table class="w-full border-collapse border border-gray-300 mb-8">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="border border-gray-300 p-2">STT</th>
+                        <th class="border border-gray-300 p-2">Tên vật tư</th>
+                        <th class="border border-gray-300 p-2">Số lượng</th>
+                        <th class="border border-gray-300 p-2">ĐVT</th>
+                        <th class="border border-gray-300 p-2">Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody id="printTableBody"></tbody>
+            </table>
+
+            <!-- Notes -->
+            <div class="mb-8">
+                <p><strong>Ghi chú:</strong> <span id="printGhiChu"></span></p>
+            </div>
+
+            <!-- Signatures -->
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p class="font-bold">Người lập phiếu</p>
+                    <p class="text-sm">(Ký, họ tên)</p>
+                    <div class="h-20"></div>
+                    <p id="printCreatorName"></p>
+                </div>
+                <div>
+                    <p class="font-bold">Người giao hàng</p>
+                    <p class="text-sm">(Ký, họ tên)</p>
+                    <div class="h-20"></div>
+                </div>
+                <div>
+                    <p class="font-bold">Người nhận hàng</p>
+                    <p class="text-sm">(Ký, họ tên)</p>
+                    <div class="h-20"></div>
+                </div>
+            </div>
+        </div>
+    `;
+        }
+        function generatePrintTableContent() {
+            const tbody = document.getElementById('warehouseDetails');
+            const printTbody = document.getElementById('printTableBody');
+            if (!tbody || !printTbody) return;
+
+            printTbody.innerHTML = '';
+
+            Array.from(tbody.children).forEach((row, index) => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+            <td class="border border-gray-300 p-2 text-center">${index + 1}</td>
+            <td class="border border-gray-300 p-2">${row.querySelector('.font-medium').textContent}</td>
+            <td class="border border-gray-300 p-2 text-right">${row.querySelector('[data-quantity]').value}</td>
+            <td class="border border-gray-300 p-2 text-center">${row.cells[5].textContent}</td>
+            <td class="border border-gray-300 p-2">${row.cells[6].querySelector('input').value || ''}</td>
+        `;
+                printTbody.appendChild(newRow);
+            });
+        }
+
+        // Utility Functions
+        function updateProductCount() {
+            const count = document.getElementById('warehouseDetails').children.length;
+            document.getElementById('productCount').textContent = count;
+        }
+
+        function getImageUrl(imagePath) {
+            if (imagePath && imagePath.startsWith('DMHH_Images/')) {
+                const baseUrl = 'https://www.appsheet.com/template/gettablefileurl';
+                const appName = encodeURIComponent(API_CONFIG.APP_ID);
+                const tableName = encodeURIComponent('DMHH');
+                const fileName = encodeURIComponent(imagePath);
+                return `${baseUrl}?appName=${appName}&tableName=${tableName}&fileName=${fileName}`;
+            }
+            return imagePath || 'https://i.ibb.co/cYHCSgp/image.png';
+        }
+
+
+        document.addEventListener('DOMContentLoaded', async function () {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('thoiGian').value = now.toISOString().slice(0, 16);
+            document.getElementById('IDPHIEUNXT').value = state.currentWarehouseId;
+
+            // Lấy thông tin từ URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const manv = urlParams.get('manv');
+            const mda = urlParams.get('mda'); // Thêm dòng này
+
+            // Lưu vào state
+            state.mda = mda;
+            state.nguoiTao = manv;
+
+            // Set giá trị cho các trường
+            document.getElementById('nguoiTao').value = manv;
+            document.getElementById('mda').value = mda; // Thêm dòng này
+
+            await Promise.all([
+                loadProducts(),
+                loadPhieuNXT(),
+                loadNhanVien()
+            ]);
+
+            setupEventListeners();
+        });
+        function searchProducts(value) {
+            if (!value.trim()) {
+                renderProducts(state.products);
+                return;
+            }
+
+            const filtered = state.products.filter(product =>
+                product['Mã hàng']?.toLowerCase().includes(value.toLowerCase()) ||
+                product['Tên vật tư']?.toLowerCase().includes(value.toLowerCase())
+            );
+            renderProducts(filtered);
+        }
+        // Event Listeners Setup
+        function setupEventListeners() {
+            document.getElementById('searchProduct').addEventListener('input',
+                debounce(e => searchProducts(e.target.value), 300)
+            );
+
+            document.querySelectorAll('input[name="loaiPhieu"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    console.log('Radio changed:', this.value);
+                    document.getElementById('loaiNhap').value = this.value;
+                    generateDocumentNumber(this.value);
+                    updateFromToOptions(this.value);
+                });
+            });
+        }
+
+        const showToast = (message, type = 'success') => {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
+                style: {
+                    background: type === 'success'
+                        ? "linear-gradient(to right, #00b09b, #96c93d)"
+                        : "linear-gradient(to right, #ff5f6d, #ffc371)",
+                }
+            }).showToast();
+        };
+        async function generateDocumentNumber(loaiPhieu) {
+            // Map of document type abbreviations
+            const prefixMap = {
+                'Nhập tồn kho': 'NTK',
+                'Nhập trả hàng': 'NTH',
+                'Xuất bán': 'XB'
+            };
+
+            try {
+                const prefix = prefixMap[loaiPhieu] || 'NXT';
+                const today = new Date();
+                const monthYear = `${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
+
+                // Filter existing documents from state for current month and type
+                const currentMonthDocs = state.phieuNXT.filter(doc => {
+                    const docDate = new Date(doc['THỜI GIAN']);
+                    return doc['LOẠI PHIẾU'] === loaiPhieu &&
+                        docDate.getFullYear() === today.getFullYear() &&
+                        docDate.getMonth() === today.getMonth();
+                });
+
+                // Find highest number
+                let maxNumber = 0;
+                currentMonthDocs.forEach(doc => {
+                    const soChungTu = doc['SỐ CHỨNG TỪ'];
+                    if (soChungTu && soChungTu.startsWith(prefix)) {
+                        const numberPart = parseInt(soChungTu.split('-').pop(), 10);
+                        if (!isNaN(numberPart) && numberPart > maxNumber) {
+                            maxNumber = numberPart;
+                        }
+                    }
+                });
+
+                // Generate new number
+                const nextNumber = (maxNumber + 1).toString().padStart(4, '0');
+                const newDocNumber = `${prefix}${monthYear}-${nextNumber}`;
+
+                // Update the form field
+                document.getElementById('soChungTu').value = newDocNumber;
+
+                return newDocNumber;
+            } catch (error) {
+                console.error('Error generating document number:', error);
+                showToast('Lỗi khi tạo số chứng từ', 'error');
+                return '';
+            }
+        }
+        const debounce = (func, wait) => {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        };
+    </script>
+</body>
+
+</html>
