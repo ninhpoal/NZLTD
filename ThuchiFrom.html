@@ -186,11 +186,11 @@
                     <label class="block text-sm font-medium text-gray-700">Hóa Đơn</label>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center">
-                            <input type="radio" id="coHoaDon" name="hoaDon" value="CÓ" class="h-4 w-4 text-blue-600">
+                            <input type="radio" id="coHoaDon" name="hoaDon" value="CÓ" class="h-4 w-4 text-blue-600" checked>
                             <label for="coHoaDon" class="ml-2 text-sm text-gray-700">CÓ HÓA ĐƠN</label>
                         </div>
                         <div class="flex items-center">
-                            <input type="radio" id="khongHoaDon" name="hoaDon" value="KHÔNG" class="h-4 w-4 text-blue-600" checked>
+                            <input type="radio" id="khongHoaDon" name="hoaDon" value="KHÔNG" class="h-4 w-4 text-blue-600" >
                             <label for="khongHoaDon" class="ml-2 text-sm text-gray-700">KHÔNG CÓ HÓA ĐƠN</label>
                         </div>
                     </div>
@@ -904,7 +904,7 @@
             },
 
             getFormData() {
-                const hoaDonValue = document.querySelector('input[name="hoaDon"]:checked')?.value || "KHÔNG";
+                const hoaDonValue = document.querySelector('input[name="hoaDon"]:checked')?.value || "CÓ";
                 return {
 
                     'KHU VỰC': elements.khuVuc.value,
