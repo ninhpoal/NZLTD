@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -181,7 +182,19 @@
                         <option value="">Chọn mã chi</option>
                     </select>
                 </div>
-
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Hóa Đơn</label>
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <input type="radio" id="coHoaDon" name="hoaDon" value="CÓ" class="h-4 w-4 text-blue-600">
+                            <label for="coHoaDon" class="ml-2 text-sm text-gray-700">CÓ HÓA ĐƠN</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input type="radio" id="khongHoaDon" name="hoaDon" value="KHÔNG" class="h-4 w-4 text-blue-600" checked>
+                            <label for="khongHoaDon" class="ml-2 text-sm text-gray-700">KHÔNG CÓ HÓA ĐƠN</label>
+                        </div>
+                    </div>
+                </div>
 
 
                 <div class="space-y-2 md:col-span-2">
@@ -891,6 +904,7 @@
             },
 
             getFormData() {
+                const hoaDonValue = document.querySelector('input[name="hoaDon"]:checked')?.value || "KHÔNG";
                 return {
 
                     'KHU VỰC': elements.khuVuc.value,
@@ -900,7 +914,8 @@
                     'MDA': elements.mda.value,
                     'SỐ TIỀN': elements.soTien.value.replace(/\D/g, ''),
                     'NỘI DUNG': elements.noiDung.value,
-                    'NHÂN VIÊN THỰC HIỆN': elements.nhanVien.value
+                    'NHÂN VIÊN THỰC HIỆN': elements.nhanVien.value , 
+                    'HOADON': hoaDonValue  
                 };
             },
 
