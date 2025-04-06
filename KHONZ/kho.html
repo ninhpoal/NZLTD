@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -176,17 +177,17 @@
 
                                 <label
                                     class="inline-flex items-center px-4 py-2 rounded-full border cursor-pointer hover:bg-blue-50 transition-colors">
-                                    <input type="radio" name="loaiPhieu" value="Nhập kho NZ" class="hidden peer">
+                                    <input type="radio" name="loaiPhieu" value="Nhập Kho NZ" class="hidden peer">
                                     <span class="text-sm peer-checked:text-blue-600 peer-checked:font-medium">
-                                        <i class="fas fa-box mr-2"></i>Nhập kho NZ
+                                        <i class="fas fa-box mr-2"></i>Nhập Kho NZ
                                     </span>
                                 </label>
 
                                 <label
                                     class="inline-flex items-center px-4 py-2 rounded-full border cursor-pointer hover:bg-blue-50 transition-colors">
-                                    <input type="radio" name="loaiPhieu" value="Nhập tồn kho NZ" class="hidden peer">
+                                    <input type="radio" name="loaiPhieu" value="Nhập tồn Kho NZ HCM" class="hidden peer">
                                     <span class="text-sm peer-checked:text-blue-600 peer-checked:font-medium">
-                                        <i class="fas fa-boxes mr-2"></i>Nhập tồn kho NZ
+                                        <i class="fas fa-boxes mr-2"></i>Nhập tồn Kho NZ HCM
                                     </span>
                                 </label>
                             </div>
@@ -395,8 +396,8 @@
 
             switch (loaiPhieu) {
                 case 'Xuất thi công':
-                    // TỪ: Kho NZ
-                    addOptions(tuSelect, ['Kho NZ']);
+                    // TỪ: Kho NZ HCM
+                    addOptions(tuSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC' ]);
 
                     // ĐẾN: Đội thi công + Admin
                     const thiCongStaff = state.nhanVien
@@ -405,31 +406,31 @@
                     addOptions(denSelect, [...thiCongStaff, 'NZ - Admin', 'NZ - Phước NV']);
                     break;
 
-                case 'Nhập kho NZ':
+                case 'Nhập Kho NZ':
                     // TỪ: Kho FPT + Đội thi công
                     const fromList = ['Kho FPT', ...state.nhanVien
                         .filter(nv => nv['Phòng ban'] === 'Đội thi công')
                         .map(nv => nv['Mã nhân viên'])];
                     addOptions(tuSelect, fromList);
 
-                    // ĐẾN: Kho NZ + Admin
-                    addOptions(denSelect, ['Kho NZ', 'NZ - Admin', 'NZ - Phước NV']);
+                    // ĐẾN: Kho NZ HCM + Admin
+                    addOptions(denSelect, ['Kho NZ HCM', 'Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
                     break;
 
                 case 'Nhập trả kho FPT':
-                    // TỪ: Kho NZ
-                    addOptions(tuSelect, ['Kho NZ']);
+                    // TỪ: Kho NZ HCM
+                    addOptions(tuSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
 
                     // ĐẾN: Kho FPT + Admin
-                    addOptions(denSelect, ['Kho FPT', 'NZ - Admin', 'NZ - Phước NV']);
+                    addOptions(denSelect, ['Kho FPT']);
                     break;
 
-                case 'Nhập tồn kho NZ':
-                    // TỪ: Kho NZ
-                    addOptions(tuSelect, ['Kho NZ']);
+                case 'Nhập tồn Kho NZ HCM':
+                    // TỪ: Kho NZ HCM
+                    addOptions(tuSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
 
-                    // ĐẾN: Kho NZ + Admin
-                    addOptions(denSelect, ['Kho NZ', 'NZ - Admin', 'NZ - Phước NV']);
+                    // ĐẾN: Kho NZ HCM + Admin
+                    addOptions(denSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
                     break;
             }
         }
