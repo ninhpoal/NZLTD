@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -185,7 +184,8 @@
 
                                 <label
                                     class="inline-flex items-center px-4 py-2 rounded-full border cursor-pointer hover:bg-blue-50 transition-colors">
-                                    <input type="radio" name="loaiPhieu" value="Nhập tồn Kho NZ HCM" class="hidden peer">
+                                    <input type="radio" name="loaiPhieu" value="Nhập tồn Kho NZ HCM"
+                                        class="hidden peer">
                                     <span class="text-sm peer-checked:text-blue-600 peer-checked:font-medium">
                                         <i class="fas fa-boxes mr-2"></i>Nhập tồn Kho NZ HCM
                                     </span>
@@ -397,7 +397,7 @@
             switch (loaiPhieu) {
                 case 'Xuất thi công':
                     // TỪ: Kho NZ HCM
-                    addOptions(tuSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC' ]);
+                    addOptions(tuSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
 
                     // ĐẾN: Đội thi công + Admin
                     const thiCongStaff = state.nhanVien
@@ -414,12 +414,12 @@
                     addOptions(tuSelect, fromList);
 
                     // ĐẾN: Kho NZ HCM + Admin
-                    addOptions(denSelect, ['Kho NZ HCM', 'Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
+                    addOptions(denSelect, ['Kho NZ HCM', 'Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
                     break;
 
                 case 'Nhập trả kho FPT':
                     // TỪ: Kho NZ HCM
-                    addOptions(tuSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
+                    addOptions(tuSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
 
                     // ĐẾN: Kho FPT + Admin
                     addOptions(denSelect, ['Kho FPT']);
@@ -427,10 +427,10 @@
 
                 case 'Nhập tồn Kho NZ HCM':
                     // TỪ: Kho NZ HCM
-                    addOptions(tuSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
+                    addOptions(tuSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
 
                     // ĐẾN: Kho NZ HCM + Admin
-                    addOptions(denSelect, ['Kho NZ HCM' ,'Kho NZ BDG','Kho NZ DNI' ,'Kho NZ BPC']);
+                    addOptions(denSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
                     break;
             }
         }
@@ -788,18 +788,19 @@
             let quantityInputHtml;
             if (product['Loại vật tư'] === 'Cáp') {
                 quantityInputHtml = `
-        <td class="px-6 py-4">
-            <div class="flex items-center space-x-2">
-                <input type="number" data-quantity 
-                       class="w-20 px-3 py-1 border border-gray-300 rounded bg-gray-100" 
-                       value="0" readonly>
-                <button onclick="openCableModal('${product['Mã hàng']}')" 
-                        class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
-                    Nhập đầu số
-                </button>
-            </div>
-        </td>`;
+    <td class="px-6 py-4">
+        <div class="flex items-center space-x-2">
+            <input type="number" data-quantity 
+                   class="w-20 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                   value="0" min="0" 
+                   onchange="updateRowCalculations(this.parentElement.parentElement.parentElement)">
+            <button onclick="openCableModal('${product['Mã hàng']}')" 
+                    class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
+                <i class="fas fa-plus mr-2"></i>
+                Nhập đầu số
+            </button>
+        </div>
+    </td>`;
             }
             else {
                 // Cho các sản phẩm khác: input bình thường
