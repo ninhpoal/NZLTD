@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>In Phiếu Nhập Xuất Kho - NZ</title>
+    <link rel="shortcut icon" href="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png"
+        type="image/x-icon">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .print-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo-section img {
+            width: 60px;
+            margin-right: 10px;
+        }
+
+        .company-info {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .company-info h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .company-info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .title {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .title h2 {
+            font-size: 24px;
+            margin: 0;
+        }
+
+        .title p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .info-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-section p {
+            margin: 5px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+        }
+
+        .signature-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .signature-section div {
+            padding: 10px;
+        }
+
+        .signature-section p {
+            margin: 5px 0;
+        }
+
+        .signature-space {
+            height: 80px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .print-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        @media print {
+            .button-container {
+                display: none;
+            }
+
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+
+            body {
+                background-color: white;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="button-container">
+        <button id="printButton" class="print-button" onclick="window.print()">
+            <i class="fas fa-print"></i> In Phiếu
+        </button>
+    </div>
+
+    <div class="container" id="printContent">
+        <!-- Nội dung sẽ được điền bằng JavaScript -->
+    </div>
+
+    <script>
+        const API_CONFIG = {
+            APP_ID: '269a45b5-ce3b-463a-9ef7-d85322d32b46',
+            ACCESS_KEY: 'V2-fVRby-Ok8c7-0Hv05-ZFWhS-4pyO8-Y2R6d-1ReoI-szUsx',
+            REGION: 'www',
+            BASE_URL: 'https://www.appsheet.com/api/v2/apps'
+        };
+
+        // API Service
+        const apiService = {
+            createAxiosInstance() {
+                return axios.create({
+                    baseURL: `${API_CONFIG.BASE_URL}/${API_CONFIG.APP_ID}/tables`,
+                    headers: {
+                        'ApplicationAccessKey': API_CONFIG.ACCESS_KEY,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            },
+
+            async request(tableName, action, data = {}, select = {}) {
+                try {
+                    const api = this.createAxiosInstance();
+                    const response = await api.post(`/${tableName}/Action`, {
+                        Action: action,
+                        Properties: select,
+                        ...data
+                    });
+                    return response.data;
+                } catch (error) {
+                    console.error('API request failed:', error);
+                    throw error;
+                }
+            }
+        };
+
+        // Toast notification
+        function showToast(message, type = 'success') {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                stopOnFocus: true,
+                style: {
+                    background: type === 'success'
+                        ? "linear-gradient(to right, #00b09b, #96c93d)"
+                        : "linear-gradient(to right, #ff5f6d, #ffc371)",
+                }
+            }).showToast();
+        }
+
+        // Get ID from URL
+        function getPhieuIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // Load phiếu data
+        async function loadPhieuData() {
+            const phieuId = getPhieuIdFromUrl();
+            if (!phieuId) {
+                showToast('Không tìm thấy ID phiếu', 'error');
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return;
+            }
+
+            try {
+                // Load thông tin chính từ PHIEUNXT
+                const phieuData = await apiService.request('PHIEUNXT', 'Find', {}, {
+                    Selector: `Filter(PHIEUNXT, [IDPHIEUNXT] = "${phieuId}")`
+                });
+
+                if (!phieuData || phieuData.length === 0) {
+                    showToast('Không tìm thấy thông tin phiếu', 'error');
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    return;
+                }
+
+                // Load chi tiết từ PHIEUNXTDE
+                const phieuDetail = await apiService.request('PHIEUNXTDE', 'Find', {}, {
+                    Selector: `Filter(PHIEUNXTDE, [IDPHIEUNXT] = "${phieuId}")`
+                });
+
+                // Render thông tin phiếu
+                renderPhieuData(phieuData[0], phieuDetail);
+                
+            } catch (error) {
+                console.error('Error loading phiếu data:', error);
+                showToast('Lỗi khi tải dữ liệu phiếu', 'error');
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        // Render phiếu data
+        function renderPhieuData(phieu, chiTiet) {
+            const printContent = document.getElementById('printContent');
+            
+            const formattedDate = new Date(phieu['THỜI GIAN']).toLocaleString('vi-VN');
+            const currentDate = new Date().toLocaleString('vi-VN');
+            
+            printContent.innerHTML = `
+                <div class="print-header">
+                    <div class="logo-section">
+                        <img src="https://nzltd.vn/wp-content/uploads/2024/09/Logo-NZ-1-1024x979.png" alt="Logo NZ">
+                    </div>
+                    <div class="company-info">
+                        <h1>CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ NZ</h1>
+                        <p>MST: 0317496891</p>
+                        <p>32/21/11 Hà Thị Khiêm, Phường Trung Mỹ Tây, Quận 12, Thành phố Hồ Chí Minh, Việt Nam</p>
+                    </div>
+                    <div>
+                        <p>Mẫu số: 01-VT</p>
+                        <p>Số: ${phieu['SỐ CHỨNG TỪ']}</p>
+                    </div>
+                </div>
+
+                <div class="title">
+                    <h2>PHIẾU ${phieu['LOẠI PHIẾU'].toUpperCase()}</h2>
+                    <p>Ngày in: ${currentDate}</p>
+                </div>
+
+                <div class="info-section">
+                    <div>
+                        <p><strong>Số chứng từ:</strong> ${phieu['SỐ CHỨNG TỪ']}</p>
+                        <p><strong>Từ:</strong> ${phieu['TỪ']}</p>
+                        <p><strong>Đến:</strong> ${phieu['ĐẾN']}</p>
+                    </div>
+                    <div>
+                        <p><strong>Thời gian:</strong> ${formattedDate}</p>
+                        <p><strong>Người tạo:</strong> ${phieu['NGƯỜI TẠO']}</p>
+                        <p><strong>Diễn giải:</strong> ${phieu['DIỄN GIẢI'] || ''}</p>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Tên vật tư</th>
+                            <th>Số lượng</th>
+                            <th>ĐVT</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${renderTableRows(chiTiet)}
+                    </tbody>
+                </table>
+
+                <div>
+                    <p><strong>Ghi chú:</strong> ${phieu['GHI CHÚ'] || ''}</p>
+                </div>
+
+                <div class="signature-section">
+                    <div>
+                        <p><strong>Người lập phiếu</strong></p>
+                        <p>(Ký, họ tên)</p>
+                        <div class="signature-space"></div>
+                        <p>${phieu['NGƯỜI TẠO']}</p>
+                    </div>
+                    <div>
+                        <p><strong>Người giao hàng</strong></p>
+                        <p>(Ký, họ tên)</p>
+                        <div class="signature-space"></div>
+                    </div>
+                    <div>
+                        <p><strong>Người nhận hàng</strong></p>
+                        <p>(Ký, họ tên)</p>
+                        <div class="signature-space"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render table rows
+        function renderTableRows(chiTiet) {
+            if (!chiTiet || chiTiet.length === 0) {
+                return `<tr><td colspan="5" style="text-align: center">Không có dữ liệu</td></tr>`;
+            }
+
+            return chiTiet.map((item, index) => `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${item['TÊN HÀNG']}</td>
+                    <td style="text-align: right">${item['SỐ LƯỢNG']}</td>
+                    <td>${item['ĐƠN VỊ TÍNH']}</td>
+                    <td>${item['GHI CHÚ'] || ''}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Load data when page is ready
+        document.addEventListener('DOMContentLoaded', loadPhieuData);
+    </script>
+</body>
+
+</html>
