@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -11,6 +12,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.2/axios.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!-- Thêm choices.js CSS và JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <style>
         .animate-spin {
@@ -43,6 +47,26 @@
                 display: none !important;
             }
         }
+        .choices__inner {
+        background-color: #fff;
+        border-radius: 0.5rem;
+        border: 1px solid #e5e7eb;
+        min-height: 40px;
+        padding: 0.5rem;
+    }
+
+    .choices__input {
+        background-color: transparent;
+    }
+
+    .choices__list--dropdown {
+        border-radius: 0.5rem;
+    }
+
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background-color: #3b82f6;
+        color: rgb(0, 0, 0);
+    }
     </style>
 </head>
 
@@ -127,24 +151,25 @@
                         </div>
 
                         <!-- TỪ -->
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-gray-700 block">Từ</label>
-                            <select id="tu"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                required>
-                                <option value="">Chọn điểm xuất</option>
-                            </select>
-                        </div>
+                     <!-- TỪ -->
+<div class="space-y-2">
+    <label class="text-sm font-medium text-gray-700 block">Từ</label>
+    <select id="tu" 
+        class="choices-select w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        required>
+        <option value="">Chọn điểm xuất</option>
+    </select>
+</div>
 
-                        <!-- ĐẾN -->
-                        <div class="space-y-2">
-                            <label class="text-sm font-medium text-gray-700 block">Đến</label>
-                            <select id="den"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                required>
-                                <option value="">Chọn điểm nhận</option>
-                            </select>
-                        </div>
+<!-- ĐẾN -->
+<div class="space-y-2">
+    <label class="text-sm font-medium text-gray-700 block">Đến</label>
+    <select id="den"
+        class="choices-select w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        required>
+        <option value="">Chọn điểm nhận</option>
+    </select>
+</div>
 
                         <!-- Diễn Giải -->
                         <div class="space-y-2">
@@ -368,6 +393,31 @@
     </div>
 
     <script>
+        let tuChoices, denChoices;
+        function initChoices() {
+    // Nếu đã khởi tạo trước đó, hủy bỏ
+    if (tuChoices) tuChoices.destroy();
+    if (denChoices) denChoices.destroy();
+
+    // Khởi tạo mới
+    tuChoices = new Choices('#tu', {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Tìm điểm xuất...',
+        itemSelectText: 'Nhấn để chọn',
+        noResultsText: 'Không tìm thấy kết quả',
+        noChoicesText: 'Không có lựa chọn nào',
+        placeholderValue: 'Chọn điểm xuất'
+    });
+
+    denChoices = new Choices('#den', {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Tìm điểm nhận...',
+        itemSelectText: 'Nhấn để chọn',
+        noResultsText: 'Không tìm thấy kết quả',
+        noChoicesText: 'Không có lựa chọn nào',
+        placeholderValue: 'Chọn điểm nhận'
+    });
+}
         const API_CONFIG = {
             APP_ID: '269a45b5-ce3b-463a-9ef7-d85322d32b46',
             ACCESS_KEY: 'V2-fVRby-Ok8c7-0Hv05-ZFWhS-4pyO8-Y2R6d-1ReoI-szUsx',
@@ -383,58 +433,63 @@
             phieuNXT: [],
             cableDetails: new Map()
         };
+     
         function updateFromToOptions(loaiPhieu) {
-            const tuSelect = document.getElementById('tu');
-            const denSelect = document.getElementById('den');
+    const tuSelect = document.getElementById('tu');
+    const denSelect = document.getElementById('den');
 
-            tuSelect.innerHTML = '<option value="">Chọn điểm xuất</option>';
-            denSelect.innerHTML = '<option value="">Chọn điểm nhận</option>';
+    // Xóa tất cả options hiện tại
+    tuSelect.innerHTML = '<option value="">Chọn điểm xuất</option>';
+    denSelect.innerHTML = '<option value="">Chọn điểm nhận</option>';
 
-            // Add console.log for debugging
-            console.log('Selected loaiPhieu:', loaiPhieu);
-            console.log('Available employees:', state.nhanVien);
+    console.log('Selected loaiPhieu:', loaiPhieu);
+    console.log('Available employees:', state.nhanVien);
 
-            switch (loaiPhieu) {
-                case 'Xuất thi công':
-                    // TỪ: Kho NZ HCM
-                    addOptions(tuSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
+    // Danh sách các options tùy thuộc vào loại phiếu
+    let tuOptions = [];
+    let denOptions = [];
 
-                    // ĐẾN: Đội thi công + Admin
-                    const thiCongStaff = state.nhanVien
-                        .filter(nv => nv['Phòng ban'] === 'Đội thi công')
-                        .map(nv => nv['Mã nhân viên']);
-                    addOptions(denSelect, [...thiCongStaff, 'NZ - Admin', 'NZ - Phước NV']);
-                    break;
+    switch (loaiPhieu) {
+        case 'Xuất thi công':
+            tuOptions = ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC'];
+            denOptions = [
+                ...state.nhanVien
+                    .filter(nv => nv['Phòng ban'] === 'Đội thi công')
+                    .map(nv => nv['Mã nhân viên']),
+                'NZ - Admin', 
+                'NZ - Phước NV'
+            ];
+            break;
 
-                case 'Nhập Kho NZ':
-                    // TỪ: Kho FPT + Đội thi công
-                    const fromList = ['Kho FPT', ...state.nhanVien
-                        .filter(nv => nv['Phòng ban'] === 'Đội thi công')
-                        .map(nv => nv['Mã nhân viên'])];
-                    addOptions(tuSelect, fromList);
+        case 'Nhập Kho NZ':
+            tuOptions = [
+                'Kho FPT', 
+                ...state.nhanVien
+                    .filter(nv => nv['Phòng ban'] === 'Đội thi công')
+                    .map(nv => nv['Mã nhân viên'])
+            ];
+            denOptions = ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC'];
+            break;
 
-                    // ĐẾN: Kho NZ HCM + Admin
-                    addOptions(denSelect, ['Kho NZ HCM', 'Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
-                    break;
+        case 'Nhập trả kho FPT':
+            tuOptions = ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC'];
+            denOptions = ['Kho FPT'];
+            break;
 
-                case 'Nhập trả kho FPT':
-                    // TỪ: Kho NZ HCM
-                    addOptions(tuSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
+        case 'Nhập tồn Kho NZ HCM':
+            tuOptions = ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC'];
+            denOptions = ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC'];
+            break;
+    }
 
-                    // ĐẾN: Kho FPT + Admin
-                    addOptions(denSelect, ['Kho FPT']);
-                    break;
+    // Thêm options vào selects
+    addOptions(tuSelect, tuOptions);
+    addOptions(denSelect, denOptions);
 
-                case 'Nhập tồn Kho NZ HCM':
-                    // TỪ: Kho NZ HCM
-                    addOptions(tuSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
-
-                    // ĐẾN: Kho NZ HCM + Admin
-                    addOptions(denSelect, ['Kho NZ HCM', 'Kho NZ BDG', 'Kho NZ DNI', 'Kho NZ BPC']);
-                    break;
-            }
-        }
-        // Function thêm đoạn cáp
+    // Khởi tạo lại Choices sau khi cập nhật options
+    initChoices();
+}
+   // Function thêm đoạn cáp
         function addCableSegment() {
             const soDau = parseInt(document.getElementById('soDau').value);
             const soCuoi = parseInt(document.getElementById('soCuoi').value);
@@ -558,13 +613,13 @@
             document.getElementById('ghiChuCap').value = '';
         }
         function addOptions(selectElement, options) {
-            options.forEach(option => {
-                const opt = document.createElement('option');
-                opt.value = option;
-                opt.textContent = option;
-                selectElement.appendChild(opt);
-            });
-        }
+    options.forEach(option => {
+        const opt = document.createElement('option');
+        opt.value = option;
+        opt.textContent = option;
+        selectElement.appendChild(opt);
+    });
+}
         async function loadNhanVien() {
             try {
                 const response = await apiService.request('NHÂN VIÊN', 'Find', {}, {
@@ -1099,34 +1154,36 @@
             return imagePath || 'https://i.ibb.co/cYHCSgp/image.png';
         }
 
-
         document.addEventListener('DOMContentLoaded', async function () {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('thoiGian').value = now.toISOString().slice(0, 16);
-            document.getElementById('IDPHIEUNXT').value = state.currentWarehouseId;
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('thoiGian').value = now.toISOString().slice(0, 16);
+    document.getElementById('IDPHIEUNXT').value = state.currentWarehouseId;
 
-            // Lấy thông tin từ URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const manv = urlParams.get('manv');
-            const mda = urlParams.get('mda'); // Thêm dòng này
+    // Lấy thông tin từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const manv = urlParams.get('manv');
+    const mda = urlParams.get('mda');
 
-            // Lưu vào state
-            state.mda = mda;
-            state.nguoiTao = manv;
+    // Lưu vào state
+    state.mda = mda;
+    state.nguoiTao = manv;
 
-            // Set giá trị cho các trường
-            document.getElementById('nguoiTao').value = manv;
-            document.getElementById('mda').value = mda; // Thêm dòng này
+    // Set giá trị cho các trường
+    document.getElementById('nguoiTao').value = manv;
+    document.getElementById('mda').value = mda;
 
-            await Promise.all([
-                loadProducts(),
-                loadPhieuNXT(),
-                loadNhanVien()
-            ]);
+    await Promise.all([
+        loadProducts(),
+        loadPhieuNXT(),
+        loadNhanVien()
+    ]);
 
-            setupEventListeners();
-        });
+    setupEventListeners();
+    
+    // Khởi tạo Choices.js khi trang đã tải xong
+    initChoices();
+});
         function searchProducts(value) {
             if (!value.trim()) {
                 renderProducts(state.products);
