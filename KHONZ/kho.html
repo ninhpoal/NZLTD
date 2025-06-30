@@ -786,34 +786,35 @@
         }
 
         // Selection and Search Functions
-        function selectProduct(maHang) {
-            const product = state.products.find(p => p['Mã hàng'] === maHang);
-            if (!product) return;
+      function selectProduct(maHang) {
+    const product = state.products.find(p => p['Mã hàng'] === maHang);
+    if (!product) return;
 
-            const tbody = document.getElementById('warehouseDetails');
-            const existingRow = Array.from(tbody.children).find(row => {
-                const maHangCell = row.querySelector('td[data-ma-hang]');
-                return maHangCell && maHangCell.dataset.maHang === maHang;
-            });
+    const tbody = document.getElementById('warehouseDetails');
+    const existingRow = Array.from(tbody.children).find(row => {
+        const maHangCell = row.querySelector('td[data-ma-hang]');
+        return maHangCell && maHangCell.dataset.maHang === maHang;
+    });
 
-            if (existingRow) {
-                const quantityInput = existingRow.querySelector('[data-quantity]');
-                quantityInput.value = parseInt(quantityInput.value) + 1;
-                updateRowCalculations(existingRow);
-            } else {
-                addNewProductRow(product);
-            }
-            updateProductCount();
-        }
+    if (existingRow) {
+        const quantityInput = existingRow.querySelector('[data-quantity]');
+        // Sử dụng parseFloat thay vì parseInt
+        quantityInput.value = parseFloat(quantityInput.value) + 1;
+        updateRowCalculations(existingRow);
+    } else {
+        addNewProductRow(product);
+    }
+    updateProductCount();
+}
         // Function to update calculations for a row
-        function updateRowCalculations(row) {
-            const quantityInput = row.querySelector('[data-quantity]');
-            if (quantityInput) {
-                // Make sure the quantity is at least 1
-                const quantity = parseInt(quantityInput.value) || 1;
-                quantityInput.value = Math.max(1, quantity);
-            }
-        }
+      function updateRowCalculations(row) {
+    const quantityInput = row.querySelector('[data-quantity]');
+    if (quantityInput) {
+        // Cho phép số thập phân, chỉ cần đảm bảo không âm
+        const quantity = parseFloat(quantityInput.value) || 0;
+        quantityInput.value = Math.max(0, quantity);
+    }
+}
 
         // Function to toggle category selection
         function toggleCategory(category) {
@@ -845,10 +846,10 @@
                 quantityInputHtml = `
     <td class="px-6 py-4">
         <div class="flex items-center space-x-2">
-            <input type="number" data-quantity 
-                   class="w-20 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                   value="0" min="0" 
-                   onchange="updateRowCalculations(this.parentElement.parentElement.parentElement)">
+        <input type="number" data-quantity 
+       class="w-20 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+       value="0" min="0" step="0.01"
+       onchange="updateRowCalculations(this.parentElement.parentElement.parentElement)">
             <button onclick="openCableModal('${product['Mã hàng']}')" 
                     class="px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center">
                 <i class="fas fa-plus mr-2"></i>
@@ -862,9 +863,9 @@
                 quantityInputHtml = `
             <td class="px-6 py-4">
                 <input type="number" data-quantity 
-                       class="w-20 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
-                       value="1" min="1" 
-                       onchange="updateRowCalculations(this.parentElement.parentElement)">
+       class="w-20 px-3 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+       value="1" min="0" step="0.01"
+       onchange="updateRowCalculations(this.parentElement.parentElement)">
             </td>`;
             }
 
@@ -1226,54 +1227,57 @@
                 }
             }).showToast();
         };
-        async function generateDocumentNumber(loaiPhieu) {
-            // Map of document type abbreviations
-            const prefixMap = {
-                'Nhập tồn kho': 'NTK',
-                'Nhập trả hàng': 'NTH',
-                'Xuất bán': 'XB'
-            };
+     
+     async function generateDocumentNumber(loaiPhieu) {
+    // Map of document type abbreviations
+    const prefixMap = {
+        'Xuất thi công': 'XTC',
+        'Nhập trả kho FPT': 'NTK',
+        'Nhập Kho NZ': 'NKN',
+        'Nhập tồn Kho NZ HCM': 'NTH'
+    };
 
-            try {
-                const prefix = prefixMap[loaiPhieu] || 'NXT';
-                const today = new Date();
-                const monthYear = `${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
+    try {
+        const prefix = prefixMap[loaiPhieu] || 'NXT';
+        const today = new Date();
+        const monthYear = `${(today.getMonth() + 1).toString().padStart(2, '0')}${today.getFullYear().toString().slice(-2)}`;
 
-                // Filter existing documents from state for current month and type
-                const currentMonthDocs = state.phieuNXT.filter(doc => {
-                    const docDate = new Date(doc['THỜI GIAN']);
-                    return doc['LOẠI PHIẾU'] === loaiPhieu &&
-                        docDate.getFullYear() === today.getFullYear() &&
-                        docDate.getMonth() === today.getMonth();
-                });
+        // Filter existing documents from state for current month and type
+        const currentMonthDocs = state.phieuNXT.filter(doc => {
+            const docDate = new Date(doc['THỜI GIAN']);
+            return doc['LOẠI PHIẾU'] === loaiPhieu &&
+                docDate.getFullYear() === today.getFullYear() &&
+                docDate.getMonth() === today.getMonth();
+        });
 
-                // Find highest number
-                let maxNumber = 0;
-                currentMonthDocs.forEach(doc => {
-                    const soChungTu = doc['SỐ CHỨNG TỪ'];
-                    if (soChungTu && soChungTu.startsWith(prefix)) {
-                        const numberPart = parseInt(soChungTu.split('-').pop(), 10);
-                        if (!isNaN(numberPart) && numberPart > maxNumber) {
-                            maxNumber = numberPart;
-                        }
-                    }
-                });
-
-                // Generate new number
-                const nextNumber = (maxNumber + 1).toString().padStart(4, '0');
-                const newDocNumber = `${prefix}${monthYear}-${nextNumber}`;
-
-                // Update the form field
-                document.getElementById('soChungTu').value = newDocNumber;
-
-                return newDocNumber;
-            } catch (error) {
-                console.error('Error generating document number:', error);
-                showToast('Lỗi khi tạo số chứng từ', 'error');
-                return '';
+        // Find highest number
+        let maxNumber = 0;
+        currentMonthDocs.forEach(doc => {
+            const soChungTu = doc['SỐ CHỨNG TỪ'];
+            if (soChungTu && soChungTu.startsWith(prefix)) {
+                const numberPart = parseInt(soChungTu.split('-').pop(), 10);
+                if (!isNaN(numberPart) && numberPart > maxNumber) {
+                    maxNumber = numberPart;
+                }
             }
-        }
-        const debounce = (func, wait) => {
+        });
+
+        // Generate new number
+        const nextNumber = (maxNumber + 1).toString().padStart(4, '0');
+        const newDocNumber = `${prefix}${monthYear}-${nextNumber}`;
+
+        // Update the form field
+        document.getElementById('soChungTu').value = newDocNumber;
+
+        return newDocNumber;
+    } catch (error) {
+        console.error('Error generating document number:', error);
+        showToast('Lỗi khi tạo số chứng từ', 'error');
+        return '';
+    }
+}
+     
+       const debounce = (func, wait) => {
             let timeout;
             return function executedFunction(...args) {
                 const later = () => {
