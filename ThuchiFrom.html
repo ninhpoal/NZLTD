@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -106,7 +105,9 @@
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-gray-800 mb-2">Tạo Phiếu Chi Mới</h2>
             <p class="text-gray-600">Điền thông tin và tải lên hình ảnh chứng từ (nếu có)</p>
-         <span class="text-2xl font-bold text-red-600 mb-2"><br>  <p>Hóa đơn trên 200k yêu cầu phải có hóa đơn VAT</p>   <br> </span> 
+            <span class="text-2xl font-bold text-red-600 mb-2"><br>
+                <p>Hóa đơn trên 200k yêu cầu phải có hóa đơn VAT</p> <br>
+            </span>
         </div>
 
         <form id="uploadForm" class="space-y-6">
@@ -121,8 +122,6 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
-
-
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-gray-700">SỐ TIỀN <span
                             class="text-red-500">*</span></label>
@@ -130,10 +129,11 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div class="space-y-2 w-full max-w-md mx-auto p-4">
+                    <label class="block text-sm font-medium text-gray-700">POP - Mã kế hoạch</label>
                     <div id="mdaContainer" class="relative">
                         <div id="mdaInput"
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer bg-white flex flex-wrap gap-1">
-                            <span class="text-gray-500">Chọn MDA...</span>
+                            <span class="text-gray-500">Chọn POP - Mã kế hoạch...</span>
                         </div>
 
                         <!-- Dropdown panel -->
@@ -187,16 +187,17 @@
                     <label class="block text-sm font-medium text-gray-700">Hóa Đơn</label>
                     <div class="flex items-center space-x-4">
                         <div class="flex items-center">
-                            <input type="radio" id="coHoaDon" name="hoaDon" value="CÓ" class="h-4 w-4 text-blue-600" checked>
+                            <input type="radio" id="coHoaDon" name="hoaDon" value="CÓ" class="h-4 w-4 text-blue-600"
+                                checked>
                             <label for="coHoaDon" class="ml-2 text-sm text-gray-700">CÓ HÓA ĐƠN</label>
                         </div>
                         <div class="flex items-center">
-                            <input type="radio" id="khongHoaDon" name="hoaDon" value="KHÔNG" class="h-4 w-4 text-blue-600" >
+                            <input type="radio" id="khongHoaDon" name="hoaDon" value="KHÔNG"
+                                class="h-4 w-4 text-blue-600">
                             <label for="khongHoaDon" class="ml-2 text-sm text-gray-700">KHÔNG CÓ HÓA ĐƠN</label>
                         </div>
                     </div>
                 </div>
-
 
                 <div class="space-y-2 md:col-span-2">
                     <label class="block text-sm font-medium text-gray-700">NỘI DUNG <span
@@ -211,8 +212,6 @@
                     <input type="text" id="nhanVien" required
                         class="readonly-field w-full px-4 py-3 border border-gray-300 rounded-lg" readonly>
                 </div>
-
-
 
             </div>
 
@@ -302,8 +301,21 @@
             appId: '1a8d9270-a4ff-46b8-94fc-db1e4632f273',
             accessKey: 'V2-IEkJl-GKXgi-aBjtl-fN3Ur-QQSYX-Ggn6e-m9pkA-GtxEU',
             region: 'www',
-            apiKey: '93bfdf6d5910909c985faf82ee7220cc'
+
+            // Cấu hình Cloudinary
+            cloudinary: {
+                cloudName: 'djtcgipfl',
+                uploadPreset: 'ml_default'
+            },
+
+            // Cấu hình cho MDA API
+            mdaConfig: {
+                appId: '0540a1e6-318a-4a16-914b-ed05b267664d',
+                accessKey: 'V2-MVliw-UPOwh-W67yM-258Sd-nTjtL-eUDNu-LWYD5-8ieS2',
+                region: 'www'
+            }
         };
+
         const mdaHandler = {
             options: [],
             selectedValues: [],
@@ -325,7 +337,7 @@
                 this.initializeOptions();
 
                 // Close dropdown when clicking outside
-                if (this.container) { // Add this check
+                if (this.container) {
                     document.addEventListener('click', (e) => {
                         if (!this.container.contains(e.target)) {
                             this.closeDropdown();
@@ -385,6 +397,7 @@
                 this.updateDisplay();
                 this.updateHiddenInput();
             },
+
             async initializeOptions() {
                 try {
                     const mdaOptions = await api.fetchMDAOptions();
@@ -392,7 +405,7 @@
                     this.renderOptions();
                 } catch (error) {
                     console.error('Error initializing MDA options:', error);
-                    utils.showToast('Không thể tải danh sách MDA', 'error');
+                    utils.showToast('Không thể tải danh sách POP - Mã kế hoạch', 'error');
                 }
             },
 
@@ -415,7 +428,7 @@
 
             updateDisplay() {
                 if (this.selectedValues.length === 0) {
-                    this.input.innerHTML = `<span class="text-gray-500">Chọn MDA...</span>`;
+                    this.input.innerHTML = `<span class="text-gray-500">Chọn POP - Mã kế hoạch...</span>`;
                 } else {
                     this.input.innerHTML = this.selectedValues.map(value => `
                 <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">${value}</span>
@@ -433,6 +446,7 @@
                 this.updateHiddenInput();
             }
         };
+
         // Store DOM elements
         const elements = {
             form: document.getElementById('uploadForm'),
@@ -469,29 +483,34 @@
                     backgroundColor: type === 'success' ? "#4CAF50" : "#F44336"
                 }).showToast();
             },
-
-
         };
 
         // API functions
         const api = {
+            // Upload ảnh lên Cloudinary
             uploadImage: async (file) => {
                 if (!file) return '';
+
                 const formData = new FormData();
-                formData.append('image', file);
+                formData.append('file', file);
+                formData.append('upload_preset', config.cloudinary.uploadPreset);
+
                 try {
                     const response = await axios.post(
-                        `https://api.imgbb.com/1/upload?key=${config.apiKey}`,
+                        `https://api.cloudinary.com/v1_1/${config.cloudinary.cloudName}/image/upload`,
                         formData
                     );
-                    return response.data.data.url;
+                    return response.data.secure_url;
                 } catch (error) {
-                    throw new Error('Failed to upload image');
+                    console.error('Error uploading to Cloudinary:', error);
+                    throw new Error('Failed to upload image to Cloudinary');
                 }
             },
+
+            // MDA API call với cấu hình riêng
             async fetchMDAOptions() {
                 try {
-                    const response = await this.sendRequest('Duan', 'Find', {
+                    const response = await this.sendMDARequest('Duan', 'Find', {
                         Properties: {
                             Locale: 'vi-VN',
                             Timezone: 'Asia/Ho_Chi_Minh',
@@ -500,22 +519,69 @@
                         Rows: []
                     });
 
-                    // Extract unique MDA values
-                    const mdaSet = new Set();
+                    // Tạo array để chứa các option với format "POP - Mã kế hoạch"
+                    const mdaOptions = [];
+                    const addedValues = new Set(); // Để tránh trùng lặp
+
                     response.forEach(item => {
-                        if (item.MDA) {
-                            item.MDA.split(',').forEach(mda => {
-                                mdaSet.add(mda.trim());
-                            });
+                        const pop = item['POP'] ? item['POP'].toString().trim() : '';
+                        const maKeHoach = item['Mã kế hoạch'] ? item['Mã kế hoạch'].toString().trim() : '';
+
+                        // Nếu có cả POP và Mã kế hoạch
+                        if (pop && maKeHoach) {
+                            const combined = `${pop} - ${maKeHoach}`;
+                            if (!addedValues.has(combined)) {
+                                mdaOptions.push(combined);
+                                addedValues.add(combined);
+                            }
+                        }
+                        // Nếu chỉ có POP
+                        else if (pop) {
+                            if (!addedValues.has(pop)) {
+                                mdaOptions.push(pop);
+                                addedValues.add(pop);
+                            }
+                        }
+                        // Nếu chỉ có Mã kế hoạch
+                        else if (maKeHoach) {
+                            if (!addedValues.has(maKeHoach)) {
+                                mdaOptions.push(maKeHoach);
+                                addedValues.add(maKeHoach);
+                            }
                         }
                     });
 
-                    return Array.from(mdaSet);
+                    // Sắp xếp theo thứ tự alphabet để dễ tìm
+                    return mdaOptions.sort();
+
                 } catch (error) {
                     console.error('Error fetching MDA options:', error);
                     throw error;
                 }
             },
+
+            // Request riêng cho MDA API
+            sendMDARequest: async (tableName, action, data) => {
+                const apiUrl = `https://${config.mdaConfig.region}.appsheet.com/api/v2/apps/${config.mdaConfig.appId}/tables/${tableName}/Action`;
+                return $.ajax({
+                    url: apiUrl,
+                    method: 'POST',
+                    headers: {
+                        'ApplicationAccessKey': config.mdaConfig.accessKey,
+                        'Content-Type': 'application/json'
+                    },
+                    data: JSON.stringify({
+                        Action: action,
+                        Properties: {
+                            Locale: 'vi-VN',
+                            Timezone: 'Asia/Ho_Chi_Minh'
+                        },
+                        ...data
+                    })
+                });
+            },
+
+            // Request cho API chính (LCHIPHI)
             sendRequest: async (tableName, action, data) => {
                 const apiUrl = `https://${config.region}.appsheet.com/api/v2/apps/${config.appId}/tables/${tableName}/Action`;
                 return $.ajax({
@@ -570,11 +636,11 @@
                     }, 1000);
                     throw error;
                 }
-            }, resetLCHIPHIData() {
-                globalLCHIPHIData = null;
             },
 
-
+            resetLCHIPHIData() {
+                globalLCHIPHIData = null;
+            },
 
             structureLCHIPHIData(data) {
                 const structured = {};
@@ -596,358 +662,372 @@
                     });
                 });
                 return structured;
-            }
-        };
-
-        // Form handlers
-        const formHandlers = {
-            async initForm() {
-                try {
-                    // Fetch initial data
-                    const data = await api.fetchLCHIPHIData();
-
-                    // Init dropdowns với data đã có
-                    this.updateKhuVucDropdown(data);
-                    // Set current time
-                    elements.thoiGian.value = new Date().toISOString().slice(0, 16);
-                    mdaHandler.init();
-                    // Get employee info from URL
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const maNV = urlParams.get('manv');
-                    if (maNV) {
-                        elements.nhanVien.value = maNV;
-                    }
-
-
-
-                    // Init event listeners
-                    this.initEventListeners();
-                    this.initImageHandlers();
-                    this.initAdditionalImageHandlers();
-
-                } catch (error) {
-                    console.error('Error initializing form:', error);
-                    utils.showToast('Không thể khởi tạo form', 'error');
                 }
-            },
-            additionalImages: [],
-            initAdditionalImageHandlers() {
-                const container = document.getElementById('additionalImagesContainer');
-                const dropzone = document.getElementById('additionalImageDropzone');
-                const input = document.getElementById('additionalImageInput');
+       };
 
-                dropzone.onclick = () => {
-                    // Reset giá trị input để có thể chọn lại cùng một file
-                    input.value = '';
-                    input.click();
-                };
+       // Form handlers
+       const formHandlers = {
+           async initForm() {
+               try {
+                   // Fetch initial data
+                   const data = await api.fetchLCHIPHIData();
 
-                input.onchange = (e) => {
-                    if (e.target.files && e.target.files.length > 0) {
-                        Array.from(e.target.files).forEach(file => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => {
-                                const imageDiv = document.createElement('div');
-                                imageDiv.className = 'relative';
-                                imageDiv.innerHTML = `
-                        <img src="${e.target.result}" class="w-full h-48 object-cover rounded-lg">
-                        <button type="button" class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    `;
+                   // Init dropdowns với data đã có
+                   this.updateKhuVucDropdown(data);
+                   // Set current time
+                   elements.thoiGian.value = new Date().toISOString().slice(0, 16);
+                   mdaHandler.init();
+                   // Get employee info from URL
+                   const urlParams = new URLSearchParams(window.location.search);
+                   const maNV = urlParams.get('manv');
+                   if (maNV) {
+                       elements.nhanVien.value = maNV;
+                   }
 
-                                this.additionalImages.push(file);
-                                container.insertBefore(imageDiv, dropzone);
+                   // Init event listeners - ĐÂY LÀ PHẦN BỊ THIẾU
+                   this.initEventListeners();
+                   this.initImageHandlers();
+                   this.initAdditionalImageHandlers();
 
-                                imageDiv.querySelector('button').onclick = () => {
-                                    const index = Array.from(container.children).indexOf(imageDiv) - 1; // Trừ 1 vì có dropzone
-                                    this.additionalImages.splice(index, 1);
-                                    imageDiv.remove();
-                                };
-                            };
-                            reader.readAsDataURL(file);
-                        });
-                    }
-                };
-            },
+               } catch (error) {
+                   console.error('Error initializing form:', error);
+                   utils.showToast('Không thể khởi tạo form', 'error');
+               }
+           },
+           
+           additionalImages: [],
+           
+           initAdditionalImageHandlers() {
+               const container = document.getElementById('additionalImagesContainer');
+               const dropzone = document.getElementById('additionalImageDropzone');
+               const input = document.getElementById('additionalImageInput');
 
-            updateKhuVucDropdown(data) {
-                const khuVucList = Object.keys(data);
-                elements.khuVuc.innerHTML = `
-                    <option value="">Chọn khu vực</option>
-                    ${khuVucList.map(kv => `<option value="${kv}">${kv}</option>`).join('')}
-                `;
-            },
+               dropzone.onclick = () => {
+                   // Reset giá trị input để có thể chọn lại cùng một file
+                   input.value = '';
+                   input.click();
+               };
 
-            updateDuAnDropdown(data, khuVuc) {
-                const duAnList = Object.keys(data[khuVuc] || {});
-                elements.duAn.innerHTML = `
-                    <option value="">Chọn dự án</option>
-                    ${duAnList.map(da => `<option value="${da}">${da}</option>`).join('')}
-                `;
-            },
+               input.onchange = (e) => {
+                   if (e.target.files && e.target.files.length > 0) {
+                       Array.from(e.target.files).forEach(file => {
+                           const reader = new FileReader();
+                           reader.onload = (e) => {
+                               const imageDiv = document.createElement('div');
+                               imageDiv.className = 'relative';
+                               imageDiv.innerHTML = `
+                      <img src="${e.target.result}" class="w-full h-48 object-cover rounded-lg">
+                      <button type="button" class="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                          </svg>
+                      </button>
+                  `;
 
-            updateMaChiDropdown(data, khuVuc, duAn) {
-                const maChiList = data[khuVuc]?.[duAn] || [];
-                elements.maChi.innerHTML = `
-                    <option value="">Chọn mã chi</option>
-                    ${maChiList.map(item =>
-                    `<option value="${item.maChi}" data-tenloai="${item.tenLoaiChi}">
-                            ${item.tenLoaiChi} (${item.maChi})
-                        </option>`
-                ).join('')}
-                `;
-            },
+                               this.additionalImages.push(file);
+                               container.insertBefore(imageDiv, dropzone);
 
-            initEventListeners() {
+                               imageDiv.querySelector('button').onclick = () => {
+                                   const index = Array.from(container.children).indexOf(imageDiv) - 1; // Trừ 1 vì có dropzone
+                                   this.additionalImages.splice(index, 1);
+                                   imageDiv.remove();
+                               };
+                           };
+                           reader.readAsDataURL(file);
+                       });
+                   }
+               };
+           },
 
-                elements.khuVuc.addEventListener('change', () => {
-                    const khuVuc = elements.khuVuc.value;
-                    if (globalLCHIPHIData && khuVuc) {
-                        this.updateDuAnDropdown(globalLCHIPHIData, khuVuc);
-                    } else {
-                        this.resetDependentDropdowns();
-                    }
-                });
+           updateKhuVucDropdown(data) {
+               const khuVucList = Object.keys(data);
+               elements.khuVuc.innerHTML = `
+                  <option value="">Chọn khu vực</option>
+                  ${khuVucList.map(kv => `<option value="${kv}">${kv}</option>`).join('')}
+              `;
+           },
 
-                elements.maChi.addEventListener('change', () => {
-                    const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
-                    if (selectedOption && selectedOption.value) {
-                        const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
-                        if (tenLoaiChi) {
-                            // Tự động điền tên loại chi vào nội dung
-                            elements.noiDung.value = `${tenLoaiChi}: `;
+           updateDuAnDropdown(data, khuVuc) {
+               const duAnList = Object.keys(data[khuVuc] || {});
+               elements.duAn.innerHTML = `
+                  <option value="">Chọn dự án</option>
+                  ${duAnList.map(da => `<option value="${da}">${da}</option>`).join('')}
+              `;
+           },
 
-                            // Focus vào vị trí cuối của nội dung
-                            elements.noiDung.focus();
-                            elements.noiDung.setSelectionRange(
-                                elements.noiDung.value.length,
-                                elements.noiDung.value.length
-                            );
+           updateMaChiDropdown(data, khuVuc, duAn) {
+               const maChiList = data[khuVuc]?.[duAn] || [];
+               elements.maChi.innerHTML = `
+                  <option value="">Chọn mã chi</option>
+                  ${maChiList.map(item =>
+                   `<option value="${item.maChi}" data-tenloai="${item.tenLoaiChi}">
+                          ${item.tenLoaiChi} (${item.maChi})
+                      </option>`
+               ).join('')}
+              `;
+           },
 
-                            // Thêm placeholder để hướng dẫn nhân viên
-                            elements.noiDung.placeholder = `${tenLoaiChi}: [Nhập thông tin chi tiết tại đây]`;
-                        }
-                    } else {
-                        // Reset nội dung nếu không chọn mã chi
-                        elements.noiDung.value = '';
-                        elements.noiDung.placeholder = 'Nhập nội dung chi';
-                    }
-                }); // Thêm sự kiện cho nội dung để đảm bảo giữ prefix
-                elements.noiDung.addEventListener('input', () => {
-                    const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
-                    if (selectedOption && selectedOption.value) {
-                        const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
-                        if (tenLoaiChi) {
-                            const prefix = `${tenLoaiChi}: `;
+           initEventListeners() {
+               // Event listener cho Khu vực
+               elements.khuVuc.addEventListener('change', () => {
+                   const khuVuc = elements.khuVuc.value;
+                   if (globalLCHIPHIData && khuVuc) {
+                       this.updateDuAnDropdown(globalLCHIPHIData, khuVuc);
+                   } else {
+                       this.resetDependentDropdowns();
+                   }
+               });
 
-                            // Kiểm tra nếu người dùng cố xóa prefix
-                            if (!elements.noiDung.value.startsWith(prefix)) {
-                                // Khôi phục prefix
-                                elements.noiDung.value = prefix + elements.noiDung.value;
-                            }
-                        }
-                    }
-                });
-                elements.noiDung.addEventListener('focus', () => {
-                    const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
-                    if (selectedOption && selectedOption.value) {
-                        const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
-                        if (tenLoaiChi) {
-                            const prefix = `${tenLoaiChi}: `;
+               // Event listener cho Dự án
+               elements.duAn.addEventListener('change', () => {
+                   const khuVuc = elements.khuVuc.value;
+                   const duAn = elements.duAn.value;
+                   if (globalLCHIPHIData && khuVuc && duAn) {
+                       this.updateMaChiDropdown(globalLCHIPHIData, khuVuc, duAn);
+                   } else {
+                       elements.maChi.innerHTML = '<option value="">Chọn mã chi</option>';
+                       elements.noiDung.value = '';
+                   }
+               });
 
-                            // Di chuyển con trỏ về sau prefix
-                            const cursorPosition = Math.max(prefix.length, elements.noiDung.selectionStart);
-                            elements.noiDung.setSelectionRange(cursorPosition, cursorPosition);
-                        }
-                    }
-                });
-                elements.duAn.addEventListener('change', () => {
-                    const khuVuc = elements.khuVuc.value;
-                    const duAn = elements.duAn.value;
-                    if (globalLCHIPHIData && khuVuc && duAn) {
-                        this.updateMaChiDropdown(globalLCHIPHIData, khuVuc, duAn);
-                    } else {
-                        elements.maChi.innerHTML = '<option value="">Chọn mã chi</option>';
-                        elements.noiDung.value = '';
-                    }
-                });
+               // Event listener cho Mã CHI
+               elements.maChi.addEventListener('change', () => {
+                   const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
+                   if (selectedOption && selectedOption.value) {
+                       const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
+                       if (tenLoaiChi) {
+                           // Tự động điền tên loại chi vào nội dung
+                           elements.noiDung.value = `${tenLoaiChi}: `;
 
-                // Currency format
-                elements.soTien.addEventListener('input', function () {
-                    let value = this.value.replace(/\D/g, '');
-                    if (value) {
-                        this.value = utils.formatCurrency(value);
-                    }
-                });
+                           // Focus vào vị trí cuối của nội dung
+                           elements.noiDung.focus();
+                           elements.noiDung.setSelectionRange(
+                               elements.noiDung.value.length,
+                               elements.noiDung.value.length
+                           );
 
-                // Image upload
-                this.initImageHandlers();
+                           // Thêm placeholder để hướng dẫn nhân viên
+                           elements.noiDung.placeholder = `${tenLoaiChi}: [Nhập thông tin chi tiết tại đây]`;
+                       }
+                   } else {
+                       // Reset nội dung nếu không chọn mã chi
+                       elements.noiDung.value = '';
+                       elements.noiDung.placeholder = 'Nhập nội dung chi';
+                   }
+               });
 
-                // Form submit
-                elements.form.addEventListener('submit', this.handleSubmit.bind(this));
-            },
+               // Thêm sự kiện cho nội dung để đảm bảo giữ prefix
+               elements.noiDung.addEventListener('input', () => {
+                   const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
+                   if (selectedOption && selectedOption.value) {
+                       const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
+                       if (tenLoaiChi) {
+                           const prefix = `${tenLoaiChi}: `;
 
+                           // Kiểm tra nếu người dùng cố xóa prefix
+                           if (!elements.noiDung.value.startsWith(prefix)) {
+                               // Khôi phục prefix
+                               elements.noiDung.value = prefix + elements.noiDung.value;
+                           }
+                       }
+                   }
+               });
 
-            initImageHandlers() {
-                elements.mainImageDropzone.onclick = () => elements.mainImageInput.click();
+               elements.noiDung.addEventListener('focus', () => {
+                   const selectedOption = elements.maChi.options[elements.maChi.selectedIndex];
+                   if (selectedOption && selectedOption.value) {
+                       const tenLoaiChi = selectedOption.getAttribute('data-tenloai');
+                       if (tenLoaiChi) {
+                           const prefix = `${tenLoaiChi}: `;
 
-                elements.mainImageInput.onchange = (e) => {
-                    if (e.target.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = (e) => {
-                            elements.mainImagePreview.querySelector('img').src = e.target.result;
-                            elements.mainImagePreview.classList.remove('hidden');
-                            elements.mainImageDropzone.classList.add('hidden');
-                        };
-                        reader.readAsDataURL(e.target.files[0]);
-                    }
-                };
+                           // Di chuyển con trỏ về sau prefix
+                           const cursorPosition = Math.max(prefix.length, elements.noiDung.selectionStart);
+                           elements.noiDung.setSelectionRange(cursorPosition, cursorPosition);
+                       }
+                   }
+               });
 
-                elements.removeMainImage.onclick = () => {
-                    elements.mainImageInput.value = '';
-                    elements.mainImagePreview.classList.add('hidden');
-                    elements.mainImageDropzone.classList.remove('hidden');
-                };
-            },
+               // Currency format
+               elements.soTien.addEventListener('input', function () {
+                   let value = this.value.replace(/\D/g, '');
+                   if (value) {
+                       this.value = utils.formatCurrency(value);
+                   }
+               });
 
-            async handleSubmit(e) {
-                e.preventDefault();
-                if (!this.validateForm()) return;
+               // Form submit
+               elements.form.addEventListener('submit', this.handleSubmit.bind(this));
+           },
 
-                try {
-                    elements.submitBtn.disabled = true;
-                    loadingUtils.show('Đang khởi tạo...');
+           resetDependentDropdowns() {
+               elements.duAn.innerHTML = '<option value="">Chọn dự án</option>';
+               elements.maChi.innerHTML = '<option value="">Chọn mã chi</option>';
+               elements.noiDung.value = '';
+           },
 
-                    // Tạo IDCHI ngẫu nhiên
-                    const idChi = 'CHI' + Date.now() + Math.random().toString(36).substr(2, 5);
+           initImageHandlers() {
+               elements.mainImageDropzone.onclick = () => elements.mainImageInput.click();
 
-                    // Chuẩn bị dữ liệu
-                    loadingUtils.updateProgress(20, 'Đang chuẩn bị dữ liệu...');
-                    const formData = this.getFormData();
-                    formData['IDPHIEU'] = idChi; // Thêm IDCHI vào formData
+               elements.mainImageInput.onchange = (e) => {
+                   if (e.target.files[0]) {
+                       const reader = new FileReader();
+                       reader.onload = (e) => {
+                           elements.mainImagePreview.querySelector('img').src = e.target.result;
+                           elements.mainImagePreview.classList.remove('hidden');
+                           elements.mainImageDropzone.classList.add('hidden');
+                       };
+                       reader.readAsDataURL(e.target.files[0]);
+                   }
+               };
 
-                    // Upload tất cả hình ảnh song song
-                    const uploadPromises = [];
+               elements.removeMainImage.onclick = () => {
+                   elements.mainImageInput.value = '';
+                   elements.mainImagePreview.classList.add('hidden');
+                   elements.mainImageDropzone.classList.remove('hidden');
+               };
+           },
 
-                    // Upload hình ảnh chính nếu có
-                    if (elements.mainImageInput.files[0]) {
-                        loadingUtils.updateProgress(40, 'Đang tải lên hình ảnh...');
-                        uploadPromises.push(
-                            api.uploadImage(elements.mainImageInput.files[0])
-                                .then(url => {
-                                    formData['Hình ảnh'] = url;
-                                })
-                        );
-                    }
+           async handleSubmit(e) {
+               e.preventDefault();
+               if (!this.validateForm()) return;
 
-                    // Upload các hình ảnh phụ nếu có
-                    if (this.additionalImages.length > 0) {
-                        loadingUtils.updateProgress(50, 'Đang tải lên các hình ảnh khác...');
+               try {
+                   elements.submitBtn.disabled = true;
+                   loadingUtils.show('Đang khởi tạo...');
 
-                        this.additionalImages.forEach(file => {
-                            uploadPromises.push(
-                                api.uploadImage(file)
-                                    .then(url => {
-                                        return api.sendRequest('Image', 'Add', {
-                                            Rows: [{
-                                                KEY: idChi,
-                                                'Hình ảnh': url
-                                            }]
-                                        });
-                                    })
-                            );
-                        });
-                    }
+                   // Tạo IDCHI ngẫu nhiên
+                   const idChi = 'CHI' + Date.now() + Math.random().toString(36).substr(2, 5);
 
-                    // Chờ tất cả hình ảnh upload xong
-                    await Promise.all(uploadPromises);
+                   // Chuẩn bị dữ liệu
+                   loadingUtils.updateProgress(20, 'Đang chuẩn bị dữ liệu...');
+                   const formData = this.getFormData();
+                   formData['IDPHIEU'] = idChi; // Thêm IDCHI vào formData
 
-                    // Gửi dữ liệu phiếu chi
-                    loadingUtils.updateProgress(80, 'Đang tạo phiếu chi...');
-                    await api.sendRequest('Chi', 'Add', { Rows: [formData] });
+                   // Upload tất cả hình ảnh song song
+                   const uploadPromises = [];
 
-                    // Hoàn thành
-                    loadingUtils.updateProgress(100, 'Thành công!');
-                    utils.showToast('Tạo phiếu chi thành công!', 'success');
-                    this.resetForm();
-                    loadingUtils.hide();
+                   // Upload hình ảnh chính nếu có
+                   if (elements.mainImageInput.files[0]) {
+                       loadingUtils.updateProgress(40, 'Đang tải lên hình ảnh chính...');
+                       uploadPromises.push(
+                           api.uploadImage(elements.mainImageInput.files[0])
+                               .then(url => {
+                                   formData['Hình ảnh'] = url;
+                               })
+                       );
+                   }
 
-                } catch (error) {
-                    console.error(error);
-                    loadingUtils.updateText('Đã xảy ra lỗi!');
-                    loadingUtils.updateProgress(100, 'Không thể xử lý yêu cầu');
-                    utils.showToast('Có lỗi xảy ra khi xử lý yêu cầu!', 'error');
-                    loadingUtils.hide();
-                } finally {
-                    elements.submitBtn.disabled = false;
-                }
-            },
-            validateForm() {
-                const requiredFields = ['khuVuc', 'duAn', 'maChi', 'thoiGian', 'soTien', 'noiDung', 'nhanVien'];
+                   // Upload các hình ảnh phụ nếu có
+                   if (this.additionalImages.length > 0) {
+                       loadingUtils.updateProgress(50, 'Đang tải lên các hình ảnh khác...');
 
-                const missingFields = requiredFields.filter(field => !elements[field].value.trim());
+                       this.additionalImages.forEach(file => {
+                           uploadPromises.push(
+                               api.uploadImage(file)
+                                   .then(url => {
+                                       return api.sendRequest('Image', 'Add', {
+                                           Rows: [{
+                                               KEY: idChi,
+                                               'Hình ảnh': url
+                                           }]
+                                       });
+                                   })
+                           );
+                       });
+                   }
 
-                if (missingFields.length > 0) {
-                    utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
-                    return false;
-                }
+                   // Chờ tất cả hình ảnh upload xong
+                   await Promise.all(uploadPromises);
 
-                const soTien = elements.soTien.value.replace(/\D/g, '');
-                if (isNaN(soTien) || parseInt(soTien) <= 0) {
-                    utils.showToast('Vui lòng nhập số tiền hợp lệ', 'error');
-                    return false;
-                }
+                   // Gửi dữ liệu phiếu chi
+                   loadingUtils.updateProgress(80, 'Đang tạo phiếu chi...');
+                   await api.sendRequest('Chi', 'Add', { Rows: [formData] });
 
-                return true;
-            },
+                   // Hoàn thành
+                   loadingUtils.updateProgress(100, 'Thành công!');
+                   utils.showToast('Tạo phiếu chi thành công!', 'success');
+                   this.resetForm();
+                   setTimeout(() => loadingUtils.hide(), 1000);
 
-            getFormData() {
-                const hoaDonValue = document.querySelector('input[name="hoaDon"]:checked')?.value || "CÓ";
-                return {
+               } catch (error) {
+                   console.error(error);
+                   loadingUtils.updateText('Đã xảy ra lỗi!');
+                   loadingUtils.updateProgress(100, 'Không thể xử lý yêu cầu');
+                   utils.showToast('Có lỗi xảy ra khi xử lý yêu cầu!', 'error');
+                   setTimeout(() => loadingUtils.hide(), 2000);
+               } finally {
+                   elements.submitBtn.disabled = false;
+               }
+           },
 
-                    'KHU VỰC': elements.khuVuc.value,
-                    'Dự án': elements.duAn.value,
-                    'Mã CHI': elements.maChi.value,
-                    'Thời gian': elements.thoiGian.value,
-                    'MDA': elements.mda.value,
-                    'SỐ TIỀN': elements.soTien.value.replace(/\D/g, ''),
-                    'NỘI DUNG': elements.noiDung.value,
-                    'NHÂN VIÊN THỰC HIỆN': elements.nhanVien.value , 
-                    'HOADON': hoaDonValue  
-                };
-            },
+           validateForm() {
+               const requiredFields = ['khuVuc', 'duAn', 'maChi', 'thoiGian', 'soTien', 'noiDung', 'nhanVien'];
 
-            resetForm() {
-                // Lưu giá trị nhân viên trước khi reset
-                const nhanVienValue = elements.nhanVien.value;
+               const missingFields = requiredFields.filter(field => !elements[field].value.trim());
 
-                // Reset form
-                elements.form.reset();
-                mdaHandler.reset();
-                // Khôi phục các giá trị và trạng thái mặc định
-                elements.mainImagePreview.classList.add('hidden');
-                elements.mainImageDropzone.classList.remove('hidden');
-                elements.thoiGian.value = new Date().toISOString().slice(0, 16);
+               if (missingFields.length > 0) {
+                   utils.showToast('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+                   return false;
+               }
 
-                // Khôi phục lại giá trị nhân viên
-                elements.nhanVien.value = nhanVienValue;
-                this.additionalImages = [];
-                const container = document.getElementById('additionalImagesContainer');
-                const dropzone = document.getElementById('additionalImageDropzone');
-                while (container.firstChild !== dropzone) {
-                    container.removeChild(container.firstChild);
-                }
-            }
-        };
+               const soTien = elements.soTien.value.replace(/\D/g, '');
+               if (isNaN(soTien) || parseInt(soTien) <= 0) {
+                   utils.showToast('Vui lòng nhập số tiền hợp lệ', 'error');
+                   return false;
+               }
 
-        // Initialize when page loads
-        window.addEventListener('DOMContentLoaded', () => {
-            formHandlers.initForm();
-        });
-    </script>
+               return true;
+           },
+
+           getFormData() {
+               const hoaDonValue = document.querySelector('input[name="hoaDon"]:checked')?.value || "CÓ";
+               return {
+                   'KHU VỰC': elements.khuVuc.value,
+                   'Dự án': elements.duAn.value,
+                   'Mã CHI': elements.maChi.value,
+                   'Thời gian': elements.thoiGian.value,
+                   'MDA': elements.mda.value,
+                   'SỐ TIỀN': elements.soTien.value.replace(/\D/g, ''),
+                   'NỘI DUNG': elements.noiDung.value,
+                   'NHÂN VIÊN THỰC HIỆN': elements.nhanVien.value,
+                   'HOADON': hoaDonValue
+               };
+           },
+
+           resetForm() {
+               // Lưu giá trị nhân viên trước khi reset
+               const nhanVienValue = elements.nhanVien.value;
+
+               // Reset form
+               elements.form.reset();
+               mdaHandler.reset();
+
+               // Khôi phục các giá trị và trạng thái mặc định
+               elements.mainImagePreview.classList.add('hidden');
+               elements.mainImageDropzone.classList.remove('hidden');
+               elements.thoiGian.value = new Date().toISOString().slice(0, 16);
+
+               // Khôi phục lại giá trị nhân viên
+               elements.nhanVien.value = nhanVienValue;
+
+               // Reset additional images
+               this.additionalImages = [];
+               const container = document.getElementById('additionalImagesContainer');
+               const dropzone = document.getElementById('additionalImageDropzone');
+               while (container.firstChild !== dropzone) {
+                   container.removeChild(container.firstChild);
+               }
+
+               // Reset dependent dropdowns
+               this.resetDependentDropdowns();
+           }
+       };
+
+       // Initialize when page loads
+       window.addEventListener('DOMContentLoaded', () => {
+           formHandlers.initForm();
+       });
+   </script>
 </body>
 
 </html>
